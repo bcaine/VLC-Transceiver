@@ -21,7 +21,7 @@
 /******************************************************************************
 * Local Macro Declarations                                                    *
 ******************************************************************************/
-#define LENGTH 		 2423
+#define LENGTH 		 2326
 #define PRU_NUM 	 0
 #define BUFFER_LENGTH    186
 #define BUFF_BASEADDR    0x90000000
@@ -95,22 +95,22 @@ int main (void)
     prussdrv_pruintc_init(&pruss_intc_initdata);
 
     /* Initialize example */
-    printf("\tINFO: Initializing test.\r\n");
+    printf("\tINFO: Initializing test: (%li) packets.\r\n", LENGTH);
     LOCAL_exampleInit();
     
     /* Execute example on PRU */
-    printf("\tINFO: Executing test.\r\n");
+    //printf("\tINFO: Executing test.\r\n");
     prussdrv_exec_program (0, "./pru0.bin");
     prussdrv_exec_program (1, "./pru1.bin");
 
     /* Wait until PRU0 has finished execution */
     printf("\tINFO: Waiting for HALT1 command.\r\n");
     prussdrv_pru_wait_event (PRU_EVTOUT_1);
-    printf("\tINFO: PRU1 completed execution.\r\n");
+    //printf("\tINFO: PRU1 completed execution.\r\n");
     prussdrv_pru_clear_event (PRU1_ARM_INTERRUPT);
     printf("\tINFO: Waiting for HALT0 command.\r\n");
     prussdrv_pru_wait_event (PRU_EVTOUT_0);
-    printf("\tINFO: PRU0 completed execution.\r\n");
+    //printf("\tINFO: PRU0 completed execution.\r\n");
     prussdrv_pru_clear_event (PRU0_ARM_INTERRUPT);
     /* Check if example passed */
     if ( LOCAL_examplePassed(PRU_NUM) )
@@ -160,9 +160,9 @@ static int LOCAL_exampleInit (  )
 
     *((unsigned long*) length) = LENGTH;
 	
-    printf("Attempting memset to (%x) with size of (%li)\n", LOW_CODE, numBytes);
-    memset(data, LOW_CODE, numBytes);
-    printf("\t memset passed \n");
+    //printf("Attempting memset to (%x) with size of (%li)\n", LOW_CODE, numBytes);
+    //memset(data, LOW_CODE, numBytes);
+    //printf("\t memset passed \n");
     return(0);
 }
 static unsigned short LOCAL_examplePassed ( unsigned short pruNum )
@@ -172,9 +172,9 @@ static unsigned short LOCAL_examplePassed ( unsigned short pruNum )
    printf("Offset: (%li)\n", (*(unsigned long*) cursor));
    printf("Data: \n\n");
    int i = 0;
-   char received;
-   for(i; i < numBytes; i++){
-        received = (*(unsigned char*) data);
+   long received;
+   for(i; i < numBytes; i=i+4){
+        received = (*(unsigned long*) data);
 	if( i < 100){//received != 0xff){
 	    printf("Byte (%li): (%x)\n", i, received);
         }
