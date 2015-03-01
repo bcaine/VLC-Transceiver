@@ -21,7 +21,7 @@
 /******************************************************************************
 * Local Macro Declarations                                                    *
 ******************************************************************************/
-#define LENGTH 		 1860
+#define LENGTH 		 2423
 #define PRU_NUM 	 0
 #define BUFFER_LENGTH    186
 #define BUFF_BASEADDR    0x90000000
@@ -30,11 +30,6 @@
 #define ALT_CODE 	 0xaaaa
 #define LOW_CODE	 0x0000
 
-// do not change:
-#define DDR_BASEADDR     0x80000000
-#define OFFSET_DDR	 0x00001000 
-#define OFFSET_SHAREDRAM 2048		//equivalent with 0x00002000
-#define PRUSS0_SHARED_DATARAM    4
 
 /******************************************************************************
 * Local Typedef Declarations                                                  *
@@ -131,7 +126,7 @@ int main (void)
     prussdrv_pru_disable(0);
     prussdrv_pru_disable(1); 
     prussdrv_exit ();
-    munmap(ddrMem, 0x0FFFFFFF);
+    munmap(ddrMem, numBytes);
     close(mem_fd);
 
     return(0);
@@ -180,7 +175,7 @@ static unsigned short LOCAL_examplePassed ( unsigned short pruNum )
    char received;
    for(i; i < numBytes; i++){
         received = (*(unsigned char*) data);
-	if(received != 0xff){
+	if( i < 100){//received != 0xff){
 	    printf("Byte (%li): (%x)\n", i, received);
         }
 	data = data + 1;
