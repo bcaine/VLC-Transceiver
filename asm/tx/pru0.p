@@ -2,71 +2,83 @@
 .entrypoint INIT
 #include "../../include/asm.hp"
 
+// Select modulation frequency:
+#define MHz1 1
+//#define kHz500 1
+
+#ifdef MHz1
+	#define DELAY_FWD 97
+	#define DELAY_BWD 92
+	#define DELAY_NEW 82
+#endif
+
+#ifdef kHz500
+	#define DELAY_FWD 197
+	#define DELAY_BWD 192
+	#define DELAY_NEW 182
+#endif
+
 //  _____________________
 //  Register  |  Purpose
 //
-//    r0.b0   |  Counter - delay loops performed
-//    r0.b1   |  Const   - delays to perform (normal op)
-//    r0.b2   |  Holder  - delays to perform (after reg copy)   
-//    r0.b3   |  Counter - registers modulated
+//    r0.w0   |  Counter - delay loops performed
+//    r0.w2   |  Holder  - delays to perform (normal op)
+//    r1.w0   |  Holder  - delays to perform (between reg)
+//    r1.b3   |  Counter - registers of this packet modulated
 //    r2.w0   |  Counter - packets modulated
 //    r2.w2   |  Const   - packets to transfer
 //      r3    |  Const   - base address of data buffer
 //      r4    |  Holder  - bit to modulate
-//
-//    r5-r7   |  Free
-//
-//    r9-r29  |  Holder  - hold packet bytes
+//   r5 - r8  |  Free
+//   r9 - r29 |  Holder  - hold packet bytes
 //      r30   |  I/O     - holds GPO pin register (.t15)
-
-#define DELAY_FWD 197//997//97
-#define DELAY_BWD 192//992//92
-#define DELAY_LAST_REG   182
 
 INIT:
     
     // Enable OCP master port -- allows external memory access
     LBCO      r0, C4, 4, 4
-    CLR       r0, r0, 4         // Clear SYSCFG[STANDBY_INIT] to enable OCP master port
+    CLR       r0, r0, 4           
     SBCO      r0, C4, 4, 4
 		
     MOV r3, DDR_ADDRESS
 	
-    MOV  r0.w0, 0 // init delay counter to 0
-    MOV  r0.w2, DELAY_FWD // store forward delay value
+    MOV  r0.w0, 0                 // init delay counter to 0
+    MOV  r0.w2, DELAY_FWD         // store forward delay value
   
-    MOV  r1.w0, DELAY_BWD // store backward delay value
+    MOV  r1.w0, DELAY_BWD         // store backward delay value
+    MOV  r1.b3, 0                 // init register counter to 0
 	
-    MOV  r2.w0, 0 // init packet counter to 0
-    LBBO r2.w2, r3, 0, 2 // load transfer length from RAM
+    MOV  r2.w0, 0                 // init packet counter to 0
+    LBBO r2.w2, r3, 0, 2          // load transfer length from RAM
 
 
-    MOV  r5.b0, 0 // init register counter to 0
-    XIN 10, r9, PACK_LEN // pull a packet from the scratchpad
-    JMP CLC_B1b1 // jump to modulation (start loop)
+    XIN 10, r9, PACK_LEN          // pull a packet from the scratchpad
+    JMP CLC_B1b1                  // jump to modulation (start loop)
 
 MAIN_LOOP:
-    XIN 10, r9, PACK_LEN // load PACK_LEN bytes in from SP
-    MOV r1.w0, DELAY_LAST_REG // set delay lower when pulling new packet (takes longer) 
+    XIN 10, r9, PACK_LEN          // load PACK_LEN bytes in from SP
+    MOV r1.w0, DELAY_NEW          // set delay lower when pulling new packet (takes longer) 
 
-DEL_R8: // new packet delay
+// delay between packets
+
+DEL_R8:
     ADD r0.w0, r0.w0, 1
     QBNE DEL_R8, r0.w0, r1.w0
 
 CLC_B1b1:
-    MOV r0.w0, 0 // reset delay counter to 0
-    GET_BIT r9, 0, r4
-    QBEQ SET_B1b1, r4, 1 // if this bit is high, jump to set
+    MOV r0.w0, 0                  // reset delay counter to 0
+    GET_BIT r9, 0, r4             // check data bit
+    QBEQ SET_B1b1, r4, 1          // if this bit is high, jump to set
 
-CLR_B1b1: // if bit low
-    CLR r30.t15 // set GPIO low
-    JMP DEL_B1b1 // jump to delay
+CLR_B1b1:                         // if bit low
+    CLR r30.t15                   // set GPIO low
+    JMP DEL_B1b1                  // jump to delay
 
-SET_B1b1: // if bit high
-    SET r30.t15 // set GPIO high
-    JMP DEL_B1b1 // jump to delay
+SET_B1b1:                         // if bit high
+    SET r30.t15                   // set GPIO high
+    JMP DEL_B1b1                  // jump to delay
 
-DEL_B1b1: // Byte 1, bit 1 delay
+DEL_B1b1:                         // Byte 1, bit 1 delay
     ADD r0.w0, r0.w0, 1
     QBNE DEL_B1b1, r0.w0, r0.w2
 
@@ -187,9 +199,9 @@ SET_B1b8:
     SET r30.t15
     JMP DEL_B1b8
 
-BCK_B1b8: // backup to loop start
-    QBEQ MAIN_LOOP, r5.b0, 0 // if we've modulated all reg, pull a new packet
-    JMP DEL_R8 // else, modulate next data reg
+BCK_B1b8:                         
+    QBEQ MAIN_LOOP, r1.b3, 0      // if we've modulated all reg, pull a new packet
+    JMP DEL_R8                    // else, modulate next data reg
 
 DEL_B1b8:
     ADD r0.w0, r0.w0, 1
@@ -605,53 +617,49 @@ SET_B4b8:
     SET r30.t15
     JMP UPD_R8
 
-BCK_B4b8: // backup to loop start
+BCK_B4b8:                         // backup to loop start
 	JMP BCK_B3b8
 
-UPD_R8: // once the whole reg modulated
-	ADD r5.b0, r5.b0, 1 // increment register counter
+UPD_R8:                           // once the whole reg modulated
+	ADD r1.b3, r1.b3, 1       // increment register counter
 	
-	// Copy the next register to modulate into r9,
-	// dependent on the value of the register counter
-	QBEQ CPY_R10, r5.b0, 1
-	QBEQ CPY_R11, r5.b0, 2
-	QBEQ CPY_R12, r5.b0, 3
-	QBEQ CPY_R13, r5.b0, 4
-	QBEQ CPY_R14, r5.b0, 5
-	QBEQ CPY_R15, r5.b0, 6
-	QBEQ CPY_R16, r5.b0, 7
-	QBEQ CPY_R17, r5.b0, 8
-	QBEQ CPY_R18, r5.b0, 9
-	QBEQ CPY_R19, r5.b0, 10
-	QBEQ CPY_R20, r5.b0, 11
-	QBEQ CPY_R21, r5.b0, 12
-	QBEQ CPY_R22, r5.b0, 13
-	QBEQ CPY_R23, r5.b0, 14
-	QBEQ CPY_R24, r5.b0, 15
-	QBEQ CPY_R25, r5.b0, 16
-	QBEQ CPY_R26, r5.b0, 17
-	QBEQ CPY_R27, r5.b0, 18
-	QBEQ CPY_R28, r5.b0, 19
-	QBEQ MOD_R29, r5.b0, 20
+	                          // Copy the next register to modulate into r9,
+	                          // dependent on the value of the register counter
+	QBEQ CPY_R10, r1.b3, 1
+	QBEQ CPY_R11, r1.b3, 2
+	QBEQ CPY_R12, r1.b3, 3
+	QBEQ CPY_R13, r1.b3, 4
+	QBEQ CPY_R14, r1.b3, 5
+	QBEQ CPY_R15, r1.b3, 6
+	QBEQ CPY_R16, r1.b3, 7
+	QBEQ CPY_R17, r1.b3, 8
+	QBEQ CPY_R18, r1.b3, 9
+	QBEQ CPY_R19, r1.b3, 10
+	QBEQ CPY_R20, r1.b3, 11
+	QBEQ CPY_R21, r1.b3, 12
+	QBEQ CPY_R22, r1.b3, 13
+	QBEQ CPY_R23, r1.b3, 14
+	QBEQ CPY_R24, r1.b3, 15
+	QBEQ CPY_R25, r1.b3, 16
+	QBEQ CPY_R26, r1.b3, 17
+	QBEQ CPY_R27, r1.b3, 18
+	QBEQ CPY_R28, r1.b3, 19
+	QBEQ MOD_R29, r1.b3, 20
 
 // If all registers modulated
 
 CHECK_DONE: 
-	MOV r5.b0, 0 // reset register counter
-    	ADD r2.w0, r2.w0, 1 // increment packet counter
-    // if more packets, jump back to loop start.
-    // Note that due to instruction limitations,
-    // jump is segmented across multiple addresses
-    // in instruction memory to allow stunted jump
-    // back to the top of the loop.
-    QBNE BCK_B4b8, r2.w0, r2.w2
+	MOV r1.b3, 0              // reset register counter
+    	ADD r2.w0, r2.w0, 1       // increment packet counter
+    
+    QBNE BCK_B4b8, r2.w0, r2.w2   // if more packets, jump back to loop start.
 
-    JMP STOP // if done, jump to stop
+    JMP STOP                      // if done, jump to stop
 
 CPY_R10:
-	MOV r9, r10 	// copy contents of r9 into r9 (modulation reg)
-	MOV r1.w0, DELAY_BWD // reset delay
-	JMP BCK_B4b8 // jump back to loop start
+	MOV r9, r10 	          // copy contents of r9 into r9 (modulation reg)
+	MOV r1.w0, DELAY_BWD      // reset delay
+	JMP BCK_B4b8              // jump back to loop start
 CPY_R11:
 	MOV r9, r11
 	JMP BCK_B4b8 
@@ -719,7 +727,7 @@ CPY_R28:
 MOD_R29:
 	MOV r9, r29
 	MOV r0.w0, 0
-	ADD r1.w0, r1.w0, 2 // = 85
+	ADD r1.w0, r1.w0, 2
 	
 DEL_R29:
 	ADD r0.w0, r0.w0, 1
@@ -1130,8 +1138,8 @@ SET_R29_B4b8:
     JMP UPD_R8
 
 STOP:
-	SET r30.t15 // leave GPIO line high
-	MOV r31.b0, PRU0_ARM_INTERRUPT+16 // send termination interrupt to ARM
-	HALT // shutdown
+	SET r30.t15                         // leave GPIO line high
+	MOV r31.b0, PRU0_ARM_INTERRUPT+16   // send termination interrupt to ARM
+	HALT                                // shutdown
 
 
