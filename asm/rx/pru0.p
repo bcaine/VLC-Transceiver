@@ -19,6 +19,8 @@
 #define DONE_CODE 0xff
 #define DDR_ADDRESS 0x90000000
 
+#define PACKETS_2_RCV 15
+
 //  _____________________
 //  Register  |  Purpose
 //		      
@@ -78,6 +80,7 @@ INIT:
 	MOV r6, DDR_ADDRESS
 	MOV r7.b0, 0
 	MOV r7.b1, READY_CODE
+	MOV r7.b2, 0
 
     	JMP PRE_LP
 
@@ -776,8 +779,10 @@ UPD_R29:
 	MOV r1.b0, 0
 
 CHECK_DONE:
-	LBBO r7.b0, r6, 0, 1 // load done code from main RAM
-	QBNE BCK_P4b8, r7.b0, DONE_CODE
+	ADD r7.b2, r7.b2, 1
+	QBNE BCK_P4b8, r7.b2, PACKETS_2_RCV
+	//LBBO r7.b0, r6, 0, 1 // load done code from main RAM
+	//QBNE BCK_P4b8, r7.b0, DONE_CODE
 
 	XOUT 10, r8, 88
 	JMP STOP
@@ -858,6 +863,41 @@ CPY_R28:
 	JMP BCK_B3b8
 
 STOP:
+
+	MOV r0, 0
+	MOV r1, 0
+	MOV r2, 0
+	MOV r3, 0
+	MOV r4, 0
+	MOV r5, 0
+	MOV r6, 0
+	MOV r7, 0
+	MOV r8, 0
+	MOV r9, 0
+	MOV r10, 0
+	MOV r11, 0
+	MOV r12, 0
+	MOV r13, 0
+	MOV r14, 0
+	MOV r15, 0
+	MOV r16, 0
+	MOV r17, 0
+	MOV r18, 0
+	MOV r19, 0
+	MOV r20, 0
+	MOV r21, 0
+	MOV r22, 0	
+	MOV r23, 0
+	MOV r24, 0
+	MOV r25, 0
+	MOV r26, 0
+	MOV r27, 0
+	MOV r28, 0
+	MOV r29, 0
+	SBBO r0, r7, 0, 120
+	SBCO r0, CONST_PRUSHAREDRAM, 0, 120
+
+
 	MOV r31.b0, PRU0_ARM_INTERRUPT+16
 	HALT
 

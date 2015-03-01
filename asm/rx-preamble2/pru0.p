@@ -22,12 +22,14 @@
 #define DONE_CODE                   0xff
 #define ERROR_CODES                 0x00 // MAKE THIS USEFUL
 
+#define PACKS_2_RCV 15
+
 // Preamble:
 #define PREAMBLE         0b0011110000111
 #define PRE_BITMASK   0b0000111111111111 // only want to check the first 12 bits
 #define INIT_PRE              0x00000000 // initialize bitstream to avoid accidental matches
 #define REQ_BITS                      12 // number of bits (out of 13) required to match actual preamble
-#define SYNC_TIMEOUT                  40 // timeout if not receiving preamble transition
+#define SYNC_TIMEOUT                  60 // timeout if not receiving preamble transition
 
 // Delay Constants:
 #define DELAY_P1                      74 // delay to maintain 200 cycles between preamble bit checks
@@ -95,7 +97,7 @@ INIT:
 	MOV r6, DDR_ADDRESS // store DDR address for later store instr
 	MOV r7.b0, 0 // init done code holder to 0
 	MOV r7.b1, READY_CODE // store ready code for later use
-
+	MOV r5.b0, 0
     	JMP P1_SMP
 
 NEW_PACKET:
@@ -834,8 +836,10 @@ UPD_R29:
 	MOV r0.b2, 0 // reset register counter
 
 CHECK_DONE:
-	LBBO r7.b0, r6, 0, 1 // load done code from main RAM
-	QBNE BCK_P4b8, r7.b0, DONE_CODE // if not done, try to pull another packet
+	ADD r5, r5, 1
+	QBNE BCK_P4b8, r5, PACKS_2_RCV
+	//LBBO r7.b0, r6, 0, 1 // load done code from main RAM
+	//QBNE BCK_P4b8, r7.b0, DONE_CODE // if not done, try to pull another packet
 
 	XOUT 10, r8, PACK_LEN // if done, send data to PRU1
 	JMP STOP // jump to shutdown

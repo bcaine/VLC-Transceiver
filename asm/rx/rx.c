@@ -98,34 +98,13 @@ int main (void)
     printf("\tINFO: Initializing test: (%li) packets.\r\n", LENGTH);
     LOCAL_exampleInit();
     
-   printf("Data: \n\n");
-   int i = 0;
-   unsigned long received[22];
-   for(i; i < 5; i=i+1){
-	int j = 0;
-	while (j < 22){
-	  received[j] = (*(unsigned long*)(data + (j*4)));
-	  j=j+1;
-	}
-
-	int k = 0;
-	for(k; k < 22; k=k+1){
-	    printf("%x ", received[k]);
-	}
-	printf("\n\n");
-   }
-
     /* Execute example on PRU */
     //printf("\tINFO: Executing test.\r\n");
     prussdrv_exec_program (0, "./pru0.bin");
     prussdrv_exec_program (1, "./pru1.bin");
 
-    printf("\tWaiting for PRU cursor.\r\n");
+    printf("\tDelaying very stupidly.\r\n");
     //while((*(unsigned long*) cursor) < 8880){};
-    i = 0;
-    while(i < 100000000){
-        i++;
-    }
     *((unsigned char*) length) = 0xff;
 
     /* Wait until PRU0 has finished execution */
@@ -140,9 +119,7 @@ int main (void)
     /* Check if example passed */
     LOCAL_examplePassed(PRU_NUM);
 
-    printf("Clearing after");
     memset(ddrMem, LOW_CODE, numBytes);
-    printf("\t memset passed \n");
     
     /* Disable PRU and close memory mapping*/
     prussdrv_pru_disable(0);
@@ -174,7 +151,7 @@ static int LOCAL_exampleInit (  )
         close(mem_fd);
         return -1;
     }
-    printf("Base address: %x", ddrMem);
+
     /* Setup required PRU vars in RAM */
     length = ddrMem;
     cursor = ddrMem + 4;
@@ -195,9 +172,9 @@ static unsigned short LOCAL_examplePassed ( unsigned short pruNum )
    printf("Cursor: (%li)\n", (*(unsigned long*) cursor));
 
    printf("Data: \n\n");
-   int i = 0;
+   int i = 4;
    unsigned long received[22];
-   for(i; i < 5; i=i+1){
+   for(i; i < 15; i=i+1){
 	int j = 0;
 	while (j < 22){
 	  received[j] = (*(unsigned long*) (data + (i * 88) + (4 * j)));
