@@ -68,9 +68,8 @@ INIT:
 	MOV r6.w2, DELAY_FWD_RX   // store forward delay value for comparison
 
 	MOV r7.w0, 0              // init packet counter to 0
-
 	MOV r8.w0, SYNC_TIMEOUT
-    JMP P1_SMP                // jump to preamble check
+        JMP P1_SMP                // jump to preamble check
 
 NEW_PACKET:
     XOUT 10, r9, PACK_LEN         // write data to PRU1
@@ -730,7 +729,7 @@ CHECK_DONE:
     SBCO r4, CONST_PRUSHAREDRAM, 0, 1       // write packet ready code to PRU RAM
     MOV r0.b2, 0                            // reset register counter
     ADD r7.b0, r7.b0, 1
-    JMP BCK_P4b8                               // and commence shutdown
+    JMP BCK_P4b8                              
 
 CPY_R9:
 	MOV r9, r29 	          // copy contents of r9 into r9 (modulation reg)
