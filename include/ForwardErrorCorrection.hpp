@@ -1,4 +1,4 @@
-/* Encoding Library for Reed-Solomon based on Longhair implementation
+/* Encoding Library for Reed-Solomon based on Golay(12, 24) Coding
 
    Author: Ben Caine
    Date: September 24, 2015
@@ -6,41 +6,21 @@
 #ifndef FEC_HPP
 #define FEC_HPP
 
-#include "cauchy_256.h"
 #include <assert.h>
-
+#include "Golay.hpp"
 
 class ForwardErrorCorrection {
 
 public:
-  ForwardErrorCorrection(int k, int m, int bytes) {
-    // Check that the values are usable
-    assert(bytes % 8 == 0);
+  void Encode(unsigned char *data, unsigned char* encoded, int len);
+  void Decode(unsigned char *encoded, unsigned char* data, int len);
 
-    _k = k;
-    _m = m;
-    _bytes = bytes;
-    
-    if (cauchy_256_init()) {
-      exit(1);
-    }
-  }
-
-  ~ForwardErrorCorrection() {
-    // Free up garbage/memory here
-  }
-
-
-  unsigned char* Encode(unsigned char *data, int data_length);
-  unsigned char* Decode(unsigned char *data);
-
-private:
-  int _k, _m;
-  int _bytes;
-
-  bool RLLEncode(char *data);
-  bool RLLDecode(char *data);
-
+  void ManchesterEncode(unsigned char *data_in,
+			unsigned char *data_out,
+			int in_len, int out_len);
+  void ManchesterDecode(unsigned char *data_in,
+			unsigned char *data_out,
+			int in_len, int out_len);
 };
 
 #endif // FEC_HPP
