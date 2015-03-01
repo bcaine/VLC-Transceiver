@@ -12,9 +12,9 @@
 .entrypoint INIT
 #include "../../include/asm.hp"
 
-#define PACKETCOUNT 500
-#define PREAMBLE 0b11111111
-#define REQBITS 8
+#define PACKETCOUNT 2000
+#define PREAMBLE 0b00111100
+#define REQBITS 6
 
 //  _____________________
 //  Register  |  Purpose
@@ -60,6 +60,7 @@ INIT:
 
         MOV r6, PACKETCOUNT
 	MOV r7, 0
+
         JMP PRE_LP
 
 NEW_PACKET:
@@ -69,24 +70,24 @@ DEL_NEW:
         ADD r0.b0, r0.b0, 1
         QBNE DEL_NEW, r0.b0, r0.b2
 
-        MOV r2.b0, 0 // reset bit holder
+        MOV r2, 0 // reset bit holder
         MOV r3.b2, 0 // reset matching bits counter
 
 PRE_LP:
         MOV r0.b0, 0 // reset delay
-        LSL r2.b0, r2.b0, 1 // shift preamble holder to prepare for new bit
+        LSL r2, r2, 1 // shift preamble holder to prepare for new bit
         LSR r4, r31, 15 // sample GPI reg, shift sample value to 0th index
         AND r4, r4, 1 // and to zero out all other bits
         QBEQ PRE_SET, r4, 1 // if bit set, jump to set
 
 PRE_CLR:
-        CLR r2.b0.t0 // clear new bit
-        MOV r3.b2, 0 // reset matching bits counter
+        CLR r2.t0 // clear new bit
+        MOV r3.b2, 0 // NOP
         JMP PRE_DEL
 
 PRE_SET:
-        SET r2.b0.t0 // set new bit
-        MOV r3.b2, 0 // reset matching bits counter
+        SET r2.t0 // set new bit
+        MOV r3.b2, 0 // NOP
         JMP PRE_DEL
 
 PRE_DEL: 
@@ -129,7 +130,7 @@ PRE_CHK:
         AND r3.b3, r3.b3, 1
         ADD r3.b2, r3.b2, r3.b3
 
-        QBEQ CPY_P1b1, r3.b1, r3.b2 // if enough bits match, jump out of preamble
+        QBGT CPY_P1b1, r3.b1, r3.b2 // if enough bits match, jump out of preamble
         JMP PRE_LP
 
 CPY_P1b1:
@@ -285,6 +286,7 @@ BCK_P1b8:
 	JMP NEW_PACKET
 
 BCK_B1b8:
+
 	JMP DEL_CPY
 
 DEL_B1b8:
@@ -761,7 +763,7 @@ UPD_R29:
 
 CHECK_DONE:
 	ADD r7, r7, 1
-	SUB r0.b3, r0.b3, 3
+	SUB r0.b2, r0.b2, 3
 	QBNE BCK_P4b8, r6, r7
 	XOUT 10, r8, 88
 	JMP STOP
