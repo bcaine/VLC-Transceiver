@@ -16,11 +16,7 @@ def get_socket(port):
 
 def send_data(port, n):
     sock = get_socket(port)
-    # 5 Bytes * whatever
-
     message = 'hello' * (n / 5)
-
-
     len_in_bytes = struct.pack("I", len(message))
     print "Sending Length"
     sock.sendall(len_in_bytes)
@@ -34,20 +30,31 @@ def send_data(port, n):
 def receive_data(port):
     print "Creating socket"
     sock = get_socket(port)
+
     data = ''
-    data += sock.recv(1000)
+    # Send 1 byte of junk so it has the client addr
+    sock.sendall('a')
+
+    while(True):
+        received = sock.recv(100)
+
+        if (len(received) == 4) and received == "DONE":
+            break
+        
+        data += received
+    
     print "Received data of length: {}".format(len(data))
     print data
 
 
 def convert(n):
-    num = int(n[:-1])
+
     if n[-1:] == 'k':
-        return num * 10**3
+        return int(n[:-1]) * 10**3
     elif n[-1:] == 'm':
-        return num * 10**6
+        return int(n[:-1]) * 10**6
     else:
-        return num
+        return int(n)
 
 if __name__=="__main__":
     if len(sys.argv) == 3:

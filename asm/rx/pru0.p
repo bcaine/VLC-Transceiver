@@ -1,228 +1,152 @@
+// Receiver - PRU0 source code. Responsible for sampling incoming data from
+// its input GPIO pin (Header 8, Pin 15 on Beaglebone Black) and passing it
+// to PRU1 for later memory dump. This code implements a preamble for clock
+// sync purposes: on init, and after the end of each packet, PRU0 will sample
+// a byte of data from its input pin and check if this byte matches the start
+// of a new packet (preamble byte). Aside from this special case, PRU0 will
+// sample its input pin at a rate of 1MHz, matching the transmission rate.
+// Current implementation stores 4 bytes of input data at a time in r29, then
+// copies r29 to the first register 'in the queue', allowing repetition of the loop.
+
 .origin 0
 .entrypoint INIT
 #include "../../include/asm.hp"
 
-#define READ_ADDRESS 0x90000000
+#define PACKETCOUNT 2000
+#define PREAMBLE 0b00111100
+#define REQBITS 6
+
+//  _____________________
+//  Register  |  Purpose
+//		      
+//    r0.b0   |  Counter - delay loops performed
+//    r0.b1   |  Const   - delays to perform (normal op)
+//    r0.b2   |  Const   - delays to perform (after reg copy)
+//    r0.b3   |  Const   - delays to perform (preamble loop)
+//    r1.b0   |  Counter - registers filled
+//    r1.b1   |  Holder  - XOR result (preamble)
+//      r2    |  Holder  - recent input bits (preamble)
+//    r3.b0   |  Holder  - hold preamble for comparison
+//    r3.b1   |  Holder  - hold desired number of bitmatches for preamble comparison
+//    r3.b2   |  Counter - number of input stream bits matching the preamble
+//    r3.b3   |  Holder  - hold LSR/AND result (preamble)
+//      r4    |  Holder  - bit sampled
+//    r8-r29  |  Holder  - hold sampled bytes
+//      r30   |  I/O     - holds GPI pin register (.t15)
+//
+//    r5, r6  | - Free registers
+//      r7    |
 
 INIT:
-	// Enable OCP master port
-	LBCO      r0, C4, 4, 4
-	CLR       r0, r0, 4         // Clear SYSCFG[STANDBY_INIT] to enable OCP master port
-	SBCO      r0, C4, 4, 4
+        // Enable OCP master port
+        LBCO      r0, C4, 4, 4
+        CLR       r0, r0, 4         // Clear SYSCFG[STANDBY_INIT] to enable OCP master port
+        SBCO      r0, C4, 4, 4
 
-	MOV r7, READ_ADDRESS
-	
-	MOV r0.b0, 0 // counter -- register number
-	MOV r0.b1, 0 // counter -- preamble verified bits
-	
-	MOV r1.b0, 0 // counter --delay
-	MOV r1.b1, 97 // loop delay --forward
-	MOV r1.b2, 92 // loop delay --backward (init not req, here for visibility)
-	MOV r1.b3, 96 // loop delay --preamble (init not req, here for visibility)
+        MOV r0.b0, 0 // init delay counter to 0
+        MOV r0.b1, 97 // store forward delay value for comparison
+        MOV r0.b2, 92 // store backward delay value for comparison
+        MOV r0.b3, 82 // store preamble delay value for comparison
 
-	MOV r2, 0 // counter --packet length
-	LBBO r3, r7, 0, 4 // what's the offset?
+	MOV r1.b0, 0 // init reg number to 0
+	MOV r1.b1, 0 // hold XOR result
 
-	// Free Registers: r5, r6, r7
-	// Cycle Count: 140800
-	JMP START_PRE
+        MOV r2, 0 // recent bits holder
+        
+	MOV r3.b0, PREAMBLE // hold actual preamble for comparison
+        MOV r3.b1, REQBITS // hold desired bit matches for comparison
+	MOV r3.b2, 0 // init bit matches counter to 0
+	MOV r3.b3, 0 // hold LSR/AND result
+
+        MOV r6, PACKETCOUNT
+	MOV r7, 0
+
+        JMP PRE_LP
 
 NEW_PACKET:
-	XOUT 10, r8, 88
+        XOUT 10, r8, 88
 
 DEL_NEW:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_NEW, r1.b0, r1.b2
+        ADD r0.b0, r0.b0, 1
+        QBNE DEL_NEW, r0.b0, r0.b2
 
-	MOV r0.b1, 0 // reset verified
-	JMP START_PRE
+        MOV r2, 0 // reset bit holder
+        MOV r3.b2, 0 // reset matching bits counter
 
-PRE_P1b1: // restarting preamble - 200c
-	MOV r0.b1, 0 // reset verified
-START_PRE: // coming from valid data - 199c
-	MOV r1.b0, 0
-	LSR r4, r31, 15
-	AND r4, r4, 1
-	QBEQ SET_P1b1, r4, 1
+PRE_LP:
+        MOV r0.b0, 0 // reset delay
+        LSL r2, r2, 1 // shift preamble holder to prepare for new bit
+        LSR r4, r31, 15 // sample GPI reg, shift sample value to 0th index
+        AND r4, r4, 1 // and to zero out all other bits
+        QBEQ PRE_SET, r4, 1 // if bit set, jump to set
 
-CLR_P1b1:
-	CLR r29.t31
-	MOV r0.b1, r0.b1
-	JMP DEL_P1b1
+PRE_CLR:
+        CLR r2.t0 // clear new bit
+        MOV r0.b0, 0 // NOP
+        JMP PRE_DEL
 
-SET_P1b1:
-	SET r29.t31
-	ADD r0.b1, r0.b1, 1
-	JMP DEL_P1b1
+PRE_SET:
+        SET r2.t0 // set new bit
+        MOV r0.b0, 0 // NOP
+        JMP PRE_DEL
 
-DEL_P1b1:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_P1b1, r1.b0, r1.b3
+PRE_DEL: 
+        ADD r0.b0, r0.b0, 1
+        QBNE PRE_DEL, r0.b0, r0.b3
 
-PRE_P1b2: // 200c
-	MOV r1.b0, 0
-	MOV r1.b0, 0
-	LSR r4, r31, 15
-	AND r4, r4, 1
-	QBEQ SET_P1b2, r4, 1
+PRE_CHK:
+        XOR r1.b1, r2.b0, r3.b0 // get bitwise differences b/w preamble and current
+        NOT r1.b1, r1.b1 // NOT - get bitwise similarities
 
-CLR_P1b2:
-	CLR r29.t30
-	MOV r0.b1, r0.b1
-	JMP DEL_P1b2
+        LSR r3.b3, r1.b1, 0 // shift to bit of interest
+        AND r3.b3, r3.b3, 1 // isolate that bit
+        ADD r3.b2, r3.b2, r3.b3 // add it to the counter
 
-SET_P1b2:
-	SET r29.t30
-	ADD r0.b1, r0.b1, 1
-	JMP DEL_P1b2
+        LSR r3.b3, r1.b1, 1 // repeat for each bit
+        AND r3.b3, r3.b3, 1
+        ADD r3.b2, r3.b2, r3.b3
 
-DEL_P1b2:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_P1b2, r1.b0, r1.b3
+        LSR r3.b3, r1.b1, 2
+        AND r3.b3, r3.b3, 1
+        ADD r3.b2, r3.b2, r3.b3
 
-PRE_P1b3: //200c
-	MOV r1.b0, 0
-	MOV r1.b0, 0
-	LSR r4, r31, 15
-	AND r4, r4, 1
-	QBEQ SET_P1b3, r4, 1
+	LSR r3.b3, r1.b1, 3
+        AND r3.b3, r3.b3, 1
+        ADD r3.b2, r3.b2, r3.b3
 
-CLR_P1b3:
-	CLR r29.t29
-	MOV r0.b1, r0.b1
-	JMP DEL_P1b3
+	LSR r3.b3, r1.b1, 4
+        AND r3.b3, r3.b3, 1
+        ADD r3.b2, r3.b2, r3.b3
 
-SET_P1b3:
-	SET r29.t29
-	ADD r0.b1, r0.b1, 1
-	JMP DEL_P1b3
+	LSR r3.b3, r1.b1, 5
+        AND r3.b3, r3.b3, 1
+        ADD r3.b2, r3.b2, r3.b3
 
-DEL_P1b3:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_P1b3, r1.b0, r1.b3
+	LSR r3.b3, r1.b1, 6
+        AND r3.b3, r3.b3, 1
+        ADD r3.b2, r3.b2, r3.b3
 
-PRE_P1b4: // 200c
-	MOV r1.b0, 0
-	MOV r1.b0, 0
-	LSR r4, r31, 15
-	AND r4, r4, 1
-	QBEQ SET_P1b4, r4, 1
+	LSR r3.b3, r1.b1, 7
+        AND r3.b3, r3.b3, 1
+        ADD r3.b2, r3.b2, r3.b3
 
-CLR_P1b4:
-	CLR r29.t28
-	MOV r0.b1, r0.b1
-	JMP DEL_P1b4
+        QBGT CPY_P1b1, r3.b1, r3.b2 // if enough bits match, jump out of preamble
+        JMP PRE_LP
 
-SET_P1b4:
-	SET r29.t28
-	ADD r0.b1, r0.b1, 1
-	JMP DEL_P1b4
-
-DEL_P1b4:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_P1b5, r1.b0, r1.b3
-
-PRE_P1b5: // 200c
-	MOV r1.b0, 0
-	MOV r1.b0, 0
-	LSR r4, r31, 15
-	AND r4, r4, 1
-	QBEQ SET_P1b5, r4, 1
-
-CLR_P1b5:
-	CLR r29.t27
-	MOV r0.b1, r0.b1
-	JMP DEL_P1b5
-
-SET_P1b5:
-	SET r29.t27
-	ADD r0.b1, r0.b1, 1
-	JMP DEL_P1b5
-
-DEL_P1b5:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_P1b5, r1.b0, r1.b3
-
-PRE_P1b6: // 200c
-	MOV r1.b0, 0
-	MOV r1.b0, 0
-	LSR r4, r31, 15
-	AND r4, r4, 1
-	QBEQ SET_P1b6, r4, 1
-
-CLR_P1b6:
-	CLR r29.t26
-	MOV r0.b1, r0.b1
-	JMP DEL_P1b6
-
-SET_P1b6:
-	SET r29.t26
-	ADD r0.b1, r0.b1, 1
-	JMP DEL_P1b6
-
-DEL_P1b6:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_P1b6, r1.b0, r1.b3
-
-PRE_P1b7: // 200c 
-	MOV r1.b0, 0
-	MOV r1.b0, 0
-	LSR r4, r31, 15
-	AND r4, r4, 1
-	QBEQ SET_P1b7, r4, 1
-
-CLR_P1b7:
-	CLR r29.t25
-	MOV r0.b1, r0.b1
-	JMP DEL_P1b7
-
-SET_P1b7:
-	SET r29.t25
-	ADD r0.b1, r0.b1, 1
-	JMP DEL_P1b7
-
-DEL_P1b7:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_P1b7, r1.b0, r1.b3
-
-PRE_P1b8: // 200c (pre) - 201c (data)
-	MOV r1.b0, 0
-	MOV r1.b0, 0
-	LSR r4, r31, 15
-	AND r4, r4, 1
-	QBEQ SET_P1b8, r4, 1
-
-CLR_P1b8:
-	CLR r29.t24
-	MOV r0.b1, r0.b1
-	MOV r1.b3, 94
-	JMP DEL_P1b8 
-
-SET_P1b8:
-	SET r29.t24
-	ADD r0.b1, r0.b1, 1
-	MOV r1.b3, 94
-	JMP DEL_P1b8
-
-DEL_P1b8:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_P1b8, r1.b0, r1.b3 
-
-CHK_PRE:
-	MOV r1.b0, 0
-	MOV r1.b3, 96 // reset preamble delay
-	QBLT PRE_P1b1, r0.b1, 7 // repeat preamble - 200c
-	JMP SMP_B2b8 // go to data - 201c
+CPY_P1b1:
+        MOV r29.b3, r2.b0 // store preamble
+        JMP SMP_B2b1
 
 DEL_CPY:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_CPY, r1.b0, r1.b2
+        ADD r0.b0, r0.b0, 1
+        QBNE DEL_CPY, r0.b0, r0.b2
 
 SMP_B1b1:
-	MOV r1.b0, 0
-	LSR r4, r31, 15
-	AND r4, r4, 1
-	QBEQ SET_B1b1, r4, 1
+        MOV r0.b0, 0
+        LSR r4, r31, 15
+        AND r4, r4, 1
+        QBEQ SET_B1b1, r4, 1
+
 
 CLR_B1b1:
 	CLR r29.t31
@@ -233,11 +157,11 @@ SET_B1b1:
 	JMP DEL_B1b1
 
 DEL_B1b1:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_B1b1, r1.b0, r1.b1
+	ADD r0.b0, r0.b0, 1
+	QBNE DEL_B1b1, r0.b0, r0.b1
 
 SMP_B1b2:
-	MOV r1.b0, 0
+	MOV r0.b0, 0
 	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B1b2, r4, 1
@@ -251,11 +175,11 @@ SET_B1b2:
 	JMP DEL_B1b2
 
 DEL_B1b2:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_B1b2, r1.b0, r1.b1
+	ADD r0.b0, r0.b0, 1
+	QBNE DEL_B1b2, r0.b0, r0.b1
 
 SMP_B1b3:
-	MOV r1.b0, 0
+	MOV r0.b0, 0
 	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B1b3, r4, 1
@@ -269,11 +193,11 @@ SET_B1b3:
 	JMP DEL_B1b3
 
 DEL_B1b3:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_B1b3, r1.b0, r1.b1
+	ADD r0.b0, r0.b0, 1
+	QBNE DEL_B1b3, r0.b0, r0.b1
 
 SMP_B1b4:
-	MOV r1.b0, 0
+	MOV r0.b0, 0
 	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B1b4, r4, 1
@@ -287,11 +211,11 @@ SET_B1b4:
 	JMP DEL_B1b4
 
 DEL_B1b4:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_B1b4, r1.b0, r1.b1
+	ADD r0.b0, r0.b0, 1
+	QBNE DEL_B1b4, r0.b0, r0.b1
 
 SMP_B1b5:
-	MOV r1.b0, 0
+	MOV r0.b0, 0
 	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B1b5, r4, 1
@@ -305,11 +229,11 @@ SET_B1b5:
 	JMP DEL_B1b5
 
 DEL_B1b5:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_B1b5, r1.b0, r1.b1
+	ADD r0.b0, r0.b0, 1
+	QBNE DEL_B1b5, r0.b0, r0.b1
 
 SMP_B1b6:
-	MOV r1.b0, 0
+	MOV r0.b0, 0
 	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B1b6, r4, 1
@@ -323,11 +247,11 @@ SET_B1b6:
 	JMP DEL_B1b6
 
 DEL_B1b6:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_B1b6, r1.b0, r1.b1
+	ADD r0.b0, r0.b0, 1
+	QBNE DEL_B1b6, r0.b0, r0.b1
 
 SMP_B1b7:
-	MOV r1.b0, 0
+	MOV r0.b0, 0
 	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B1b7, r4, 1
@@ -341,11 +265,11 @@ SET_B1b7:
 	JMP DEL_B1b7
 
 DEL_B1b7:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_B1b7, r1.b0, r1.b1
+	ADD r0.b0, r0.b0, 1
+	QBNE DEL_B1b7, r0.b0, r0.b1
 
 SMP_B1b8:
-	MOV r1.b0, 0
+	MOV r0.b0, 0
 	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B1b8, r4, 1
@@ -362,14 +286,15 @@ BCK_P1b8:
 	JMP NEW_PACKET
 
 BCK_B1b8:
+
 	JMP DEL_CPY
 
 DEL_B1b8:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_B1b8, r1.b0, r1.b1
+	ADD r0.b0, r0.b0, 1
+	QBNE DEL_B1b8, r0.b0, r0.b1
 
 SMP_B2b1:
-	MOV r1.b0, 0
+	MOV r0.b0, 0
 	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B2b1, r4, 1
@@ -383,11 +308,11 @@ SET_B2b1:
 	JMP DEL_B2b1
 
 DEL_B2b1:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_B2b1, r1.b0, r1.b1
+	ADD r0.b0, r0.b0, 1
+	QBNE DEL_B2b1, r0.b0, r0.b1
 
 SMP_B2b2:
-	MOV r1.b0, 0
+	MOV r0.b0, 0
 	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B2b2, r4, 1
@@ -401,11 +326,11 @@ SET_B2b2:
 	JMP DEL_B2b2
 
 DEL_B2b2:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_B2b2, r1.b0, r1.b1
+	ADD r0.b0, r0.b0, 1
+	QBNE DEL_B2b2, r0.b0, r0.b1
 
 SMP_B2b3:
-	MOV r1.b0, 0
+	MOV r0.b0, 0
 	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B2b3, r4, 1
@@ -419,11 +344,11 @@ SET_B2b3:
 	JMP DEL_B2b3
 
 DEL_B2b3:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_B2b3, r1.b0, r1.b1
+	ADD r0.b0, r0.b0, 1
+	QBNE DEL_B2b3, r0.b0, r0.b1
 
 SMP_B2b4:
-	MOV r1.b0, 0
+	MOV r0.b0, 0
 	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B2b4, r4, 1
@@ -437,11 +362,11 @@ SET_B2b4:
 	JMP DEL_B2b4
 
 DEL_B2b4:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_B2b4, r1.b0, r1.b1
+	ADD r0.b0, r0.b0, 1
+	QBNE DEL_B2b4, r0.b0, r0.b1
 
 SMP_B2b5:
-	MOV r1.b0, 0
+	MOV r0.b0, 0
 	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B2b5, r4, 1
@@ -455,11 +380,11 @@ SET_B2b5:
 	JMP DEL_B2b5
 
 DEL_B2b5:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_B2b5, r1.b0, r1.b1
+	ADD r0.b0, r0.b0, 1
+	QBNE DEL_B2b5, r0.b0, r0.b1
 
 SMP_B2b6:
-	MOV r1.b0, 0
+	MOV r0.b0, 0
 	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B2b6, r4, 1
@@ -473,11 +398,11 @@ SET_B2b6:
 	JMP DEL_B2b6
 
 DEL_B2b6:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_B2b6, r1.b0, r1.b1
+	ADD r0.b0, r0.b0, 1
+	QBNE DEL_B2b6, r0.b0, r0.b1
 
 SMP_B2b7:
-	MOV r1.b0, 0
+	MOV r0.b0, 0
 	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B2b7, r4, 1
@@ -491,11 +416,11 @@ SET_B2b7:
 	JMP DEL_B2b7
 
 DEL_B2b7:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_B2b7, r1.b0, r1.b1
+	ADD r0.b0, r0.b0, 1
+	QBNE DEL_B2b7, r0.b0, r0.b1
 
 SMP_B2b8:
-	MOV r1.b0, 0
+	MOV r0.b0, 0
 	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B2b8, r4, 1
@@ -515,11 +440,11 @@ BCK_B2b8:
 	JMP BCK_B1b8
 
 DEL_B2b8:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_B2b8, r1.b0, r1.b1
+	ADD r0.b0, r0.b0, 1
+	QBNE DEL_B2b8, r0.b0, r0.b1
 
 SMP_B3b1:
-	MOV r1.b0, 0
+	MOV r0.b0, 0
 	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B3b1, r4, 1
@@ -533,11 +458,11 @@ SET_B3b1:
 	JMP DEL_B3b1
 
 DEL_B3b1:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_B3b1, r1.b0, r1.b1
+	ADD r0.b0, r0.b0, 1
+	QBNE DEL_B3b1, r0.b0, r0.b1
 
 SMP_B3b2:
-	MOV r1.b0, 0
+	MOV r0.b0, 0
 	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B3b2, r4, 1
@@ -551,11 +476,11 @@ SET_B3b2:
 	JMP DEL_B3b2
 
 DEL_B3b2:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_B3b2, r1.b0, r1.b1
+	ADD r0.b0, r0.b0, 1
+	QBNE DEL_B3b2, r0.b0, r0.b1
 
 SMP_B3b3:
-	MOV r1.b0, 0
+	MOV r0.b0, 0
 	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B3b3, r4, 1
@@ -569,11 +494,11 @@ SET_B3b3:
 	JMP DEL_B3b3
 
 DEL_B3b3:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_B3b3, r1.b0, r1.b1
+	ADD r0.b0, r0.b0, 1
+	QBNE DEL_B3b3, r0.b0, r0.b1
 
 SMP_B3b4:
-	MOV r1.b0, 0
+	MOV r0.b0, 0
 	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B3b4, r4, 1
@@ -587,11 +512,11 @@ SET_B3b4:
 	JMP DEL_B3b4
 
 DEL_B3b4:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_B3b4, r1.b0, r1.b1
+	ADD r0.b0, r0.b0, 1
+	QBNE DEL_B3b4, r0.b0, r0.b1
 
 SMP_B3b5:
-	MOV r1.b0, 0
+	MOV r0.b0, 0
 	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B3b5, r4, 1
@@ -605,11 +530,11 @@ SET_B3b5:
 	JMP DEL_B3b5
 
 DEL_B3b5:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_B3b5, r1.b0, r1.b1
+	ADD r0.b0, r0.b0, 1
+	QBNE DEL_B3b5, r0.b0, r0.b1
 
 SMP_B3b6:
-	MOV r1.b0, 0
+	MOV r0.b0, 0
 	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B3b6, r4, 1
@@ -623,11 +548,11 @@ SET_B3b6:
 	JMP DEL_B3b6
 
 DEL_B3b6:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_B3b6, r1.b0, r1.b1
+	ADD r0.b0, r0.b0, 1
+	QBNE DEL_B3b6, r0.b0, r0.b1
 
 SMP_B3b7:
-	MOV r1.b0, 0
+	MOV r0.b0, 0
 	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B3b7, r4, 1
@@ -641,11 +566,11 @@ SET_B3b7:
 	JMP DEL_B3b7
 
 DEL_B3b7:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_B3b7, r1.b0, r1.b1
+	ADD r0.b0, r0.b0, 1
+	QBNE DEL_B3b7, r0.b0, r0.b1
 
 SMP_B3b8:
-	MOV r1.b0, 0
+	MOV r0.b0, 0
 	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B3b8, r4, 1
@@ -665,11 +590,11 @@ BCK_B3b8:
 	JMP BCK_B2b8
 
 DEL_B3b8:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_B3b8, r1.b0, r1.b1
+	ADD r0.b0, r0.b0, 1
+	QBNE DEL_B3b8, r0.b0, r0.b1
 
 SMP_B4b1:
-	MOV r1.b0, 0
+	MOV r0.b0, 0
 	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B4b1, r4, 1
@@ -683,11 +608,11 @@ SET_B4b1:
 	JMP DEL_B4b1
 
 DEL_B4b1:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_B4b1, r1.b0, r1.b1
+	ADD r0.b0, r0.b0, 1
+	QBNE DEL_B4b1, r0.b0, r0.b1
 
 SMP_B4b2:
-	MOV r1.b0, 0
+	MOV r0.b0, 0
 	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B4b2, r4, 1
@@ -701,11 +626,11 @@ SET_B4b2:
 	JMP DEL_B4b2
 
 DEL_B4b2:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_B4b2, r1.b0, r1.b1
+	ADD r0.b0, r0.b0, 1
+	QBNE DEL_B4b2, r0.b0, r0.b1
 
 SMP_B4b3:
-	MOV r1.b0, 0
+	MOV r0.b0, 0
 	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B4b3, r4, 1
@@ -719,11 +644,11 @@ SET_B4b3:
 	JMP DEL_B4b3
 
 DEL_B4b3:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_B4b3, r1.b0, r1.b1
+	ADD r0.b0, r0.b0, 1
+	QBNE DEL_B4b3, r0.b0, r0.b1
 
 SMP_B4b4:
-	MOV r1.b0, 0
+	MOV r0.b0, 0
 	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B4b4, r4, 1
@@ -737,11 +662,11 @@ SET_B4b4:
 	JMP DEL_B4b4
 
 DEL_B4b4:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_B4b4, r1.b0, r1.b1
+	ADD r0.b0, r0.b0, 1
+	QBNE DEL_B4b4, r0.b0, r0.b1
 
 SMP_B4b5:
-	MOV r1.b0, 0
+	MOV r0.b0, 0
 	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B4b5, r4, 1
@@ -755,11 +680,11 @@ SET_B4b5:
 	JMP DEL_B4b5
 
 DEL_B4b5:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_B4b5, r1.b0, r1.b1
+	ADD r0.b0, r0.b0, 1
+	QBNE DEL_B4b5, r0.b0, r0.b1
 
 SMP_B4b6:
-	MOV r1.b0, 0
+	MOV r0.b0, 0
 	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B4b6, r4, 1
@@ -773,11 +698,11 @@ SET_B4b6:
 	JMP DEL_B4b6
 
 DEL_B4b6:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_B4b6, r1.b0, r1.b1
+	ADD r0.b0, r0.b0, 1
+	QBNE DEL_B4b6, r0.b0, r0.b1
 
 SMP_B4b7:
-	MOV r1.b0, 0
+	MOV r0.b0, 0
 	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B4b7, r4, 1
@@ -791,11 +716,11 @@ SET_B4b7:
 	JMP DEL_B4b7
 
 DEL_B4b7:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_B4b7, r1.b0, r1.b1
+	ADD r0.b0, r0.b0, 1
+	QBNE DEL_B4b7, r0.b0, r0.b1
 
 SMP_B4b8:
-	MOV r1.b0, 0
+	MOV r0.b0, 0
 	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B4b8, r4, 1
@@ -812,112 +737,113 @@ BCK_P4b8:
 	JMP BCK_P3b8
 
 UPD_R29:
-	ADD r0.b0, r0.b0, 1
-	QBEQ CPY_R8, r0.b0, 1
-	QBEQ CPY_R9, r0.b0, 2
-	QBEQ CPY_R10, r0.b0, 3
-	QBEQ CPY_R11, r0.b0, 4
-	QBEQ CPY_R12, r0.b0, 5
-	QBEQ CPY_R13, r0.b0, 6
-	QBEQ CPY_R14, r0.b0, 7
-	QBEQ CPY_R15, r0.b0, 8
-	QBEQ CPY_R16, r0.b0, 9
-	QBEQ CPY_R17, r0.b0, 10
-	QBEQ CPY_R18, r0.b0, 11
-	QBEQ CPY_R19, r0.b0, 12
-	QBEQ CPY_R20, r0.b0, 13
-	QBEQ CPY_R21, r0.b0, 14
-	QBEQ CPY_R22, r0.b0, 15
-	QBEQ CPY_R23, r0.b0, 16
-	QBEQ CPY_R24, r0.b0, 17
-	QBEQ CPY_R25, r0.b0, 18
-	QBEQ CPY_R26, r0.b0, 19
-	QBEQ CPY_R27, r0.b0, 20
-	QBEQ CPY_R28, r0.b0, 21
-	MOV r0.b0, 0
+	ADD r1.b0, r1.b0, 1
+	QBEQ CPY_R8, r1.b0, 1
+	QBEQ CPY_R9, r1.b0, 2
+	QBEQ CPY_R10, r1.b0, 3
+	QBEQ CPY_R11, r1.b0, 4
+	QBEQ CPY_R12, r1.b0, 5
+	QBEQ CPY_R13, r1.b0, 6
+	QBEQ CPY_R14, r1.b0, 7
+	QBEQ CPY_R15, r1.b0, 8
+	QBEQ CPY_R16, r1.b0, 9
+	QBEQ CPY_R17, r1.b0, 10
+	QBEQ CPY_R18, r1.b0, 11
+	QBEQ CPY_R19, r1.b0, 12
+	QBEQ CPY_R20, r1.b0, 13
+	QBEQ CPY_R21, r1.b0, 14
+	QBEQ CPY_R22, r1.b0, 15
+	QBEQ CPY_R23, r1.b0, 16
+	QBEQ CPY_R24, r1.b0, 17
+	QBEQ CPY_R25, r1.b0, 18
+	QBEQ CPY_R26, r1.b0, 19
+	QBEQ CPY_R27, r1.b0, 20
+	QBEQ CPY_R28, r1.b0, 21
+	MOV r1.b0, 0
 
 CHECK_DONE:
-	ADD r2, r2, 1
-	SUB r1.b3, r1.b3, 3
-	QBNE BCK_P4b8, r2, r3
+	ADD r7, r7, 1
+	SUB r0.b3, r0.b3, 3
+	QBNE BCK_P4b8, r6, r7
 	XOUT 10, r8, 88
 	JMP STOP
 
 CPY_R8:
 	MOV r8, r29
-	MOV r1.b2, 93
+	MOV r0.b2, 93
 	JMP BCK_B3b8
 CPY_R9:
 	MOV r9, r29
 	JMP BCK_B3b8
 CPY_R10:
 	MOV r10, r29
-	SUB r1.b2, r1.b2, 1
+	SUB r0.b2, r0.b2, 1
 	JMP BCK_B3b8
 CPY_R11:
 	MOV r11, r29
 	JMP BCK_B3b8
 CPY_R12:
 	MOV r12, r29
-	SUB r1.b2, r1.b2, 1
+	SUB r0.b2, r0.b2, 1
 	JMP BCK_B3b8
 CPY_R13:
 	MOV r13, r29
 	JMP BCK_B3b8
 CPY_R14:
 	MOV r14, r29
-	SUB r1.b2, r1.b2, 1
+	SUB r0.b2, r0.b2, 1
 	JMP BCK_B3b8
 CPY_R15:
 	MOV r15, r29
 	JMP BCK_B3b8
 CPY_R16:
 	MOV r16, r29
-	SUB r1.b2, r1.b2, 1
+	SUB r0.b2, r0.b2, 1
 	JMP BCK_B3b8
 CPY_R17:
 	MOV r17, r29
 	JMP BCK_B3b8
 CPY_R18:
 	MOV r18, r29
-	SUB r1.b2, r1.b2, 1
+	SUB r0.b2, r0.b2, 1
 	JMP BCK_B3b8
 CPY_R19:
 	MOV r19, r29
 	JMP BCK_B3b8
 CPY_R20:
 	MOV r20, r29
-	SUB r1.b2, r1.b2, 1
+	SUB r0.b2, r0.b2, 1
 	JMP BCK_B3b8
 CPY_R21:
 	MOV r21, r29
 	JMP BCK_B3b8
 CPY_R22:
 	MOV r22, r29
-	SUB r1.b2, r1.b2, 1
+	SUB r0.b2, r0.b2, 1
 	JMP BCK_B3b8
 CPY_R23:
 	MOV r23, r29
 	JMP BCK_B3b8
 CPY_R24:
 	MOV r24, r29
-	SUB r1.b2, r1.b2, 1
+	SUB r0.b2, r0.b2, 1
 	JMP BCK_B3b8
 CPY_R25:
 	MOV r25, r29
 	JMP BCK_B3b8
 CPY_R26:
 	MOV r26, r29
-	SUB r1.b2, r1.b2, 1
+	SUB r0.b2, r0.b2, 1
 	JMP BCK_B3b8
 CPY_R27:
 	MOV r27, r29
 	JMP BCK_B3b8
 CPY_R28:
 	MOV r28, r29
-	SUB r1.b2, r1.b2, 1
+	SUB r0.b2, r0.b2, 1
 	JMP BCK_B3b8
 
 STOP:
 	MOV r31.b0, PRU0_ARM_INTERRUPT+16
 	HALT
+
