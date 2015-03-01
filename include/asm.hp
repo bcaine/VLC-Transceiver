@@ -12,12 +12,12 @@
 // Implementation Constants:
 #define PACK_LEN 83
 #define PIN_OFFSET_BIT 15
-#define PACKET_LIMIT 6000
+#define PACKET_LIMIT 1000
 
 // Timing:
 #define RX_PRU1_TIMEOUT 1328000
 #define RX_PRU0_TIMEOUT   65500
-#define SYNC_TIMEOUT         40
+#define SYNC_TIMEOUT         140//40
 
 // Preamble:
 #define PREAMBLE1 0b00111100
