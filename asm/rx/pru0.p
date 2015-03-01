@@ -28,7 +28,7 @@ INIT:
 	JMP START_PRE
 
 NEW_PACKET:
-	XOUT 10, r1.b3, 87
+	XOUT 10, r8, 88
 
 DEL_NEW:
 	ADD r1.b0, r1.b0, 1
@@ -840,7 +840,7 @@ CHECK_DONE:
 	ADD r2, r2, 1
 	SUB r1.b3, r1.b3, 3
 	QBNE BCK_P4b8, r2, r3
-	XOUT 10, r1.b3, 88
+	XOUT 10, r8, 88
 	JMP STOP
 
 CPY_R8:

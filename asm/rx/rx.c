@@ -21,7 +21,7 @@
 /******************************************************************************
 * Local Macro Declarations                                                    *
 ******************************************************************************/
-#define LENGTH 		 1
+#define LENGTH 		 2
 #define PRU_NUM 	 0
 #define BUFFER_LENGTH    186
 #define BUFF_BASEADDR    0x90000000
@@ -177,11 +177,11 @@ static unsigned short LOCAL_examplePassed ( unsigned short pruNum )
    printf("Offset: (%li)\n", (*(unsigned long*) cursor));
    printf("Data: \n\n");
    int i = 0;
-   for(i; i <= numBytes; i++){
+   for(i; i < numBytes; i++){
 	data = data + 1;
-	if(i%8 == 0){
+	//if(i%8 == 0){
 	    printf("Byte (%li): (%x)\n", i, (*(unsigned char*) data));
-        }
+        //}
    }
 
    // return(*(unsigned long*) DDR_regaddr == 0xdcba);

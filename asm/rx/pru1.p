@@ -22,11 +22,6 @@ INIT:
     CLR       r0, r0, 4         // Clear SYSCFG[STANDBY_INIT] to enable OCP master port
     SBCO      r0, C4, 4, 4
 
-	// make C31 (CONST_DDR) point to DDR base address
-	MOV		  r0, 0x100000
-	MOV		  r1, PRU1CTPPR_1
-	SBBO	  r0, r1, 0, 4
-
 	MOV r7, READ_ADDRESS
 
 	MOV		  r0, 8 // init write offset to ninth byte
