@@ -58,7 +58,7 @@ void RealtimeControl::Receive() {
 
 void RealtimeControl::Test() {
   printf("Executing the PruTest\n");
-  prussdrv_exec_program(0, "./tests/interface/prutest.bin");
+  prussdrv_exec_program(0, "./tests/prutest.bin");
 
   printf("\tINFO: Waiting for HALT0 command.\r\n");
   prussdrv_pru_wait_event (PRU_EVTOUT_0);
@@ -98,7 +98,7 @@ void RealtimeControl::DisablePru() {
 bool RealtimeControl::OpenMem() {
   // Start up Memory
   mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
-  // Use about 16MB (multiple of 88)
+  // Use about 16MB (multiple of ENCODED_PACKET_SIZE)
   max_bytes = 16777200;
   max_packets = max_bytes / PACKET_SIZE;
 
@@ -118,8 +118,8 @@ bool RealtimeControl::OpenMem() {
   }
 
   _length = ddrMem;
-  _pru_cursor = (uint32_t*)ddrMem + 4;
-  _data = (uint32_t*)ddrMem + 8;
+  _pru_cursor = (uint32_t*)ddrMem + 1;
+  _data = (uint32_t*)ddrMem + 2;
 
   *((uint32_t*)_length) = 0;
   *((volatile uint32_t*)_pru_cursor) = 0;
@@ -136,27 +136,27 @@ void RealtimeControl::CloseMem() {
 }
 
 
-// Always expect 87 Bytes (86.25 actual in packet)
 void RealtimeControl::push(uint8_t* packet) {
+  memset(peek(), 0, ENCODED_PACKET_SIZE);
 
-  *peek() = 0b00111100;
-  memcpy((peek() + 1), packet, PACKET_SIZE - 1);
+  // Set preamble PREAMBLE_LEN times
+  for (int i = 0; i < PREAMBLE_LEN; i++)
+    *(peek() + i) = 0b00111100;
+  memcpy((peek() + PREAMBLE_LEN), packet, ENCODED_DATA_SIZE);
 
-  _internal_cursor += 88;
+  _internal_cursor += ENCODED_PACKET_SIZE;
   _internal_cursor = _internal_cursor % max_bytes;
 }
 
 
 // Pops 1 encoded packet at a time
-// We pop 87 bytes, which is actually 86.25 bytes
-// AKA 690 bits.
 void RealtimeControl::pop(uint8_t* packet) {
 
   uint8_t* addr = peek();
   // Remove preamble 
-  memcpy(packet, (addr + 1), PACKET_SIZE - 1);
+  memcpy(packet, (addr + PREAMBLE_LEN), ENCODED_DATA_SIZE);
 
-  _internal_cursor += 88;
+  _internal_cursor += ENCODED_PACKET_SIZE;
   _internal_cursor = _internal_cursor % max_bytes;
 }
 

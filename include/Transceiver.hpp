@@ -28,6 +28,8 @@ const int TIMEOUT = 5000;
 // and we want a bit of a buffer
 const int SLEEP_US = 8000;
 
+const int FLUSH_SIZE = DECODED_DATA_SIZE * 24;
+
 class Transceiver {
 
 public:

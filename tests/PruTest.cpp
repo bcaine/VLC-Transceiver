@@ -126,8 +126,8 @@ void WritebackTest() {
   }
 
 
-  uint32_t packet_num = 3;
-  uint32_t packetlen = 88 - 1;
+  uint32_t packet_num = 500;
+  uint32_t packetlen = 87;
 
   uint8_t *data = new uint8_t[packetlen * packet_num];
   uint8_t *out = new uint8_t[packetlen];
@@ -152,17 +152,9 @@ void WritebackTest() {
   uint8_t header;
   // Check that each value is the opposite it should be
   for (uint32_t n = 0; n < packet_num; n++) {
-    cout << "Packet Number: " << n << endl;
     header = *pru.peek();
     pru.pop(out);
-    cout << "Returned Data" << endl;
-    for(int g = 0; g < 8; g++)
-      cout << getBit(&header, g);
-    for (int blah = 0; blah < packetlen * 8; blah ++) {
-      cout << getBit(out, blah);
-    }
-
-      /*
+    for (int i = 0; i < packetlen * 8; i++) {
       flag = getBit(data + (n * packetlen), i) != getBit(out, i);
 
 
@@ -187,19 +179,12 @@ void WritebackTest() {
 	for (int blarg = 0; blarg < packetlen * 8; blarg ++) {
 	  cout << getBit(out, blarg);
 	}
-	break;
-	}*/
+      }
 
-      //assert(flag);
+      assert(flag);
+    }
     memset(out, 0, packetlen);
   }
-
-  cout << endl;
-  cout << endl;
-
-  cout << "Reserved Bytes " << endl;
-  cout << pru.getLength() << endl;
-  cout << pru.pruCursor() << endl;
   
   pru.CloseMem();
   delete[] data;
