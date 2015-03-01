@@ -15,6 +15,7 @@
 #include "SocketConnection.hpp"
 #include "RealtimeControl.hpp"
 #include "Packetize.hpp"
+#include "Util.hpp"
 #include <iostream>
 #include <time.h>
 #include <unistd.h>

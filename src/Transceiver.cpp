@@ -50,6 +50,8 @@ void Transceiver::Transmit()
   int i = 0;
   int packetlen;
 
+  bool first = true;
+
   // Read in all data from socket and write to mem or backlog
   while(1) {
     recvlen = _sock.Receive(buf, FLUSH_SIZE);
@@ -70,9 +72,14 @@ void Transceiver::Transmit()
 
       // Increase packet number
       n++;
-      cout << "Packet Num " << n << endl;
-
       _pru.push(encoded);
+
+      if (first) {
+	for(int u = 0; u < PACKET_SIZE * 8; u++)
+	  cout << getBit(encoded, u);
+	cout << endl;
+	first = false;
+      }
     }
 
     if (received >= totallen) {
@@ -85,7 +92,7 @@ void Transceiver::Transmit()
   memset(encoded, 0xFF, PACKET_SIZE);
 
   for (i = n; i < PACKET_COUNT + 50; i++) {
-    _pru.push(packet);
+    _pru.push(encoded);
   }
 
   cout << "Transmitted " << n << " Packets" << endl;
