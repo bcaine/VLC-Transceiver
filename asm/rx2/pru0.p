@@ -16,13 +16,13 @@
 #ifndef GPIO_DEBUG
 	#define SETBACK_IO  0
 	#define DELAY_P1   74 // delay to maintain 200 cycles between preamble bit checks
-	#define DELAY_P2  200 // delay to sync on middle of bit after preamble part 2
+	#define DELAY_P2  156 // delay to sync on middle of bit after preamble part 2
 	#define DELAY_FWD  97 // delay between sequential data reads in normal operation
 	#define DELAY_BWD  93
 #else
 	#define SETBACK_IO  1
 	#define DELAY_P1   73
-	#define DELAY_P2  180
+	#define DELAY_P2  155
 	#define DELAY_FWD  96
 	#define DELAY_BWD  92
 #endif

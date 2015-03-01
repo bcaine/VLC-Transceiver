@@ -22,7 +22,7 @@
 /******************************************************************************
 * Local Macro Declarations                                                    *
 ******************************************************************************/
-#define LENGTH		 3000
+#define LENGTH		 5000
 #define PACK_LEN	 83
 #define PRU_NUM 	 0
 #define BUFFER_LENGTH    186
@@ -180,11 +180,11 @@ static unsigned short LOCAL_examplePassed ( unsigned short pruNum )
    printf("Cursor: (%li)\n", (*(unsigned long*) cursor));
 
    printf("Data: \n\n");
-   int i = 4;
+   int i = 6;
    unsigned char packetNum = 0;
    unsigned char received[PACK_LEN];
    unsigned long problems = 0;
-   for(i; i < 100; i=i+1){
+   for(i; i < LENGTH; i=i+1){
 	int j = 0;
 	while (j < PACK_LEN){
 	  received[j] = (*(unsigned char*) (data + (i * PACK_LEN) +  j));
@@ -193,7 +193,7 @@ static unsigned short LOCAL_examplePassed ( unsigned short pruNum )
 	
 	int clockDrift = 0;
 
-	/*int m = 2;
+	int m = 2;
 	for(m=2; m < PACK_LEN; m=m+1){
 	    if(received[m] != 0xaa){
 	        clockDrift = 1;
@@ -201,18 +201,18 @@ static unsigned short LOCAL_examplePassed ( unsigned short pruNum )
                 break;
             }
 	}
-	if(clockDrift){*/ 
+	if(clockDrift){ 
 	    printf("\n Packet number: %li\n", i);
 	    int k = 0;
 	    for(k=0; k < PACK_LEN; k=k+1){
 	        printf("%x ", received[k]);
 	    }
 	    printf("\n\n");
- 	//} 
+ 	} 
    }
-	//printf("Out of %li packets, %li had drift.\n", LENGTH-4, problems);
-	//float perc = problems/(float)(LENGTH-4);
-   	//printf("Corresponding to a %f chance of we're fucked.\n\n\n", perc);
+	printf("Out of %li packets, %li had drift.\n", LENGTH-4, problems);
+	float perc = problems/(float)(LENGTH-4);
+   	printf("Corresponding to a %f chance of we're fucked.\n\n\n", perc);
 
    // return(*(unsigned long*) DDR_regaddr == 0xdcba);
     return(1);
