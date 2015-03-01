@@ -51,8 +51,8 @@ void RealtimeControl::Transmit() {
 
 void RealtimeControl::Receive() {
   printf("Executing the RX code on the PRUs\n");
-  prussdrv_exec_program (0, "./asm/rx/pru0.bin");
-  prussdrv_exec_program (1, "./asm/rx/pru1.bin");
+  prussdrv_exec_program (0, "./asm/rx2/pru0.bin");
+  prussdrv_exec_program (1, "./asm/rx2/pru1.bin");
 }
 
 

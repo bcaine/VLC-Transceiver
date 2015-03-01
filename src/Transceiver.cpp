@@ -89,6 +89,7 @@ void Transceiver::Transmit()
 
       // Increase packet number
       n++;
+      cout << "Packet Num " << n << endl;
 
       // If its our first n packets, write to mem. 
       // Otherwise to the backlog
@@ -131,6 +132,8 @@ void Transceiver::Receive() {
   int packetlen_bits = 0;
   int packetlen = 0;
   int sendsize = 0;
+
+  int n = 0;
   
   _pru.OpenMem();
 
@@ -149,6 +152,7 @@ void Transceiver::Receive() {
   
   
   int num_packets = _pru.pruCursor() / PACKET_SIZE;
+
   // Subtract 5 for our 5 junk packets
   num_packets -= 6;
 
@@ -165,7 +169,6 @@ void Transceiver::Receive() {
     if (high > PACKET_SIZE - 10)
       break;
 
-    // This gives us number of bits in packet that are real data
     packetlen_bits = depacketize(packet, data);
     packetlen = packetlen_bits / 8;
 
@@ -185,15 +188,17 @@ void Transceiver::Receive() {
       cout << "Sending: " << sendsize << " Bytes"<< endl;
       _sock.Send(buf, sendsize);
       sendsize = 0;
-    }
+      }*/
   }
+  
+  cout << "Received: " << n << " Packets" << endl;
 
   // Send the rest via sockets.
   if (sendsize > 0) {
     cout << "Sent " << sendsize << " bytes" << endl;
     _sock.Send(buf, sendsize);
   }
-  
+
   // Mark the PRU done and send Done via sockets
   _sock.SendDone();
 
