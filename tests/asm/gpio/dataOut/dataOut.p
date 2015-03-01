@@ -9,6 +9,7 @@
 .origin 0
 .entrypoint INIT
 #include "../../../interface/asm.hp"
+
 #define ALL_HIGH 0b11111111111111111111111111111111
 #define ALL_LOW  0b00000000000000000000000000000000
 #define ALT_1bH  0b10101010101010101010101010101010
@@ -28,6 +29,7 @@ INIT:
 	MOV r3, 1000 // number of loop repetitions (32-bit modulation per)
 
 	MOV r5, ALT_2bH // data to modulate out
+	JMP END_TEST
 
 MAIN_LOOP:
 
@@ -619,7 +621,7 @@ DEL_B4b8:
     ADD r2, r2, 1
     QBNE CLC_B1b1, r2, r3
 
-END_LOOP:
+END_TEST:
 
     MOV r31.b0, PRU0_ARM_INTERRUPT+16
     HALT

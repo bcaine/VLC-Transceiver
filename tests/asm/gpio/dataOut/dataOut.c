@@ -23,7 +23,7 @@
 ******************************************************************************/
 
 #define PRU_NUM 	 0
-#define CODE1 		 0xabcd
+
 #define DDR_BASEADDR     0x80000000
 #define OFFSET_DDR	 0x00001000 
 #define OFFSET_SHAREDRAM 2048		//equivalent with 0x00002000
@@ -69,7 +69,7 @@ int main (void)
     unsigned int ret;
     tpruss_intc_initdata pruss_intc_initdata = PRUSS_INTC_INITDATA;
     
-    printf("\nINFO: Starting %s example.\r\n", "Waves are for squares");
+    printf("\nINFO: Starting %s test.\r\n", "GPIO output data");
     /* Initialize the PRU */
     prussdrv_init ();		
     
@@ -90,7 +90,7 @@ int main (void)
     
     /* Execute example on PRU */
     printf("\tINFO: Executing example.\r\n");
-    prussdrv_exec_program (PRU_NUM, "./gpio.bin");
+    prussdrv_exec_program (PRU_NUM, "./dataOut.bin");
 
     /* Wait until PRU0 has finished execution */
     printf("\tINFO: Waiting for HALT command.\r\n");
@@ -140,11 +140,6 @@ static int LOCAL_exampleInit (  )
         return -1;
     }
     
-    /* Store Addends in DDR memory location */
-    DDR_regaddr = ddrMem + OFFSET_DDR;
-
-    *(unsigned long*) DDR_regaddr = CODE1;
-
     return(0);
 }
 

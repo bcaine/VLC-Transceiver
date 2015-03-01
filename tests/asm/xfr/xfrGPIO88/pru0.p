@@ -1,6 +1,12 @@
+// This test serves to test the timing of the XFR instructions for a full packet of
+// data. PRU0 will set its GPO line high for 100 cycles, then try to send 88 bytes 
+// of data to PRU1 via the scratch pad (XOUT). Immediately upon completion of this XFR, 
+// PRU0 will set its GPIO line low. This should allow examination with the scope to 
+// determine if XFR is taking more than the specified 1 cycle per data transfer.
+
 .origin 0
 .entrypoint INIT
-#include "xfr.hp"
+#include "../../../interface/asm.hp"
 
 INIT:
 
@@ -9,43 +15,37 @@ INIT:
     CLR       r0, r0, 4         // Clear SYSCFG[STANDBY_INIT] to enable OCP master port
     SBCO      r0, C4, 4, 4
 
-    // make C31 (CONST_DDR) point to DDR base address
- 	MOV r0, 0x100000
- 	MOV r1, PRU0CTPPR_1
- 	SBBO r0, r1, 0, 4
-
-    MOV r0, 0
-    MOV r1, 100000000
-    MOV r3, 0
-    MOV r4, 48
-    MOV r5, 49
-
- // LBCO size 88 results in required 64 cycle delay.
+    MOV r0, 0 // counter for loop iterations
+    MOV r1, 1000000 // number of iterations to loop
+    MOV r3, 0 // delay counter
+    MOV r4, 48 // number of delay loops after setting high
+    MOV r5, 49 // number of delay loops after setting low
 
 BEGIN_TEST:
-    ADD r0, r0, 1
+    ADD r0, r0, 1 // increment loop counter
 
-    SET r30.t15
-    MOV r3, 0
-DEL_HIGH:
+    SET r30.t15 // set GPO high
+    MOV r3, 0 // reset delay counter
+
+DEL_HIGH: // delay s.t. GPO high for 100 cycles
     ADD r3, r3, 1
     QBNE DEL_HIGH, r3, r4
 
-    MOV r3, 0
-    SBCO r8, CONST_DDR, 4, 4
-//    XOUT 88, r6, 4
+    MOV r3, 0 // reset delay counter
+    XOUT 10, r5, 88 // transfer r5 to PRU1 via scratchpad
 
-    CLR r30.t15
-DEL_LOW:
+    CLR r30.t15 // set GPO low
+
+DEL_LOW: // delay s.t. GPO low for 100 cycles
     ADD r3, r3, 1
     QBNE DEL_LOW, r3, r5
 
-    QBNE BEGIN_TEST, r0, r1
+    // if more loop iterations to perform
+    QBNE BEGIN_TEST, r0, r1 // jump back to start of loop
 
+    // else, terminate test
 END_TEST:
 
-    // Send notification to Host for program completion
-    MOV       r31.b0, PRU0_ARM_INTERRUPT+16
+    MOV       r31.b0, PRU0_ARM_INTERRUPT+16 // send program completion interrupt
 
-    // Halt the processor
-    HALT
+    HALT // halt the microcontroller
