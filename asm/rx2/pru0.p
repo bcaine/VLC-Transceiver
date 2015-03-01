@@ -66,6 +66,8 @@ INIT:
 
 	MOV r7.w0, 0              // init packet counter to 0
 	MOV r7.w2, PACKET_LIMIT   // store packet limit for comparison
+
+	MOV r8.w0, SYNC_TIMEOUT
     	JMP P1_SMP                // jump to preamble check
 
 NEW_PACKET:
@@ -109,7 +111,7 @@ P2_INIT:
 
 P2_SMP:
 	ADD r0.w0, r0.w0, 1                 // incr counter
-	QBLT P1_RESET, r0.w0, SYNC_TIMEOUT  // if taken too long, revert to P stage 1
+	QBLT P1_RESET, r0.w0, r8.w0         // if taken too long, revert to P stage 1
 	GET_BIT r31, PIN_OFFSET_BIT, r4     // sample input pin
 	QBNE P2_SMP, r4, 0                  // if pin not reading 0, restart loop
 	MOV r0.w0, 0                        // reset delay counter

@@ -200,29 +200,29 @@ static unsigned short LOCAL_examplePassed ( unsigned short pruNum )
             }
 	}
 	if(clockDrift){ */
-	    //printf("\n Packet number: %li\n", i);
-	    //int k = 0;
-	    //for(k=0; k < PACK_LEN; k=k+1){
-	    //    printf("%x ", received[k]);
-	    //}
-	    //printf("\n\n");
- 	//} 
-   }	
-	printf("\n");
-	int offCount = 0;
-	int j = 0;
-	for(j=4; j < LENGTH; j=j+1){
-	    if(packReceived[j] - packReceived[j-1] > 1){
-		printf("At packet [%i]: Before: %i\tCurrent: %i\n", j, packReceived[j-1], packReceived[j]);
-	        offCount = offCount + 1;
+	    printf("\n Packet number: %li\n", i);
+	    int k = 0;
+	    for(k=0; k < PACK_LEN; k=k+1){
+	        printf("%x ", received[k]);
 	    }
-	    //printf("%i\n", packReceived[j]);
-	}
+	    printf("\n\n");
+ 	//} 
+   }
+   printf("\n");
+   int offCount = 0;
+   int j = 0;
+   for(j=4; j < LENGTH; j=j+1){
+     if(packReceived[j] - packReceived[j-1] > 1){
+       printf("At packet [%i]: Before: %i\tCurrent: %i\n", j, packReceived[j-1], packReceived[j]);
+       offCount = offCount + 1;
+     }
+     //printf("%i\n", packReceived[j]);
+   }
 
-	printf("\n Number off: %i\n", offCount);
-	//printf("Out of %li packets, %li had drift.\n", LENGTH-4, problems);
-	//float perc = problems/(float)(LENGTH-4);
-   	//printf("Corresponding to a %f chance of we're fucked.\n\n\n", perc);
+   printf("\n Number off: %i\n", offCount);
+   //printf("Out of %li packets, %li had drift.\n", LENGTH-4, problems);
+   //float perc = problems/(float)(LENGTH-4);
+   //printf("Corresponding to a %f chance of we're fucked.\n\n\n", perc);
 
     return(1);
 }
