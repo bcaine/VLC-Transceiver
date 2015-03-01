@@ -21,7 +21,7 @@
 /******************************************************************************
 * Local Macro Declarations                                                    *
 ******************************************************************************/
-#define LENGTH 		 500
+#define LENGTH 		 1500
 #define PRU_NUM 	 0
 #define BUFFER_LENGTH    186
 #define BUFF_BASEADDR    0x90000000
@@ -144,7 +144,7 @@ static int LOCAL_exampleInit (  )
         printf("Failed to open /dev/mem (%s)\n", strerror(errno));
         return -1;
     }	
-    // 0x0FFFFFFF
+
     /* map the DDR memory */
     ddrMem = mmap(0, numBytes,  PROT_WRITE | PROT_READ, MAP_SHARED, mem_fd, BUFF_BASEADDR);
     if (ddrMem == NULL) {
@@ -172,13 +172,20 @@ static unsigned short LOCAL_examplePassed ( unsigned short pruNum )
    printf("Offset: (%li)\n", (*(unsigned long*) cursor));
    printf("Data: \n\n");
    int i = 0;
-   long received;
-   for(i; i < numBytes; i=i+4){
-        received = (*(unsigned long*) data);
-	if( i < 100){//received != 0xff){
-	    printf("Byte (%li): (%x)\n", i, received);
-        }
-	data = data + 1;
+   long received[22];
+   for(i; i < 10; i=i+1){
+	int j = 0;
+	while (j < 22){
+	    received[j] = (*(unsigned long*) data);
+	    data = data + 4;
+	    j=j+1;
+	}
+
+   	printf("\nPacket (%li): ", i);
+	int k = 0;
+	for(k; k < 22; k=k+1){
+	    printf("%x\t", received[k]);
+	}
    }
 
    // return(*(unsigned long*) DDR_regaddr == 0xdcba);
