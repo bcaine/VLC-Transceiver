@@ -1,6 +1,6 @@
 .origin 0
 .entrypoint INIT
-#define PRU0_DELAY 70365//62365 // delay needed to wait for PRU0 - need to change
+#define PRU0_DELAY 132000//62365 // delay needed to wait for PRU0 - need to change
 #include "../../include/asm.hp"
 
 // NOTE: Delay assumes 132799 cycles between PRU0 XINs
