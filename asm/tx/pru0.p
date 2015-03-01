@@ -16,8 +16,8 @@ INIT:
 
 	LBCO r3, CONST_DDR, 0, 4 // what's the offset?
 	MOV r0, 0 // delay counter
-	MOV r1, 97 // loop delay forward
-	MOV r2, 94 // loop delay backward
+	MOV r1, 970 // loop delay forward
+	MOV r2, 940 // loop delay backward
 	MOV r5, 0 // packet length counter
 	MOV r6, 0 // register number counter
 
@@ -25,7 +25,7 @@ INIT:
 
 MAIN_LOOP:
 	XIN 10, r8, 88 // load 88 bytes in from SP
-	MOV r2, 84
+	MOV r2, 840
 
 DEL_R8:
         ADD r0, r0, 1
@@ -648,12 +648,12 @@ CHECK_DONE:
 
 CPY_R9:
 	MOV r8, r9
-	MOV r2, 88
-	MOV r2, 88
+	MOV r2, 880
+	MOV r2, 880
 	JMP BCK_B4b8
 CPY_R10:
 	MOV r8, r10
-	MOV r2, 88
+	MOV r2, 880
 	JMP BCK_B4b8
 CPY_R11:
 	MOV r8, r11
