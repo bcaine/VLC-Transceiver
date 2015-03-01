@@ -4,9 +4,9 @@
 
 INIT:
 	// Enable OCP master port
-    LBCO      r0, C4, 4, 4
-    CLR       r0, r0, 4         // Clear SYSCFG[STANDBY_INIT] to enable OCP master port
-    SBCO      r0, C4, 4, 4
+	LBCO      r0, C4, 4, 4
+        CLR       r0, r0, 4         // Clear SYSCFG[STANDBY_INIT] to enable OCP master port
+        SBCO      r0, C4, 4, 4
 		
 	// make C31 (CONST_DDR) point to DDR base address
 	MOV r0, 0x100000
@@ -15,7 +15,7 @@ INIT:
 
 
 	LBCO r3, CONST_DDR, 0, 4 // what's the offset?
-
+	MOV r0, 0 // delay counter
 	MOV r1, 47 // loop delay forward
 	MOV r2, 44 // loop delay backward
 	MOV r5, 0 // packet length counter
@@ -172,8 +172,8 @@ SET_B1b8:
         JMP DEL_B1b8
 
 BCK_B1b8:
-		QBEQ MAIN_LOOP, r6, 0
-		JMP DEL_R8
+	QBEQ MAIN_LOOP, r6, 0
+	JMP DEL_R8
 
 DEL_B1b8:
         ADD r0, r0, 1
@@ -320,7 +320,7 @@ SET_B2b8:
         JMP DEL_B2b8
 
 BCK_B2b8:
-		JMP BCK_B1b8
+	JMP BCK_B1b8
 
 DEL_B2b8:
         ADD r0, r0, 1
@@ -614,37 +614,37 @@ SET_B4b8:
         JMP UPD_R8
 
 BCK_B4b8:
-		JMP BCK_B3b8
+	JMP BCK_B3b8
 
 UPD_R8:
-		ADD r6, r6, 1
-		QBEQ CPY_R9, r6, 1
-		QBEQ CPY_R10, r6, 2
-		QBEQ CPY_R11, r6, 3
-		QBEQ CPY_R12, r6, 4
-		QBEQ CPY_R13, r6, 5
-		QBEQ CPY_R14, r6, 6
-		QBEQ CPY_R15, r6, 7
-		QBEQ CPY_R16, r6, 8
-		QBEQ CPY_R17, r6, 9
-		QBEQ CPY_R18, r6, 10
-		QBEQ CPY_R19, r6, 11
-		QBEQ CPY_R20, r6, 12
-		QBEQ CPY_R21, r6, 13
-		QBEQ CPY_R22, r6, 14
-		QBEQ CPY_R23, r6, 15
-		QBEQ CPY_R24, r6, 16
-		QBEQ CPY_R25, r6, 17
-		QBEQ CPY_R26, r6, 18
-		QBEQ CPY_R27, r6, 19
-		QBEQ CPY_R28, r6, 20
-		QBEQ CPY_R29, r6, 21
-		MOV r6, 0
+	ADD r6, r6, 1
+	QBEQ CPY_R9, r6, 1
+	QBEQ CPY_R10, r6, 2
+	QBEQ CPY_R11, r6, 3
+	QBEQ CPY_R12, r6, 4
+	QBEQ CPY_R13, r6, 5
+	QBEQ CPY_R14, r6, 6
+	QBEQ CPY_R15, r6, 7
+	QBEQ CPY_R16, r6, 8
+	QBEQ CPY_R17, r6, 9
+	QBEQ CPY_R18, r6, 10
+	QBEQ CPY_R19, r6, 11
+	QBEQ CPY_R20, r6, 12
+	QBEQ CPY_R21, r6, 13
+	QBEQ CPY_R22, r6, 14
+	QBEQ CPY_R23, r6, 15
+	QBEQ CPY_R24, r6, 16
+	QBEQ CPY_R25, r6, 17
+	QBEQ CPY_R26, r6, 18
+	QBEQ CPY_R27, r6, 19
+	QBEQ CPY_R28, r6, 20
+	QBEQ CPY_R29, r6, 21
+	MOV r6, 0
 
 CHECK_DONE:
-	    ADD r5, r5, 1
-		QBNE BCK_B4b8, r5, r3
-		JMP STOP
+        ADD r5, r5, 1
+	QBNE BCK_B4b8, r5, r3
+	JMP STOP
 
 CPY_R9:
 	MOV r8, r9
