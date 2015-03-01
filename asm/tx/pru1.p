@@ -4,17 +4,6 @@
 
 // Select modulation frequency:
 
-#define MHz1 1
-//#define kHz500 1
-
-#ifdef MHz1
-	#define PRU0_DELAY 62365
-#endif
-
-#ifdef kHz500
-	#define PRU0_DELAY 132000
-#endif
-
 // NOTE: Delay assumes 132799 cycles between PRU0 XINs
 // and allows for each LBCO/SBCO to take 200 cycles each.
 // This should ensure that PRU1 is always done before PRU0,

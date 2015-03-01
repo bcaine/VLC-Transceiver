@@ -2,22 +2,6 @@
 .entrypoint INIT
 #include "../../include/asm.hp"
 
-// Select modulation frequency:
-#define MHz1 1
-//#define kHz500 1
-
-#ifdef MHz1
-	#define DELAY_FWD 97
-	#define DELAY_BWD 92
-	#define DELAY_NEW 82
-#endif
-
-#ifdef kHz500
-	#define DELAY_FWD 197
-	#define DELAY_BWD 192
-	#define DELAY_NEW 182
-#endif
-
 //  _____________________
 //  Register  |  Purpose
 //
@@ -43,9 +27,9 @@ INIT:
     MOV r3, DDR_ADDRESS
 	
     MOV  r0.w0, 0                 // init delay counter to 0
-    MOV  r0.w2, DELAY_FWD         // store forward delay value
+    MOV  r0.w2, DELAY_FWD_TX      // store forward delay value
   
-    MOV  r1.w0, DELAY_BWD         // store backward delay value
+    MOV  r1.w0, DELAY_BWD_TX      // store backward delay value
     MOV  r1.b3, 0                 // init register counter to 0
 	
     MOV  r2.w0, 0                 // init packet counter to 0
@@ -57,7 +41,7 @@ INIT:
 
 MAIN_LOOP:
     XIN 10, r9, PACK_LEN          // load PACK_LEN bytes in from SP
-    MOV r1.w0, DELAY_NEW          // set delay lower when pulling new packet (takes longer) 
+    MOV r1.w0, DELAY_NEW_TX       // set delay lower when pulling new packet (takes longer) 
 
 // delay between packets
 
@@ -658,7 +642,7 @@ CHECK_DONE:
 
 CPY_R10:
 	MOV r9, r10 	          // copy contents of r9 into r9 (modulation reg)
-	MOV r1.w0, DELAY_BWD      // reset delay
+	MOV r1.w0, DELAY_BWD_TX   // reset delay
 	JMP BCK_B4b8              // jump back to loop start
 CPY_R11:
 	MOV r9, r11

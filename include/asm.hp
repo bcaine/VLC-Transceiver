@@ -6,8 +6,37 @@
 // *     Ryan's Macro Definitions        *
 // ***************************************
 
-// Testing
-#define GPIO_DEBUG    1
+// Frequency
+#define MHz1 1
+//#define kHz500 1
+
+#ifdef MHz1
+	#define DELAY_FWD_TX     97
+	#define DELAY_BWD_TX     92
+	#define DELAY_NEW_TX     82
+	#define PRU0_DELAY    62365
+
+	#define DELAY_P1_RX	 73
+	#define DELAY_P2_RX     155
+	#define DELAY_FWD_RX     96
+	#define DELAY_BWD_RX	 92
+	#define SYNC_TIMEOUT     40
+#endif
+
+#ifdef kHz500
+	#define DELAY_FWD_TX    197
+	#define DELAY_BWD_TX    192
+	#define DELAY_NEW_TX    182
+	#define PRU0_DELAY   132000
+
+	#define DELAY_P1_RX     173
+	#define DELAY_P2_RX     155
+	#define DELAY_FWD_RX    196
+	#define DELAY_BWD_RX    192
+	#define SYNC_TIMEOUT    140
+#endif
+
+
 
 // Implementation Constants:
 #define PACK_LEN 83
@@ -15,31 +44,31 @@
 #define PACKET_LIMIT 1000
 
 // Timing:
-#define RX_PRU1_TIMEOUT 1328000
-#define RX_PRU0_TIMEOUT   65500
-#define SYNC_TIMEOUT         140//40
+#define RX_PRU1_TIMEOUT 1328000 
+#define RX_PRU0_TIMEOUT   65500 
 
 // Preamble:
 #define PREAMBLE1 0b00111100
-#define REQ_BITS1 7 // out of 8
+#define REQ_BITS1 7 
 #define INIT_PRE1 0x0000
 
 #define PREAMBLE2 0b0011110000111
-#define REQ_BITS2 12 // out of 13
+#define REQ_BITS2 12
 #define INIT_PRE2 0x00000000
 #define PRE_BITMASK 0b0000111111111111
 
 // Memory Access:
 #define DDR_ADDRESS 0x90000000
 #define READY_CODE 0xaa
-#define OFFSET_LIM 16777130 // maximum byte offset
+#define OFFSET_LIM 16777130
 #define INIT_OFFSET 8
 
 // Macros:
+
 .macro GET_BIT
 .mparam reg, pin, dst
-    LSR dst, reg, pin // sample GPI reg, shift sample value to 0th index
-    AND dst, dst, 1 // and to zero out all other bits
+    LSR dst, reg, pin
+    AND dst, dst, 1
 .endm
 
 .macro SET_BIT

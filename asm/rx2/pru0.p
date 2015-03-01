@@ -12,41 +12,6 @@
 .entrypoint INIT
 #include "../../include/asm.hp"
 
-// Select sampling frequency:
-#define MHz1 1
-//#define kHz500 1
-
-// Delay Constants:
-#ifndef GPIO_DEBUG
-	#define SETBACK_IO  0
-	#ifdef MHz1
-		#define DELAY_P1  74        // preamble delay (bit check)
-		#define DELAY_P2  156       // preamble delay (bit sync)
-		#define DELAY_FWD  97       // delay between sequential samples
-		#define DELAY_BWD  93       // delay between registers
-	#endif
-	#ifdef kHz500
-		#define DELAY_P1  174 
-		#define DELAY_P2  156  
-		#define DELAY_FWD  197 
-		#define DELAY_BWD  193 
-	#endif		
-#else
-	#define SETBACK_IO  1
-	#ifdef MHz1
-		#define DELAY_P1   73
-		#define DELAY_P2  155
-		#define DELAY_FWD  96
-		#define DELAY_BWD  92
-	#endif
-	#ifdef kHz500
-		#define DELAY_P1   173
-		#define DELAY_P2   155
-		#define DELAY_FWD  196
-		#define DELAY_BWD  192
-	#endif		
-#endif
-
 //  _____________________
 //  Register  |  Purpose
 //     r0.w0  |  Counter - delay loops performed
@@ -93,11 +58,11 @@ INIT:
 	MOV r3.w0, 0              // XOR holder
 	MOV r3.w2, 0              // LSR/AND holder
 
-	MOV r5.w0, DELAY_P2       // store bit-sync delay value for comparison
-	MOV r5.w2, DELAY_BWD      // store backward delay value for comparison
+	MOV r5.w0, DELAY_P2_RX    // store bit-sync delay value for comparison
+	MOV r5.w2, DELAY_BWD_RX   // store backward delay value for comparison
 
-	MOV r6.w0, DELAY_P1       // store bit-check delay value for comparsion
-	MOV r6.w2, DELAY_FWD      // store forward delay value for comparison
+	MOV r6.w0, DELAY_P1_RX    // store bit-check delay value for comparsion
+	MOV r6.w2, DELAY_FWD_RX   // store forward delay value for comparison
 
 	MOV r7.w0, 0              // init packet counter to 0
 	MOV r7.w2, PACKET_LIMIT   // store packet limit for comparison
@@ -764,7 +729,7 @@ CHECK_DONE:
 
 CPY_R9:
 	MOV r9, r29 	          // copy contents of r9 into r9 (modulation reg)
-	MOV r5.w2, DELAY_BWD      // reset delay
+	MOV r5.w2, DELAY_BWD_RX   // reset delay
 	JMP BCK_B3b8              // jump back to loop start
 CPY_R10:
 	MOV r10, r29
@@ -1247,8 +1212,6 @@ SET_R29_B3b8:
 	JMP CHECK_DONE
 STOP:
 
-#ifdef GPIO_DEBUG
-	SET r30.t15                         // if in debug mode, leave output high
-#endif
+	SET r30.t15                         // leave output high
 	MOV r31.b0, PRU0_ARM_INTERRUPT+16   // send program completion interrupt to host
 	HALT                                // shutdown
