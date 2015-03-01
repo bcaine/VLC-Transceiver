@@ -54,6 +54,7 @@ static unsigned short LOCAL_examplePassed ( unsigned short pruNum );
 void *length;
 void *cursor;
 void *data;
+unsigned long numBytes = LENGTH * 88;
 
 /******************************************************************************
 * Intertupt Service Routines                                                  *
@@ -142,7 +143,6 @@ int main (void)
 
 static int LOCAL_exampleInit (  )
 {
-    unsigned long numBytes = LENGTH * 88;
     /* open the device */
     mem_fd = open("/dev/mem", O_RDWR);
     if (mem_fd < 0) {
@@ -175,6 +175,15 @@ static unsigned short LOCAL_examplePassed ( unsigned short pruNum )
    printf("\n\tAfter PRU Completion:\n");
    printf("Length: (%li)\n", (*(unsigned long*) length));
    printf("Offset: (%li)\n", (*(unsigned long*) cursor));
+   printf("Data: \n\n");
+   int i = 0;
+   for(i; i <= numBytes; i++){
+	data = data + 1;
+	if(i%8 == 0){
+	    printf("Byte (%li): (%x)\n", i, (*(unsigned char*) data));
+        }
+   }
+
    // return(*(unsigned long*) DDR_regaddr == 0xdcba);
     return(1);
 }
