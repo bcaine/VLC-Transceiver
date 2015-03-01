@@ -8,30 +8,64 @@
 
 #include "SocketConnection.hpp"
 
-SocketConnection::SocketConnection(int port, bool is_server) {
-  _is_server = is_server;
+SocketConnection::SocketConnection(int port) {
+
+  _sock = socket(AF_INET, SOCK_STREAM, 0);
+
+  memset(&_servaddr, '0', sizeof(_servaddr));
+  memset(&_cliaddr, '0', sizeof(_cliaddr));
+
+  _servaddr.sin_family = AF_INET;
+  _servaddr.sin_addr.s_addr = INADDR_ANY;
+  _servaddr.sin_port = htons(port);
   
-  // TODO:
-  // - Init Socket
-  // - Do things differently if server/client
+  if (bind(_sock, (struct sockaddr*)&_servaddr, sizeof(_servaddr)) == -1) {
+    std::cout << "Could not bind to socket." << std::endl;
+    fprintf(stderr, "socket() failed: %s\n", strerror(errno));
+  }
+
+  if (listen(_sock, 100) == -1) {
+    std::cout << "Could not listen to socket." << std::endl;
+    fprintf(stderr, "socket() failed: %s\n", strerror(errno));
+  }
+
+  // Set to 0 so we can make sure Accept is called before send/receive
+  _connfd = 0;
+
+  // Set it so we can reuse an addr
+  int yes = 1;
+  setsockopt(_sock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
+  
 }
 
 SocketConnection::~SocketConnection() {
-  // TODO:
-  // - Close Socket
+  close(_sock);
 }
 
-bool SocketConnection::Receive(char *buf) {
-  // TODO:
-  // - Behave differently if server/client
-  // - Transfer this data into the buffer that is
-  //   shared with encoding
-  return true;
+bool SocketConnection::Accept() {
+  int sock_size = sizeof(_cliaddr);
+  _connfd = accept(_sock, (struct sockaddr*)&_cliaddr,
+		   (socklen_t*)&sock_size);
+  return _connfd != -1;
 }
 
-bool SocketConnection::Send(char *buf) {
-  // TODO:
-  // - Behave differently if server/client
-  // - Take data from buffer and push to
-  return true;
+bool SocketConnection::Close() {
+  return close(_connfd) != -1;
+}
+
+int SocketConnection::Receive(uint8_t *buf, int len) {
+  if (_connfd == 0)
+    if (!Accept())
+      std::cout << "Accept failed... Receive won't work" << std::endl;
+  
+  return recv(_connfd, buf, len, 0);
+}
+
+int SocketConnection::Send(uint8_t *buf, int len) {
+
+  if (_connfd == 0)
+    if (!Accept())
+      std::cout << "Accept failed... Receive won't work" << std::endl;
+
+  return send(_connfd, buf, len, 0);
 }

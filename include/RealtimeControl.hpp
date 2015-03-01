@@ -15,19 +15,13 @@ class RealtimeControl {
 
 public:
   // TODO: This will need location info, 
-  RealtimeControl(int buffer_size);
+  RealtimeControl();
   ~RealtimeControl();
 
-  void Write(char *data);
-  void Read(char *data);
+  bool Done();
 
 private:
   bool InitPRU();
-    
-  int _buffer_size;
-  int _buf_position;
-  char *_buf;
-
 };
 
 #endif // REALTIME_HPP

@@ -26,13 +26,15 @@ unsigned char* GenerateData(int bytes) {
 }
 
 void CorruptData(unsigned char* data,
-		 int n_corruptions,
+		 double p,
 		 int bytes) {
 
-  for (int i = 0; i < n_corruptions; ++i) {
-    // Corrupt a single bit
-    int position = rand() % (bytes * 8);
-    setBit(data, position, getBit(data, position) ^ 1);
+  double q;
+  for (int i = 0; i < bytes * 8; i++) {
+    q = ((double) rand() / (RAND_MAX));
+    if (q < p)
+      setBit(data, i, getBit(data, i) ^ 1);
+
   }
 }
 
@@ -57,9 +59,9 @@ unsigned int HammingDistance(unsigned char* a,
 
 void TestFEC() {
   int data_length = 96;
-  int num_errors = 35;
+  double p_error = 0.06;
 
-  cout << "Testing FEC with " << num_errors << " errors" << endl;
+  cout << "Testing FEC with P(error) = " << p_error << endl;
 
   assert(data_length % 3 == 0);
 
@@ -74,7 +76,7 @@ void TestFEC() {
   
   fec.Encode(data, encoded, data_length);
 
-  CorruptData(encoded, num_errors, data_length);
+  CorruptData(encoded, p_error, data_length);
 
   fec.Decode(encoded, decoded, data_length * 2);
 
@@ -187,49 +189,73 @@ void TestDataPipeline() {
   // Generate Data
 
   int data_length = 1000;
-  int num_errors = 100;
+  double p_error = 0.02;
   uint8_t* data = GenerateData(data_length);
-  uint8_t* encoded = new uint8_t[2000];
+  // Packets are all 45 bytes
+  uint8_t* packet = new uint8_t[45];
+  uint8_t* encoded = new uint8_t[87];
+  uint8_t* decoded = new uint8_t[data_length];
 
   // Encode
   ForwardErrorCorrection fec;
-  fec.Encode(data, encoded, data_length);
+  ByteQueue queue(88 * 24);
 
-  // Errors
-  CorruptData(encoded, num_errors, data_length * 2);
+  int full_packets = data_length / 43;
+  int last_packet_len = data_length % 43;
+  int bitlen;
 
-  int encoded_bit_length = (data_length * 8 * 12) / 23;
-  encoded_bit_length += (data_length * 8 * 12) % 23;
-  
-  // Save
-  ByteQueue queue(2000);
-  cout << "Queue Created" << endl;
+  int num = 0;
+  // Loop through data
+  for(int i = 0; i < data_length; i+=43) {
+    if (full_packets > 0)
+      bitlen = 43 * 8;
+    else
+      bitlen = last_packet_len * 8;
 
-  /*
-  int j = 0;
-  for (int i = encoded_bit_length; i > 0; i -= (92 * 8)) {
-    queue.push(&encoded[j * 92], 92 * 8);
-    j++;
+    // First packetize the data...
+    packetize(data + i, packet, bitlen);
+
+    // Then encode it...
+    fec.Encode(packet, encoded, 45);
+
+    // Corrupt it a bit.. For fun
+    CorruptData(encoded, p_error, 87);
+
+    // Then we want to save it to ByteQueue
+    queue.push(encoded);
+
+    full_packets -= 1;
+    num++;
   }
-  // Pop
+  cout << "Loaded " << num << " Packets into the ByteQueue" << endl;
 
-  uint8_t* data_pop = new uint8_t[92];
-  int len;
-  for(int i = j; i > 0; i--) {
-    
-    len = queue.pop(data_pop);
-    cout << "Length: " << len << endl;
-    cout << data_pop << endl;
+  cout << "----------------------------------------";
+  cout << "----------------------------------------" << endl;
+
+  num = 0;
+  int total_len = 0;
+  // Reverse this...
+  for(int i = 0; i < data_length; i+=43) {
+    // Pop 87 Bytes
+    queue.pop(encoded);
+
+    fec.Decode(encoded, packet, 87);
+
+    uint16_t len = depacketize(packet, decoded + i);
+
+    total_len += len;
+    num ++;
   }
-  
-  // Decode
-  //  fec.Decode(encoded, decoded, data_length * 2);
 
+  cout << "Decoded " << num << " Packets." << endl;
+  cout << "Decoded data is " << total_len << " Bytes" << endl;
 
+  int hamming_dist = HammingDistance(data, decoded, 1000);
 
-  // Data
+  cout << "Distance between send and received: " << hamming_dist;
+  cout << endl;
 
-  */
+  assert(hamming_dist == 0);
 }
 
 
@@ -262,7 +288,11 @@ int main() {
   cout << "Advanced Packetization Test Running...\n" << endl;
   TestAdvPacketization();
 
-  // TestDataPipeline();
+  cout << "----------------------------------------";
+  cout << "----------------------------------------" << endl;
+
+  cout << "Data Pipeline Test Running...\n" << endl;
+  TestDataPipeline();
 
   return 0;
 };

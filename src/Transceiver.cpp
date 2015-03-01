@@ -9,42 +9,58 @@
 #include "Transceiver.hpp"
 
 
-Transceiver::Transceiver(const SocketConnection &sockconn,
-			 const ForwardErrorCorrection &fec,
-			 const RealtimeControl &pru):
-  _sockconn(sockconn), _fec(fec), _pru(pru) {
+Transceiver::Transceiver(SocketConnection &sockconn,
+			 ForwardErrorCorrection &fec,
+			 RealtimeControl &pru,
+			 ByteQueue &queue):
+  _sock(sockconn), _fec(fec), _pru(pru), _queue(queue) {}
 
-}
-
-Transceiver::~Transceiver() {
-  // Possibly delete the three objects? Or call destructors?
-  // This may get run automatically. Figure this out.
-  /*
-  _sockconn();
-  ~_fec();
-  ~_pru()
-  */
-}
 
 void Transceiver::Transmit()
 {
-  /*
-    unsigned char* buf = unsigned char[100]
-    unsigned char* encoded = unsigned char[100]
-    while(true):
-      length, buf = recv(1000)
-      encode(buf, encoded, length)
-      // Queue should packetize
-      queue.push(encoded)
-      
-      
+  cout << "Starting Transmit" << endl;
+  
+  uint8_t* buf = new uint8_t[43];
+  uint8_t* packet = new uint8_t[45];
+  uint8_t* encoded = new uint8_t[87];
+  int recvlen;
+
+  while(1) {
+    recvlen = _sock.Receive(buf, 43);
+
+    // Increment length so PRU knows there's more data
+    _queue.incrementLength(recvlen);
+    // cout << _queue.getLength() << endl;
     
+    if (recvlen == 0) {
+      cout << "Receive Length 0. Assume Transfer is done." << endl;
+      break;
+    }
 
-
-  */
-  // Loop through, take in data from socket, encode, write to memory
+    packetize(buf, packet, recvlen * 8);
+    _fec.Encode(encoded, packet, 87);
+    _queue.push(encoded);
+  }
 }
 
 void Transceiver::Receive() {
-  // Loop through, take data from memory, decode, send through socket
+
+  uint8_t* encoded = new uint8_t[87];
+  uint8_t* packet = new uint8_t[45];
+  uint8_t* buf = new uint8_t[43];
+  int packetlen;
+
+  while(!_pru.Done()) {
+
+    // TODO: If we are waiting on the PRU, delay...
+    // This is super important
+    
+    _queue.pop(encoded);
+    _fec.Decode(encoded, packet, 87);
+    
+    packetlen = depacketize(packet, buf);
+
+    // May want to send all data at once? Not sure yet.
+    _sock.Send(buf, packetlen);
+  }
 }
