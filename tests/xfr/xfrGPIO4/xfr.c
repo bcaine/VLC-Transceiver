@@ -23,7 +23,7 @@
 ******************************************************************************/
 
 #define PRU_NUM 	 0
-#define CODE1 		 0xabcd
+#define CODE1 		 0b01010101010101010101010101010101
 #define DDR_BASEADDR     0x80000000
 #define OFFSET_DDR	 0x00001000 
 #define OFFSET_SHAREDRAM 2048		//equivalent with 0x00002000
@@ -69,24 +69,23 @@ int main (void)
     unsigned int ret0, ret1;
     tpruss_intc_initdata pruss_intc_initdata = PRUSS_INTC_INITDATA;
     
-    printf("\nINFO: Starting %s example.\r\n", "PRU_Shared_RAM_Access");
+    printf("\nINFO: Starting %s example.\r\n", "Waves are for squares");
     /* Initialize the PRU */
     prussdrv_init ();		
     
-    /* Open PRU Interrupts */
+    /* Open PRU Interrupt */
     ret0 = prussdrv_open(PRU_EVTOUT_0);
     if (ret0)
     {
-        printf("PRU 0 Interrupt - open failed\n");
+        printf("prussdrv_open 0 failed\n");
         return (ret0);
     }
     ret1 = prussdrv_open(PRU_EVTOUT_1);
     if (ret1)
     {
-        printf("PRU 1 Interrupt - open failed\n");
-        return (ret1);
+        printf("prussdrv_open 1 failed\n");
+	return (ret1);
     }
-    
     
     /* Get the interrupt initialized */
     prussdrv_pruintc_init(&pruss_intc_initdata);
@@ -99,15 +98,16 @@ int main (void)
     printf("\tINFO: Executing example.\r\n");
     prussdrv_exec_program (0, "./pru0.bin");
     prussdrv_exec_program (1, "./pru1.bin");
-    /* Wait until PRU0 has finished execution */
-    printf("\tINFO: Waiting for PRU0 HALT.\r\n");
-    prussdrv_pru_wait_event (PRU_EVTOUT_0);
-    prussdrv_pru_clear_event (PRU0_ARM_INTERRUPT);
-    printf("\tINFO: Waiting for PRU1 HALT.\r\n");
-    prussdrv_pru_wait_event (PRU_EVTOUT_1);
-    prussdrv_pru_clear_event (PRU1_ARM_INTERRUPT);
-    printf("\tINFO: PRUS HALTed successfully.\r\n");
 
+    /* Wait until PRU0 has finished execution */
+    printf("\tINFO: Waiting for HALT0 command.\r\n");
+    prussdrv_pru_wait_event (PRU_EVTOUT_0);
+    printf("\tINFO: PRU0 completed execution.\r\n");
+    prussdrv_pru_clear_event (PRU0_ARM_INTERRUPT);
+    printf("\tINFO: Waiting for HALT1 command.\r\n");
+    prussdrv_pru_wait_event (PRU_EVTOUT_1);
+    printf("\tINFO: PRU1 completed execution.\r\n");
+    prussdrv_pru_clear_event (PRU1_ARM_INTERRUPT);
     /* Check if example passed */
     if ( LOCAL_examplePassed(PRU_NUM) )
     {
@@ -154,7 +154,7 @@ static int LOCAL_exampleInit (  )
     /* Store Addends in DDR memory location */
     DDR_regaddr = ddrMem + OFFSET_DDR;
 
-    *(unsigned long*) DDR_regaddr = 0xabcd;
+    *(unsigned long*) DDR_regaddr = CODE1;
 
     return(0);
 }
@@ -162,6 +162,8 @@ static int LOCAL_exampleInit (  )
 static unsigned short LOCAL_examplePassed ( unsigned short pruNum )
 {
     void *DDR_regaddr = ddrMem + OFFSET_DDR;
-    return((*(unsigned long*) DDR_regaddr == 0xaaaa));
+   //  printf("PRU1 wrote (%x)\n", (*(unsigned long*) DDR_regaddr));
+   //  return (*(unsigned long*) DDR_regaddr == 0xdcba);
+    return(1);
 }
 

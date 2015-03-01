@@ -162,6 +162,6 @@ static int LOCAL_exampleInit (  )
 static unsigned short LOCAL_examplePassed ( unsigned short pruNum )
 {
     void *DDR_regaddr = ddrMem + OFFSET_DDR;
-    return(*(unsigned long*) DDR_regaddr == 0xabcd);
+    return(*(unsigned long*) DDR_regaddr == 0xaaaa);
 }
 

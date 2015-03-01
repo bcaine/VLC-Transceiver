@@ -9,18 +9,18 @@
 INIT:
     
     // Enable OCP master port
-    LBCO r0, CONST_PRUCFG, 4, 4
+    LBCO r0, C4, 4, 4
     CLR r0, r0, 4
-    SBCO r0, CONST_PRUCFG, 4, 4
+    SBCO r0, C4, 4, 4
 
     // make CONST_PRUSHAREDRAM (C28) point to PRU shared RAM base address
-    MOV r0, 0x00000120
-    MOV r1, CTPPR_0
+    MOV r0, 0x120
+    MOV r1, PRU0CTPPR_0
     SBBO r0, r1, 0, 4 
    
     // make CONST_DDR (C31) point to DDR memory base address
-    MOV r0, 0x00100000
-    MOV r1, CTPPR_1
+    MOV r0, 0x100000
+    MOV r1, PRU0CTPPR_1
     SBBO r0, r1, 0, 4
 
     MOV r1, 0

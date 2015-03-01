@@ -66,27 +66,20 @@ static unsigned int *sharedMem_int;
 
 int main (void)
 {
-    unsigned int ret0, ret1;
+    unsigned int ret;
     tpruss_intc_initdata pruss_intc_initdata = PRUSS_INTC_INITDATA;
     
-    printf("\nINFO: Starting %s example.\r\n", "PRU_Shared_RAM_Access");
+    printf("\nINFO: Starting %s example.\r\n", "Waves are for squares");
     /* Initialize the PRU */
     prussdrv_init ();		
     
-    /* Open PRU Interrupts */
-    ret0 = prussdrv_open(PRU_EVTOUT_0);
-    if (ret0)
+    /* Open PRU Interrupt */
+    ret = prussdrv_open(PRU_EVTOUT_0);
+    if (ret)
     {
-        printf("PRU 0 Interrupt - open failed\n");
-        return (ret0);
+        printf("prussdrv_open open failed\n");
+        return (ret);
     }
-    ret1 = prussdrv_open(PRU_EVTOUT_1);
-    if (ret1)
-    {
-        printf("PRU 1 Interrupt - open failed\n");
-        return (ret1);
-    }
-    
     
     /* Get the interrupt initialized */
     prussdrv_pruintc_init(&pruss_intc_initdata);
@@ -97,16 +90,13 @@ int main (void)
     
     /* Execute example on PRU */
     printf("\tINFO: Executing example.\r\n");
-    prussdrv_exec_program (0, "./pru0.bin");
-    prussdrv_exec_program (1, "./pru1.bin");
+    prussdrv_exec_program (PRU_NUM, "./gpio.bin");
+
     /* Wait until PRU0 has finished execution */
-    printf("\tINFO: Waiting for PRU0 HALT.\r\n");
+    printf("\tINFO: Waiting for HALT command.\r\n");
     prussdrv_pru_wait_event (PRU_EVTOUT_0);
+    printf("\tINFO: PRU completed transfer.\r\n");
     prussdrv_pru_clear_event (PRU0_ARM_INTERRUPT);
-    printf("\tINFO: Waiting for PRU1 HALT.\r\n");
-    prussdrv_pru_wait_event (PRU_EVTOUT_1);
-    prussdrv_pru_clear_event (PRU1_ARM_INTERRUPT);
-    printf("\tINFO: PRUS HALTed successfully.\r\n");
 
     /* Check if example passed */
     if ( LOCAL_examplePassed(PRU_NUM) )
@@ -119,8 +109,7 @@ int main (void)
     }
     
     /* Disable PRU and close memory mapping*/
-    prussdrv_pru_disable(0);
-    prussdrv_pru_disable(1); 
+    prussdrv_pru_disable(PRU_NUM); 
     prussdrv_exit ();
     munmap(ddrMem, 0x0FFFFFFF);
     close(mem_fd);
@@ -154,14 +143,13 @@ static int LOCAL_exampleInit (  )
     /* Store Addends in DDR memory location */
     DDR_regaddr = ddrMem + OFFSET_DDR;
 
-    *(unsigned long*) DDR_regaddr = 0xabcd;
+    *(unsigned long*) DDR_regaddr = CODE1;
 
     return(0);
 }
 
 static unsigned short LOCAL_examplePassed ( unsigned short pruNum )
 {
-    void *DDR_regaddr = ddrMem + OFFSET_DDR;
-    return((*(unsigned long*) DDR_regaddr == 0xaaaa));
+    return(1);
 }
 

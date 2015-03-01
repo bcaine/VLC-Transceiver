@@ -24,11 +24,16 @@
 #define CONST_DDR          C31
 
 // Address for the Constant table Block Index Register (CTBIR)
-#define CTBIR_0         0x22020
+#define PRU0CTBIR_0         0x22020
 // Address for the Constant table Programmable Pointer Register 0(CTPPR_0)
-#define CTPPR_0         0x22028
+#define PRU0CTPPR_0         0x22028
 // Address for the Constant table Programmable Pointer Register 1(CTPPR_1)
-#define CTPPR_1         0x2202C
+#define PRU0CTPPR_1         0x2202C
+
+#define PRU1CTBIR_0         0x24020
+#define PRU1CTPPR_0	    0x24028
+#define PRU1CTPPR_1	    0x2402C
+
 
 #endif
 
