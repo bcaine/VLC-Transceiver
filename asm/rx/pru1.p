@@ -3,7 +3,7 @@
 
 #define PRU0_DELAY 70196 // delay needed to wait for PRU0
 #define INIT_DELAY 70400 // delay needed for initial read-in
-#define OFFSET_LIM 16376 // maximum byte offset
+#define OFFSET_LIM 16777208//16376 // maximum byte offset
 #define READ_ADDRESS 0x90000000
 
 #include "../../include/asm.hp"
