@@ -16,11 +16,11 @@ INIT:
 
         MOV r1, 0 // delay loop counter
 
-	MOV r2, 49 // delay loop limit high
-	MOV r3, 48 // delay loop limit low
+	MOV r2, 245// 49 // delay loop limit high
+	MOV r3, 240//48 // delay loop limit low
 
 	MOV r4, 0 // counter of 2-bit cycles 
-        MOV r5, 10000000 // number of 2-bit cycles to modulate
+        MOV r5, 1000000000 // number of 2-bit cycles to modulate
 
 SQ_LOOP:
         SET r30.t15

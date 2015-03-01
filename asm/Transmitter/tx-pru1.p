@@ -1,7 +1,7 @@
 .origin 0
 .entrypoint INIT
 
-#define PRU0_DELAY 70197 // delay needed to wait for PRU0
+#define PRU0_DELAY 70365 // delay needed to wait for PRU0
 #include "tx.hp"
 
 // NOTE: Delay assumes 140799 cycles between PRU0 XINs
