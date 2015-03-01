@@ -26,12 +26,14 @@ INIT:
 	MOV r0, 8 // counter -- read offset
 	MOV r1, 0 // counter --loop delay
 	MOV r2, PRU0_DELAY // limit --loop delay
-	LBCO r3, CONST_DDR, 0, 4 // limit --num packets
+	LBCO r3, CONST_DDR, 4, 4 // limit --num packets
+	SBCO r0, CONST_SSR, 4, 4 // write --initial cursor
 	MOV r4, 0 // counter --num packets
 	MOV r5, OFFSET_LIM // limit --read offset
 
 START:
 	LBCO r8, CONST_DDR, r0, 88 // load 88 bytes
+	SBCO r0, CONST_DDR, 4, 4 // update cursor
 	ADD r0, r0, 88 // increment read offset
 	ADD r4, r4, 1 // increment packet counter
 
