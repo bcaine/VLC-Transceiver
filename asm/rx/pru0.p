@@ -10,6 +10,8 @@ INIT:
 	CLR       r0, r0, 4         // Clear SYSCFG[STANDBY_INIT] to enable OCP master port
 	SBCO      r0, C4, 4, 4
 
+	MOV r7, READ_ADDRESS
+	
 	MOV r0.b0, 0 // counter -- register number
 	MOV r0.b1, 0 // counter -- preamble verified bits
 	
