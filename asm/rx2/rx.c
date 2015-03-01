@@ -211,7 +211,7 @@ static unsigned short LOCAL_examplePassed ( unsigned short pruNum )
    printf("\n");
    int offCount = 0;
    int j = 0;
-   for(j=4; j < LENGTH; j=j+1){
+   for(j=6; j < LENGTH; j=j+1){
      if(packReceived[j] - packReceived[j-1] > 1){
        printf("At packet [%i]: Before: %i\tCurrent: %i\n", j, packReceived[j-1], packReceived[j]);
        offCount = offCount + 1;

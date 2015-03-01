@@ -58,7 +58,7 @@
 	#define DELAY_NEW_TX   2482
 	#define PRU0_DELAY  1584000
 
-	#define DELAY_P1_RX    2473
+	#define DELAY_P1_RX    2471//2//3
 	#define DELAY_P2_RX    6250
 	#define DELAY_FWD_RX   2496
 	#define DELAY_BWD_RX   2491
@@ -70,11 +70,11 @@
 // Implementation Constants:
 #define PACK_LEN 83
 #define PIN_OFFSET_BIT 15
-#define PACKET_LIMIT 6000
+#define PACKET_LIMIT 5000
 
 // Timing:
 #define RX_PRU1_TIMEOUT 1328000 // update, copy and move to above ifdef blocks
-#define RX_PRU0_TIMEOUT   33200 // update, but this is agnostic to a bit-time, can stay outside of ifdefs
+#define RX_PRU0_TIMEOUT   33200//65500 // update, but this is agnostic to a bit-time, can stay outside of ifdefs
 
 // Preamble:
 #define PREAMBLE1 0b00111100
