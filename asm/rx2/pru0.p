@@ -12,151 +12,165 @@
 .entrypoint INIT
 #include "../../include/asm.hp"
 
+// Select sampling frequency:
+#define MHz1 1
+//#define kHz500 1
+
 // Delay Constants:
 #ifndef GPIO_DEBUG
 	#define SETBACK_IO  0
-	#define DELAY_P1  174//74 // delay to maintain 200 cycles between preamble bit checks
-	#define DELAY_P2  156//156 // delay to sync on middle of bit after preamble part 2
-	#define DELAY_FWD  197//97 // delay between sequential data reads in normal operation
-	#define DELAY_BWD  193//93
+	#ifdef MHz1
+		#define DELAY_P1  74        // preamble delay (bit check)
+		#define DELAY_P2  156       // preamble delay (bit sync)
+		#define DELAY_FWD  97       // delay between sequential samples
+		#define DELAY_BWD  93       // delay between registers
+	#endif
+	#ifdef kHz500
+		#define DELAY_P1  174 
+		#define DELAY_P2  156  
+		#define DELAY_FWD  197 
+		#define DELAY_BWD  193 
+	#endif		
 #else
 	#define SETBACK_IO  1
-	#define DELAY_P1   173//73
-	#define DELAY_P2  120//155
-	#define DELAY_FWD  196//96
-	#define DELAY_BWD  192//92
+	#ifdef MHz1
+		#define DELAY_P1   73
+		#define DELAY_P2  155
+		#define DELAY_FWD  96
+		#define DELAY_BWD  92
+	#endif
+	#ifdef kHz500
+		#define DELAY_P1   173
+		#define DELAY_P2   155
+		#define DELAY_FWD  196
+		#define DELAY_BWD  192
+	#endif		
 #endif
 
 //  _____________________
 //  Register  |  Purpose
-//		      
-//    r0.b0   |  Counter - delay loops performed
-//    r0.b1   |  Counter - delays to perform (after reg copy)
-//    r0.b2   |  Counter - registers filled
-//    r0.b3   |  Counter - number of input stream bits matching the preamble
-//			  |
-//    r1.b0   |  Holder  - hold current preamble bit for checking
-//	  r1.w2   |  Holder  - Preamble bitmask (only want to check first 14 bits)
-//			  |
-//    r2.w0   |  Holder  - current preamble bitstream
-//    r2.w2   |  Holder  - Hold preamble value for comparison
-//
-//    r3.w0   |  Holder  - XOR result (preamble)
-//    r3.w2   |  Holder  - LSR/AND result (preamble)
-//			  |
-//      r6    |  Holder  - DDR address
-//			  |
-//     r7.b0  |  Holder  - DDR done code
-//     r7.b1  |  Holder  - PRAM packet ready code
-//			  |
-//    r9-r29  |  Holder  - hold sampled bytes
-//      r30   |  I/O     - holds GPI pin register (.t15)
-
-
+//     r0.w0  |  Counter - delay loops performed
+//     r0.b2  |  Counter - registers sampled
+//     r0.b3  |  Counter - number of bits matching preamble
+//     r1.w2  |  Holder  - preamble bitmask
+//     r2.w0  |  Holder  - sampled bitstream (preamble)
+//     r2.w2  |  Holder  - actual preamble value for comparison
+//     r3.w0  |  Holder  - XOR result (preamble)
+//     r3.w2  |  Holder  - LSR/AND result (preamble)
+//       r4   |  Holder  - sampled bit
+//     r5.w0  |  Holder  - bit-sync delay value
+//     r5.w2  |  Holder  - backward delay value
+//     r6.w0  |  Holder  - bit-check delay value 
+//     r6.w2  |  Holder  - forward delay value
+//     r7.w0  |  Counter - packets sampled
+//     r7.w2  |  Holder  - max packets to sample
+//       r8   |  Free
+//     r9-r29 |  Holder  - sampled registers
+//    r30.t15 |  Holder  - output pin value (debug)
+//    r31.t15 |  Holder  - input pin value
 
 INIT:
     
 	// Enable OCP master port
 	LBCO      r0, C4, 4, 4
-	CLR       r0, r0, 4     // Clear SYSCFG[STANDBY_INIT] to enable OCP master port
+	CLR       r0, r0, 4 
 	SBCO      r0, C4, 4, 4
 
+	// Enable PRU RAM memory access
 	MOV     r0, 0x00000120  
 	MOV     r1, PRU0CTPPR_0 
 	SBBO    r0, r1, 0, 4
 
-	MOV r0.w0, 0 // init delay counter to 0
-	MOV r0.b2, 0 // init reg number to 0
-	MOV r0.b3, 0 // init bit matches counter to 0
+	MOV r0.w0, 0              // init delay counter to 0
+	MOV r0.b2, 0              // init reg number to 0
+	MOV r0.b3, 0              // init bit matches counter to 0
 	
-	MOV r1.b0, 0 // hold preamble bit for check
-	MOV r1.b1, 0 // hold XOR result
-	MOV r1.w2, PRE_BITMASK // load value to AND out irrelevant bits
+	MOV r1.w2, PRE_BITMASK    // load value to AND out irrelevant bits
 
-	MOV r2.w0, INIT_PRE2 // recent bits holder
-    	MOV r2.w2, PREAMBLE2 // actual preamble holder
+	MOV r2.w0, INIT_PRE2      // recent bits holder
+    	MOV r2.w2, PREAMBLE2      // actual preamble holder
 	
-	MOV r3.w0, 0 // XOR holder
-	MOV r3.w2, 0 // LSR/AND holder
+	MOV r3.w0, 0              // XOR holder
+	MOV r3.w2, 0              // LSR/AND holder
 
-	MOV r5.w0, DELAY_P2
-	MOV r5.w2, DELAY_BWD
+	MOV r5.w0, DELAY_P2       // store bit-sync delay value for comparison
+	MOV r5.w2, DELAY_BWD      // store backward delay value for comparison
 
-	MOV r6.w0, DELAY_P1
-	MOV r6.w2, DELAY_FWD
+	MOV r6.w0, DELAY_P1       // store bit-check delay value for comparsion
+	MOV r6.w2, DELAY_FWD      // store forward delay value for comparison
 
-	MOV r7.w0, 0 // packet counter
-	MOV r7.w2, PACKET_LIMIT
-    	JMP P1_SMP
+	MOV r7.w0, 0              // init packet counter to 0
+	MOV r7.w2, PACKET_LIMIT   // store packet limit for comparison
+    	JMP P1_SMP                // jump to preamble check
 
 NEW_PACKET:
-    XOUT 10, r9, PACK_LEN // write data to PRU1
+    XOUT 10, r9, PACK_LEN         // write data to PRU1
 
 P1_RESET:
-    MOV r2.w0, INIT_PRE2 // reset bit holder
+    MOV r2.w0, INIT_PRE2          // reset bit holder
 
 P1_SMP:
-    MOV r0.w0, 0 // reset delay
-    LSL r2.w0, r2.w0, 1 // shift preamble holder to prepare for new bit
+    MOV r0.w0, 0                  // reset delay
+    LSL r2.w0, r2.w0, 1           // shift preamble holder to prepare for new bit
     GET_BIT r31, PIN_OFFSET_BIT, r4
-    QBEQ P1_SET, r4, 1 // if bit set, jump to set
+    QBEQ P1_SET, r4, 1            // if bit set, jump to set
 
 P1_CLR:
-    CLR_BIT r2.w0.t0 // clear new bit
-    MOV r0.b3, 0 // reset verified bits
+    CLR_BIT r2.w0.t0              // clear new bit
+    MOV r0.b3, 0                  // reset verified bits
     JMP P1_DEL
 
 P1_SET:
-    SET_BIT r2.w0.t0 // set new bit
-    MOV r0.b3, 0 // reset verified bits
+    SET_BIT r2.w0.t0              // set new bit
+    MOV r0.b3, 0                  // reset verified bits
     JMP P1_DEL
 
 P1_DEL: 
     ADD r0.w0, r0.w0, 1
-    QBNE P1_DEL, r0.w0, r6.w0 // delay s.t. 200 cycles between preamble reads
+    QBNE P1_DEL, r0.w0, r6.w0    // delay s.t. 200 cycles between preamble reads
 
 P1_CHK:
 
-    GET_DIFF_13 r2.w0, r2.w2, r0.b3, r3.w0, r3.w2, r1.w2
-    QBLT P2_INIT, r0.b3, REQ_BITS2  // if enough bits match, jump out of preamble
-    JMP P1_SMP
+    GET_DIFF_13 r2.w0, r2.w2, r0.b3, r3.w0, r3.w2, r1.w2        // get number of matches between preamble and current bitstream
+    QBLT P2_INIT, r0.b3, REQ_BITS2                              // if enough bits match, jump out of preamble bit-check
+    JMP P1_SMP                                                  // otherwise, keep sampling
 
 P2_INIT:
-	MOV r0.w0, 0 // reset delay counter
-	MOV r0.w0, 0 // NOP for 200c between LSRs
-	MOV r0.w0, 0 // NOP for 200c between LSRs
-	GET_BIT r31, PIN_OFFSET_BIT, r4
-	QBNE P1_SMP, r4, 1 // if we don't receive the last 1 in preamble, reset
+	MOV r0.w0, 0                        // reset delay counter
+	MOV r0.w0, 0                        // NOP for 200c between LSRs
+	MOV r0.w0, 0                        // NOP for 200c between LSRs
+	GET_BIT r31, PIN_OFFSET_BIT, r4     // Sample input pin
+	QBNE P1_SMP, r4, 1                  // if we don't receive the last 1 in preamble, reset
 
 P2_SMP:
-	ADD r0.w0, r0.w0, 1 // incr counter
-	QBLT P1_RESET, r0.w0, SYNC_TIMEOUT // if taken too long, revert to P stage 1
-	GET_BIT r31, PIN_OFFSET_BIT, r4
-	QBNE P2_SMP, r4, 0 // loop until pin reads 0
-	MOV r0.w0, 0 // reset delay counter
+	ADD r0.w0, r0.w0, 1                 // incr counter
+	QBLT P1_RESET, r0.w0, SYNC_TIMEOUT  // if taken too long, revert to P stage 1
+	GET_BIT r31, PIN_OFFSET_BIT, r4     // sample input pin
+	QBNE P2_SMP, r4, 0                  // if pin not reading 0, restart loop
+	MOV r0.w0, 0                        // reset delay counter
 	
 P2_DEL: 
 	ADD r0.w0, r0.w0, 1
-	QBNE P2_DEL, r0.w0, r5.w0 // delay to middle of first data bit
+	QBNE P2_DEL, r0.w0, r5.w0           // delay to middle of first data bit
 
-	MOV r29.w0, r2.w0 // copy preamble byte 2 into storage reg
-	JMP SMP_B3b1 // jump to normal operation
+	MOV r29.w0, r2.w0                   // copy preamble byte 2 into storage reg
+	JMP SMP_B3b1                        // jump to normal operation
 	
 DEL_CPY:
-    ADD r0.w0, r0.w0, 1
-    QBNE DEL_CPY, r0.w0, r5.w2
+        ADD r0.w0, r0.w0, 1
+        QBNE DEL_CPY, r0.w0, r5.w2          // delay after copying a register
 
 SMP_B1b1:
-    MOV r0.w0, 0
-    GET_BIT r31, PIN_OFFSET_BIT, r4
-    QBEQ SET_B1b1, r4, 1
+        MOV r0.w0, 0
+        GET_BIT r31, PIN_OFFSET_BIT, r4
+        QBEQ SET_B1b1, r4, 1
 
 CLR_B1b1:
-	CLR_BIT r29.t0
+	CLR_BIT r29.t31
 	JMP DEL_B1b1
 
 SET_B1b1:
-	SET_BIT r29.t0
+	SET_BIT r29.t31
 	JMP DEL_B1b1
 
 DEL_B1b1:
@@ -169,11 +183,11 @@ SMP_B1b2:
 	QBEQ SET_B1b2, r4, 1
 
 CLR_B1b2:
-	CLR_BIT r29.t1
+	CLR_BIT r29.t30
 	JMP DEL_B1b2
 
 SET_B1b2:
-	SET_BIT r29.t1
+	SET_BIT r29.t30
 	JMP DEL_B1b2
 
 DEL_B1b2:
@@ -186,11 +200,11 @@ SMP_B1b3:
 	QBEQ SET_B1b3, r4, 1
 
 CLR_B1b3:
-	CLR_BIT r29.t2
+	CLR_BIT r29.t29
 	JMP DEL_B1b3
 
 SET_B1b3:
-	SET_BIT r29.t2
+	SET_BIT r29.t29
 	JMP DEL_B1b3
 
 DEL_B1b3:
@@ -203,11 +217,11 @@ SMP_B1b4:
 	QBEQ SET_B1b4, r4, 1
 
 CLR_B1b4:
-	CLR_BIT r29.t3
+	CLR_BIT r29.t28
 	JMP DEL_B1b4
 
 SET_B1b4:
-	SET_BIT r29.t3
+	SET_BIT r29.t28
 	JMP DEL_B1b4
 
 DEL_B1b4:
@@ -220,11 +234,11 @@ SMP_B1b5:
 	QBEQ SET_B1b5, r4, 1
 
 CLR_B1b5:
-	CLR_BIT r29.t4
+	CLR_BIT r29.t27
 	JMP DEL_B1b5
 
 SET_B1b5:
-	SET_BIT r29.t4
+	SET_BIT r29.t27
 	JMP DEL_B1b5
 
 DEL_B1b5:
@@ -237,11 +251,11 @@ SMP_B1b6:
 	QBEQ SET_B1b6, r4, 1
 
 CLR_B1b6:
-	CLR_BIT r29.t5
+	CLR_BIT r29.t26
 	JMP DEL_B1b6
 
 SET_B1b6:
-	SET_BIT r29.t5
+	SET_BIT r29.t26
 	JMP DEL_B1b6
 
 DEL_B1b6:
@@ -254,11 +268,11 @@ SMP_B1b7:
 	QBEQ SET_B1b7, r4, 1
 
 CLR_B1b7:
-	CLR_BIT r29.t6
+	CLR_BIT r29.t25
 	JMP DEL_B1b7
 
 SET_B1b7:
-	SET_BIT r29.t6
+	SET_BIT r29.t25
 	JMP DEL_B1b7
 
 DEL_B1b7:
@@ -271,11 +285,11 @@ SMP_B1b8:
 	QBEQ SET_B1b8, r4, 1
 
 CLR_B1b8:
-	CLR_BIT r29.t7
+	CLR_BIT r29.t24
 	JMP DEL_B1b8
 
 SET_B1b8:
-	SET_BIT r29.t7
+	SET_BIT r29.t24
 	JMP DEL_B1b8
 
 BCK_P1b8:
@@ -297,11 +311,11 @@ SMP_B2b1:
 	QBEQ SET_B2b1, r4, 1
 
 CLR_B2b1:
-	CLR_BIT r29.t8
+	CLR_BIT r29.t23
 	JMP DEL_B2b1
 
 SET_B2b1:
-	SET_BIT r29.t8
+	SET_BIT r29.t23
 	JMP DEL_B2b1
 
 DEL_B2b1:
@@ -314,11 +328,11 @@ SMP_B2b2:
 	QBEQ SET_B2b2, r4, 1
 
 CLR_B2b2:
-	CLR_BIT r29.t9
+	CLR_BIT r29.t22
 	JMP DEL_B2b2
 
 SET_B2b2:
-	SET_BIT r29.t9
+	SET_BIT r29.t22
 	JMP DEL_B2b2
 
 DEL_B2b2:
@@ -331,11 +345,11 @@ SMP_B2b3:
 	QBEQ SET_B2b3, r4, 1
 
 CLR_B2b3:
-	CLR_BIT r29.t10
+	CLR_BIT r29.t21
 	JMP DEL_B2b3
 
 SET_B2b3:
-	SET_BIT r29.t10
+	SET_BIT r29.t21
 	JMP DEL_B2b3
 
 DEL_B2b3:
@@ -348,11 +362,11 @@ SMP_B2b4:
 	QBEQ SET_B2b4, r4, 1
 
 CLR_B2b4:
-	CLR_BIT r29.t11
+	CLR_BIT r29.t20
 	JMP DEL_B2b4
 
 SET_B2b4:
-	SET_BIT r29.t11
+	SET_BIT r29.t20
 	JMP DEL_B2b4
 
 DEL_B2b4:
@@ -365,11 +379,11 @@ SMP_B2b5:
 	QBEQ SET_B2b5, r4, 1
 
 CLR_B2b5:
-	CLR_BIT r29.t12
+	CLR_BIT r29.t19
 	JMP DEL_B2b5
 
 SET_B2b5:
-	SET_BIT r29.t12
+	SET_BIT r29.t19
 	JMP DEL_B2b5
 
 DEL_B2b5:
@@ -382,11 +396,11 @@ SMP_B2b6:
 	QBEQ SET_B2b6, r4, 1
 
 CLR_B2b6:
-	CLR_BIT r29.t13
+	CLR_BIT r29.t18
 	JMP DEL_B2b6
 
 SET_B2b6:
-	SET_BIT r29.t13
+	SET_BIT r29.t18
 	JMP DEL_B2b6
 
 DEL_B2b6:
@@ -399,11 +413,11 @@ SMP_B2b7:
 	QBEQ SET_B2b7, r4, 1
 
 CLR_B2b7:
-	CLR_BIT r29.t14
+	CLR_BIT r29.t17
 	JMP DEL_B2b7
 
 SET_B2b7:
-	SET_BIT r29.t14
+	SET_BIT r29.t17
 	JMP DEL_B2b7
 
 DEL_B2b7:
@@ -416,11 +430,11 @@ SMP_B2b8:
 	QBEQ SET_B2b8, r4, 1
 
 CLR_B2b8:
-	CLR_BIT r29.t15
+	CLR_BIT r29.t16
 	JMP DEL_B2b8
 
 SET_B2b8:
-	SET_BIT r29.t15
+	SET_BIT r29.t16
 	JMP DEL_B2b8
 
 BCK_P2b8:
@@ -442,11 +456,11 @@ SMP_B3b1:
 	QBEQ SET_B3b1, r4, 1
 
 CLR_B3b1:
-	CLR_BIT r29.t16
+	CLR_BIT r29.t15
 	JMP DEL_B3b1
 
 SET_B3b1:
-	SET_BIT r29.t16
+	SET_BIT r29.t15
 	JMP DEL_B3b1
 
 DEL_B3b1:
@@ -459,11 +473,11 @@ SMP_B3b2:
 	QBEQ SET_B3b2, r4, 1
 
 CLR_B3b2:
-	CLR_BIT r29.t17
+	CLR_BIT r29.t14
 	JMP DEL_B3b2
 
 SET_B3b2:
-	SET_BIT r29.t17
+	SET_BIT r29.t14
 	JMP DEL_B3b2
 
 DEL_B3b2:
@@ -476,11 +490,11 @@ SMP_B3b3:
 	QBEQ SET_B3b3, r4, 1
 
 CLR_B3b3:
-	CLR_BIT r29.t18
+	CLR_BIT r29.t13
 	JMP DEL_B3b3
 
 SET_B3b3:
-	SET_BIT r29.t18
+	SET_BIT r29.t13
 	JMP DEL_B3b3
 
 DEL_B3b3:
@@ -493,11 +507,11 @@ SMP_B3b4:
 	QBEQ SET_B3b4, r4, 1
 
 CLR_B3b4:
-	CLR_BIT r29.t19
+	CLR_BIT r29.t12
 	JMP DEL_B3b4
 
 SET_B3b4:
-	SET_BIT r29.t19
+	SET_BIT r29.t12
 	JMP DEL_B3b4
 
 DEL_B3b4:
@@ -510,11 +524,11 @@ SMP_B3b5:
 	QBEQ SET_B3b5, r4, 1
 
 CLR_B3b5:
-	CLR_BIT r29.t20
+	CLR_BIT r29.t11
 	JMP DEL_B3b5
 
 SET_B3b5:
-	SET_BIT r29.t20
+	SET_BIT r29.t11
 	JMP DEL_B3b5
 
 DEL_B3b5:
@@ -527,11 +541,11 @@ SMP_B3b6:
 	QBEQ SET_B3b6, r4, 1
 
 CLR_B3b6:
-	CLR_BIT r29.t21
+	CLR_BIT r29.t10
 	JMP DEL_B3b6
 
 SET_B3b6:
-	SET_BIT r29.t21
+	SET_BIT r29.t10
 	JMP DEL_B3b6
 
 DEL_B3b6:
@@ -544,11 +558,11 @@ SMP_B3b7:
 	QBEQ SET_B3b7, r4, 1
 
 CLR_B3b7:
-	CLR_BIT r29.t22
+	CLR_BIT r29.t9
 	JMP DEL_B3b7
 		
 SET_B3b7:
-	SET_BIT r29.t22
+	SET_BIT r29.t9
 	JMP DEL_B3b7
 
 DEL_B3b7:
@@ -561,11 +575,11 @@ SMP_B3b8:
 	QBEQ SET_B3b8, r4, 1
 
 CLR_B3b8:
-	CLR_BIT r29.t23
+	CLR_BIT r29.t8
 	JMP DEL_B3b8
 
 SET_B3b8:
-	SET_BIT r29.t23
+	SET_BIT r29.t8
 	JMP DEL_B3b8
 
 BCK_P3b8:
@@ -587,11 +601,11 @@ SMP_B4b1:
 	QBEQ SET_B4b1, r4, 1
 
 CLR_B4b1:
-	CLR_BIT r29.t24
+	CLR_BIT r29.t7
 	JMP DEL_B4b1
 
 SET_B4b1:
-	SET_BIT r29.t24
+	SET_BIT r29.t7
 	JMP DEL_B4b1
 
 DEL_B4b1:
@@ -604,11 +618,11 @@ SMP_B4b2:
 	QBEQ SET_B4b2, r4, 1
 
 CLR_B4b2:
-	CLR_BIT r29.t25
+	CLR_BIT r29.t6
 	JMP DEL_B4b2
 
 SET_B4b2:
-	SET_BIT r29.t25
+	SET_BIT r29.t6
 	JMP DEL_B4b2
 
 DEL_B4b2:
@@ -621,11 +635,11 @@ SMP_B4b3:
 	QBEQ SET_B4b3, r4, 1
 
 CLR_B4b3:
-	CLR_BIT r29.t26
+	CLR_BIT r29.t5
 	JMP DEL_B4b3
 
 SET_B4b3:
-	SET_BIT r29.t26
+	SET_BIT r29.t5
 	JMP DEL_B4b3
 
 DEL_B4b3:
@@ -638,11 +652,11 @@ SMP_B4b4:
 	QBEQ SET_B4b4, r4, 1
 
 CLR_B4b4:
-	CLR_BIT r29.t27
+	CLR_BIT r29.t4
 	JMP DEL_B4b4
 
 SET_B4b4:
-	SET_BIT r29.t27
+	SET_BIT r29.t4
 	JMP DEL_B4b4
 
 DEL_B4b4:
@@ -655,11 +669,11 @@ SMP_B4b5:
 	QBEQ SET_B4b5, r4, 1
 
 CLR_B4b5:
-	CLR_BIT r29.t28
+	CLR_BIT r29.t3
 	JMP DEL_B4b5
 
 SET_B4b5:
-	SET_BIT r29.t28
+	SET_BIT r29.t3
 	JMP DEL_B4b5
 
 DEL_B4b5:
@@ -672,11 +686,11 @@ SMP_B4b6:
 	QBEQ SET_B4b6, r4, 1
 
 CLR_B4b6:
-	CLR_BIT r29.t29
+	CLR_BIT r29.t2
 	JMP DEL_B4b6
 
 SET_B4b6:
-	SET_BIT r29.t29
+	SET_BIT r29.t2
 	JMP DEL_B4b6
 
 DEL_B4b6:
@@ -689,11 +703,11 @@ SMP_B4b7:
 	QBEQ SET_B4b7, r4, 1
 
 CLR_B4b7:
-	CLR_BIT r29.t30
+	CLR_BIT r29.t1
 	JMP DEL_B4b7
 
 SET_B4b7:
-	SET_BIT r29.t30
+	SET_BIT r29.t1
 	JMP DEL_B4b7
 
 DEL_B4b7:
@@ -706,11 +720,11 @@ SMP_B4b8:
 	QBEQ SET_B4b8, r4, 1
 
 CLR_B4b8:
-	CLR_BIT r29.t31
+	CLR_BIT r29.t0
 	JMP UPD_R29
 
 SET_B4b8:
-	SET_BIT r29.t31
+	SET_BIT r29.t0
 	JMP UPD_R29
 
 BCK_P4b8:
@@ -740,18 +754,18 @@ UPD_R29:
 	QBEQ CPY_R28, r0.b2, 20
 
 CHECK_DONE:
-        MOV r4, READY_CODE
-        SBCO r4, CONST_PRUSHAREDRAM, 0, 1 // write packet ready code to PRU RAM
-        MOV r0.b2, 0 // reset register counter
-	ADD r7.w0, r7.w0, 1
-	QBNE BCK_P4b8, r7.w0, r7.w2
-        XOUT 10, r9, PACK_LEN
-        JMP STOP
+        MOV r4, READY_CODE			      // temporarily overwrite r4 with ready code for storage
+        SBCO r4, CONST_PRUSHAREDRAM, 0, 1             // write packet ready code to PRU RAM
+        MOV r0.b2, 0                                  // reset register counter
+	ADD r7.w0, r7.w0, 1                           // increment packet counter
+	QBNE BCK_P4b8, r7.w0, r7.w2                   // if not at packet limit, keep sampling
+        XOUT 10, r9, PACK_LEN                         // otherwise, transfer current packet to PRU1
+        JMP STOP                                      // and commence shutdown
 
 CPY_R9:
-	MOV r9, r29 	// copy contents of r9 into r9 (modulation reg)
-	MOV r5.w2, DELAY_BWD // reset delay
-	JMP BCK_B3b8 // jump back to loop start
+	MOV r9, r29 	          // copy contents of r9 into r9 (modulation reg)
+	MOV r5.w2, DELAY_BWD      // reset delay
+	JMP BCK_B3b8              // jump back to loop start
 CPY_R10:
 	MOV r10, r29
 	JMP BCK_B3b8 
@@ -826,7 +840,7 @@ SMP_R29:
 
 DEL_R29:
 	ADD r0.w0, r0.w0, 1
-	QBNE DEL_R29, r0.w0, r5.w2 // needs to be 85
+	QBNE DEL_R29, r0.w0, r5.w2
 	
 SMP_R29_B1b1:
         MOV r0.w0, 0
@@ -1232,8 +1246,9 @@ SET_R29_B3b8:
 	SET_BIT r29.t23
 	JMP CHECK_DONE
 STOP:
+
 #ifdef GPIO_DEBUG
-	SET r30.t15
+	SET r30.t15                         // if in debug mode, leave output high
 #endif
-	MOV r31.b0, PRU0_ARM_INTERRUPT+16 // send program completion interrupt to host
-	HALT // shutdown
+	MOV r31.b0, PRU0_ARM_INTERRUPT+16   // send program completion interrupt to host
+	HALT                                // shutdown
