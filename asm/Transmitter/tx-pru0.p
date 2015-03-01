@@ -16,8 +16,8 @@ INIT:
 
 	LBCO r3, CONST_DDR, 0, 4 // what's the offset?
 	MOV r0, 0 // delay counter
-	MOV r1, 47 // loop delay forward
-	MOV r2, 44 // loop delay backward
+	MOV r1, 97 // loop delay forward
+	MOV r2, 94 // loop delay backward
 	MOV r5, 0 // packet length counter
 	MOV r6, 0 // register number counter
 
