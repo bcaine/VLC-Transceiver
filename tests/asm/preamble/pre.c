@@ -139,7 +139,7 @@ static int LOCAL_exampleInit (  )
     xorResult  = tryByte + 1;
     notResult  = xorResult + 1;
     addResult  = notResult + 1;
-    *((unsigned long*) tryByte) = 0b00011110;
+    *((unsigned long*) tryByte) = 0b00000001;
 	
     return(0);
 }
@@ -149,7 +149,7 @@ static unsigned short LOCAL_examplePassed ( unsigned short pruNum )
    printf("Byte: (%x)\n", (*(unsigned char*) tryByte));
    printf("XOR: (%x)\n", (*(unsigned char*) xorResult));
    printf("NOT: (%x)\n", (*(unsigned char*) notResult));
-   printf("ADD: (%x)\n", (*(unsigned long*) addResult));
+   printf("ADD: (%x)\n", (*(unsigned char*) addResult));
 
    return(1);
 }

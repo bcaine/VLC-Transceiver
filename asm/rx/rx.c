@@ -50,7 +50,7 @@ void *length;
 void *cursor;
 void *data;
 unsigned long numBytes = LENGTH * 88;
-
+unsigned long binTest = 0b11100;
 /******************************************************************************
 * Intertupt Service Routines                                                  *
 ******************************************************************************/

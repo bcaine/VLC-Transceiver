@@ -12,9 +12,9 @@
 .entrypoint INIT
 #include "../../include/asm.hp"
 
-#define PACKETCOUNT 2000
+#define PACKETCOUNT 1000
 #define PREAMBLE 0b00111100
-#define REQBITS 6
+#define REQBITS 7
 
 //  _____________________
 //  Register  |  Purpose
@@ -51,7 +51,7 @@ INIT:
 	MOV r1.b0, 0 // init reg number to 0
 	MOV r1.b1, 0 // hold XOR result
 
-        MOV r2, 0 // recent bits holder
+        MOV r2.b0, 0 // recent bits holder
         
 	MOV r3.b0, PREAMBLE // hold actual preamble for comparison
         MOV r3.b1, REQBITS // hold desired bit matches for comparison
@@ -70,23 +70,23 @@ DEL_NEW:
         ADD r0.b0, r0.b0, 1
         QBNE DEL_NEW, r0.b0, r0.b2
 
-        MOV r2, 0 // reset bit holder
+        MOV r2.b0, 0 // reset bit holder
         MOV r3.b2, 0 // reset matching bits counter
 
 PRE_LP:
         MOV r0.b0, 0 // reset delay
-        LSL r2, r2, 1 // shift preamble holder to prepare for new bit
+        LSL r2.b0, r2.b0, 1 // shift preamble holder to prepare for new bit
         LSR r4, r31, 15 // sample GPI reg, shift sample value to 0th index
         AND r4, r4, 1 // and to zero out all other bits
         QBEQ PRE_SET, r4, 1 // if bit set, jump to set
 
 PRE_CLR:
-        CLR r2.t0 // clear new bit
+        CLR r2.b0.t0 // clear new bit
         MOV r3.b2, 0 // NOP
         JMP PRE_DEL
 
 PRE_SET:
-        SET r2.t0 // set new bit
+        SET r2.b0.t0 // set new bit
         MOV r3.b2, 0 // NOP
         JMP PRE_DEL
 
@@ -146,7 +146,6 @@ SMP_B1b1:
         LSR r4, r31, 15
         AND r4, r4, 1
         QBEQ SET_B1b1, r4, 1
-
 
 CLR_B1b1:
 	CLR r29.t31
