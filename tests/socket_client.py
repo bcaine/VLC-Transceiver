@@ -38,9 +38,20 @@ def receive_data(port):
     print "Received data of length: {}".format(len(data))
     print data
 
+
+def convert(n):
+    num = int(n[:-1])
+    if n[-1:] == 'k':
+        return num * 10**3
+    elif n[-1:] == 'm':
+        return num * 10**6
+    else:
+        return num
+
 if __name__=="__main__":
-    num = int(sys.argv[2])
+    if len(sys.argv) == 3:
+        num = convert(sys.argv[2])
     if 'send' in sys.argv:
         send_data(9000, num)
     elif 'receive' in sys.argv:
-        receive_data(port=9000)
+        receive_data(9000)

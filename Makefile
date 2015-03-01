@@ -72,4 +72,5 @@ main: clean $(main_o)
 
 all: test sockettest main prutest
 
-clean: -rm *.o test sockettest main prutest
+clean:
+	-rm *.o test sockettest main prutest
