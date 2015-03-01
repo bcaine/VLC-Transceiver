@@ -180,9 +180,9 @@ void Transceiver::Receive() {
   }
 
   // Send the rest via sockets.
-  if (sendsize > 0) {
+  if (sendsize > 0)
     _sock.Send(buf, sendsize);
-  }
+
   
   _sock.SendDone();
   _pru.DisablePRU();
