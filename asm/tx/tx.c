@@ -21,9 +21,10 @@
 /******************************************************************************
 * Local Macro Declarations                                                    *
 ******************************************************************************/
-#define LENGTH 		 166
+#define LENGTH 		 500
 #define PRU_NUM 	 0
-#define CODE1 		 0b01010101010101010101010101010101
+
+// do not change:
 #define DDR_BASEADDR     0x80000000
 #define OFFSET_DDR	 0x00001000 
 #define OFFSET_SHAREDRAM 2048		//equivalent with 0x00002000
@@ -159,35 +160,19 @@ static int LOCAL_exampleInit (  )
     length = DDR_regaddr;
     cursor = length + 4;
     data = cursor + 4;
-    *((unsigned long*) length) = 5;
-    *((unsigned long*) cursor) = 0;
-    printf("Attempting memset with size of 7040\n");
-    //memset(DDR_regaddr, 0, 100);
+    int packetLength = 186;
+    *((unsigned long*) length) = 10*packetLength+1;
+    printf("Attempting memset with size of 1000\n");
+    memset(DDR_regaddr+8, 0xaaaa, 1000);
     printf("\t memset passed \n");
     return(0);
 }
 static unsigned short LOCAL_examplePassed ( unsigned short pruNum )
 {
-   void *DDR_regaddr = ddrMem + OFFSET_DDR + 8;
-   printf("Start: (%x)\n", (*(unsigned char*) DDR_regaddr));
-   DDR_regaddr = DDR_regaddr + 1;
-   printf("Plus 1: (%x)\n", (*(unsigned char*) DDR_regaddr));
-   DDR_regaddr = DDR_regaddr + 1;
-   printf("Plus 2: (%x)\n", (*(unsigned char*) DDR_regaddr));
-   DDR_regaddr = DDR_regaddr + 1;
-   printf("Plus 3: (%x)\n", (*(unsigned char*) DDR_regaddr));
-   DDR_regaddr = DDR_regaddr + 1;
-   printf("Plus 4: (%x)\n", (*(unsigned char*) DDR_regaddr));
-   DDR_regaddr = DDR_regaddr + 1;
-   printf("Plus 5: (%x)\n", (*(unsigned char*) DDR_regaddr));
-   DDR_regaddr = DDR_regaddr + 1;
-   printf("Plus 6: (%x)\n", (*(unsigned char*) DDR_regaddr));
-   DDR_regaddr = DDR_regaddr + 1;
-   printf("Plus 7: (%x)\n", (*(unsigned char*) DDR_regaddr));
-   DDR_regaddr = DDR_regaddr + 1;
-   printf("Plus 8: (%x)\n", (*(unsigned char*) DDR_regaddr));
-   DDR_regaddr = DDR_regaddr + 1;
-   printf("Plus 9: (%x)\n", (*(unsigned char*) DDR_regaddr));
+   void *DDR_regaddr = ddrMem + OFFSET_DDR;
+   printf("Length field: (%li)\n", (*(unsigned long*) DDR_regaddr));
+   DDR_regaddr = DDR_regaddr + 4;
+   printf("Offset field: (%li)\n", (*(unsigned long*) DDR_regaddr));
    // return(*(unsigned long*) DDR_regaddr == 0xdcba);
     return(1);
 }

@@ -45,10 +45,10 @@ INIT:
 	MOV r1, PRU1CTPPR_1
 	SBBO r0, r1, 0, 4
 
-	MOV r0, 8 // init offset to third byte
+	MOV r0, 8 // init offset to ninth byte
 	MOV r1, OFFSET_LIM // store end of buffer location
 	MOV r2, PRU0_DELAY // store PRU delay value
-	LBCO r3, CONST_DDR, 0, 4 // read length of transfer from RAM
+	LBCO r3, CONST_DDR, 0, 4 // read number of packets from RAM
 	SBCO r0, CONST_DDR, 4, 4 // write initial read offset to RAM 
 	MOV r4, 0 // init number of packets sent to 0
 	MOV r5, 0 // init delay counter to 0
@@ -56,8 +56,8 @@ INIT:
 
 START:
 	LBCO r8, CONST_DDR, r0, 88 // load 88 bytes
-	SBCO r0, CONST_DDR, 4, 4 // store read cursor
 	ADD r0, r0, 88 // increment read offset
+	SBCO r0, CONST_DDR, 4, 4 // store read cursor
 	ADD r4, r4, 1 // increment packet counter
 
 MAIN_LOOP:
@@ -68,7 +68,7 @@ MAIN_LOOP:
 	// else
 	ADD r4, r4, 1 // increment packet count
 
-	// if overflow condition met
+	// if overflow condition not met
 	QBNE LOAD_DATA, r0, r1 // jump to LOAD_DATA
  
 	// else
@@ -78,8 +78,8 @@ MAIN_LOOP:
 
 LOAD_DATA:
 	LBCO r8, CONST_DDR, r0, 88 // load a packet (88B) from RAM
-	SBCO r0, CONST_DDR, 4, 4 // store current offset to RAM
 	ADD r0, r0, 88 // increment offset
+	SBCO r0, CONST_DDR, 4, 4 // store current offset to RAM
 
 	MOV r5, 0 // reset delay counter
 
