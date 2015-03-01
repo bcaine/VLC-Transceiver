@@ -28,7 +28,7 @@
 #define DDR_BASEADDR     0x80000000
 #define OFFSET_DDR	 0x00001000 
 #define OFFSET_SHAREDRAM 2048		//equivalent with 0x00002000
-
+#define BUFFER_LENGTH    186
 #define PRUSS0_SHARED_DATARAM    4
 
 /******************************************************************************
@@ -49,6 +49,11 @@ static unsigned short LOCAL_examplePassed ( unsigned short pruNum );
 void *length;
 void *cursor;
 void *data;
+
+unsigned long transferLength = BUFFER_LENGTH/2;
+
+unsigned long memLength =  16376;
+unsigned long dataCode = 0xaaaa;
 
 /******************************************************************************
 * Intertupt Service Routines                                                  *
@@ -145,9 +150,9 @@ static int LOCAL_exampleInit (  )
         printf("Failed to open /dev/mem (%s)\n", strerror(errno));
         return -1;
     }	
-
+    // 0x0FFFFFFF
     /* map the DDR memory */
-    ddrMem = mmap(0, 0x0FFFFFFF, PROT_WRITE | PROT_READ, MAP_SHARED, mem_fd, DDR_BASEADDR);
+    ddrMem = mmap(0, 16368+8+OFFSET_DDR,  PROT_WRITE | PROT_READ, MAP_SHARED, mem_fd, DDR_BASEADDR);
     if (ddrMem == NULL) {
         printf("Failed to map the device (%s)\n", strerror(errno));
         close(mem_fd);
@@ -161,23 +166,18 @@ static int LOCAL_exampleInit (  )
     cursor = length + 4;
     data = cursor + 4;
 
-    int bufferLength = 186;
-    *((unsigned long*) length) = 3*bufferLength + 1;
-    // note: without + 1 above, buffer will sit at MAX (16376)
+    *((unsigned long*) length) = transferLength;
 
-    unsigned long memLength =  1000;
-    printf("Attempting memset with size of (%li)\n", memLength);
-    memset(DDR_regaddr+8, 0xaaaa, memLength);
+    printf("Attempting memset to (%x) with size of (%li)\n", dataCode, memLength);
+    memset(data, dataCode, memLength);
     printf("\t memset passed \n");
     return(0);
 }
 static unsigned short LOCAL_examplePassed ( unsigned short pruNum )
 {
-   void *DDR_regaddr = ddrMem + OFFSET_DDR;
    printf("\n\tAfter PRU Completion:\n");
-   printf("Length field: (%li)\n", (*(unsigned long*) DDR_regaddr));
-   DDR_regaddr = DDR_regaddr + 4;
-   printf("Offset field: (%li)\n", (*(unsigned long*) DDR_regaddr));
+   printf("Overflow counter: (%li)\n", (*(unsigned long*) length));
+   printf("Offset: (%li)\n", (*(unsigned long*) cursor));
    // return(*(unsigned long*) DDR_regaddr == 0xdcba);
     return(1);
 }

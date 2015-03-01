@@ -53,6 +53,7 @@ INIT:
 	MOV r4, 0 // init number of packets sent to 0
 	MOV r5, 0 // init delay counter to 0
 	MOV r6, 0 // init overflow counter to 0
+	SBCO r6, CONST_DDR, 0, 4 // write initial overflow counter to RAM
 
 START:
 	LBCO r8, CONST_DDR, r0, 88 // load 88 bytes
@@ -73,7 +74,7 @@ MAIN_LOOP:
  
 	// else
 	MOV r0, 8 // reset offset to start of buffer
-	ADD r6, r6, 1 // increment overflow counter
+	ADD r6, r6, 100 // increment overflow counter
 	SBCO r6, CONST_DDR, 0, 4 // write number of overflows
 
 LOAD_DATA:

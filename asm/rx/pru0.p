@@ -26,7 +26,7 @@ INIT:
 
 	// Free Registers: r5, r6, r7
 	// Cycle Count: 140800
-	JMP START_PRE:
+	JMP START_PRE
 
 NEW_PACKET:
 	XOUT 10, r1.b3, 87
@@ -212,7 +212,7 @@ DEL_P1b8:
 CHK_PRE:
 	MOV r1.b0, 0
 	MOV r1.b3, 96 // reset preamble delay
-	QBLT PRE_B1b1, r0.b1, 7 // repeat preamble - 200c
+	QBLT PRE_P1b1, r0.b1, 7 // repeat preamble - 200c
 	JMP SMP_B2b8 // go to data - 201c
 
 DEL_CPY:
@@ -803,7 +803,7 @@ SMP_B4b8:
 
 CLR_B4b8:
 	CLR r29.t0
-	JMP UDP_R29
+	JMP UPD_R29
 
 SET_B4b8:
 	SET r29.t0
@@ -812,7 +812,7 @@ SET_B4b8:
 BCK_P4b8:
 	JMP BCK_P3b8
 
-UDP_R29:
+UPD_R29:
 	ADD r0.b0, r0.b0, 1
 	QBEQ CPY_R8, r0.b0, 1
 	QBEQ CPY_R9, r0.b0, 2

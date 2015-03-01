@@ -25,40 +25,53 @@ INIT:
 	MOV		  r1, PRU1CTPPR_1
 	SBBO	  r0, r1, 0, 4
 
-	MOV		  r0, 8 // counter --offset
-	MOV		  r1, 0 // counter --delay
-	MOV		  r2, PRU0_DELAY // loop delay --forward
-	LBCO	  r3, CONST_DDR, 0, 4 // limit --num packets
-	MOV		  r4, 0 // counter --packets
-	MOV		  r5, INIT_DELAY // loop delay --init
-	MOV		  r6, OFFSET_LIM // limit --read offset
+	MOV		  r0, 8 // init write offset to ninth byte
+	MOV		  r1, 0 // init delay counter to 0
+	MOV		  r2, PRU0_DELAY // store PRU delay value
+	LBCO	  r3, CONST_DDR, 0, 4 // read number of packets from RAM
+	SBCO	  r0, CONST_DDR, 4, 4 // write initial write offset to RAM
+	MOV		  r4, 0 // init number of packets received to 0
+	MOV		  r5, INIT_DELAY // store initial delay value
+	MOV		  r6, OFFSET_LIM // store end of buffer location
+	MOV		  r7, 0 // init overflow counter to 0
 
-START_DELAY:
+START_DELAY: // init special-case delay
 	ADD r1, r1, 1
 	QBNE START_DELAY, r1, r5
 
 MAIN_LOOP:
 	XIN 10, r8, 88 // read from SP
-	QBNE STORE_DATA, r0, r6
-	MOV r0, 8
+
+	// if overflow condition not met
+	QBNE STORE_DATA, r0, r6 // jump to STORE_DATA
+
+	// else
+	ADD r7, r7, 1 // increment overflow counter
+	SBCO r7, CONST_DDR, 0, 4 // write number of overflows
+	MOV r0, 8 // reset offset to start of buffer
 
 STORE_DATA:
-	SBCO r8, CONST_DDR, r0, 88 // store to RAM
+	SBCO r8, CONST_DDR, r0, 88 // push packet to RAM
 	ADD r0, r0, 88 // increment offset
+	SBCO r0, CONST_DDR, 4, 4 // store write offset to RAM
 
 	ADD r4, r4, 1 // increment packet count
-	SBCO r4, CONST_DDR, 4, 4 // store to RAM
 
-	QBEQ STOP, r4, r3
+	// if packet counter reaches total length
+	QBEQ STOP, r4, r3 // jump to STOP and halt operation
 
-	MOV r1, 0
+	// else
+	MOV r1, 0 // reset delay counter
 
 WAIT:
-	ADD r1, r1, 1
-	QBNE WAIT, r1, r2 
+	ADD r1, r1, 1 // increment delay
 
-	JMP MAIN_LOOP
+	// if sufficient delay for PRU0 not reached
+	QBNE WAIT, r1, r2 // continue delay
+
+	// else
+	JMP MAIN_LOOP // return to main loop
 
 STOP:
-	MOV r31.b0, PRU1_ARM_INTERRUPT + 16
-	HALT
+	MOV r31.b0, PRU1_ARM_INTERRUPT + 16 // send program complete ineterrupt to host
+	HALT // shut down microcontroller
