@@ -151,7 +151,6 @@ void RealtimeControl::push(uint8_t* packet) {
 // We pop 87 bytes, which is actually 86.25 bytes
 // AKA 690 bits.
 void RealtimeControl::pop(uint8_t* packet) {
-  // Expect packet array length to be 92
 
   uint8_t* addr = peek();
   // Remove preamble 
