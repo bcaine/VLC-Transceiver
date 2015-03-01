@@ -56,7 +56,7 @@ public:
   uint8_t* data() { return (uint8_t*)_data; }
   void setCursor(uint32_t val) { _internal_cursor = val; }
 
-  uint32_t pruCursor() { return *((uint32_t*)_pru_cursor) - 8; }
+  volatile uint32_t pruCursor() { return *((volatile uint32_t*)_pru_cursor) - 8; }
   uint32_t internalCursor() { return _internal_cursor; }
 
   uint32_t max_bytes;
@@ -70,7 +70,7 @@ private:
   void* _length;
   // Four bytes for PRU cursor
   // VALUE IN BYTES
-  void* _pru_cursor;
+  volatile void* _pru_cursor;
   // Rest is data
   void *_data;
 

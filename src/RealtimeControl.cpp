@@ -111,11 +111,11 @@ bool RealtimeControl::OpenMem() {
   }
 
   _length = ddrMem;
-  _pru_cursor = _length + 4;
-  _data = _pru_cursor + 4;
+  _pru_cursor = ddrMem + 4;
+  _data = ddrMem + 8;
 
   *((uint32_t*)_length) = 0;
-  *((uint32_t*)_pru_cursor) = 0;
+  *((volatile uint32_t*)_pru_cursor) = 0;
 
   _internal_cursor = 0;
 
