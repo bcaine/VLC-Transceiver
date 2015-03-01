@@ -13,7 +13,7 @@
 #define READ_ADDRESS 0x90000000
 #define PRU0_DELAY 70365 // delay needed to wait for PRU0
 #define OFFSET_LIM 16777208 //10485208//16376 // maximum byte offset
-#include "tx.hp"
+#include "../../include/asm.hp"
 
 // NOTE: Delay assumes 140799 cycles between PRU0 XINs
 // and allows for each LBCO/SBCO to take 200 cycles each.
@@ -32,7 +32,7 @@
 //      r4    |  Counter - packets sent
 //      r5    |  Counter - delay loops performed
 //      r6    |  Counter - overflow conditions met
-
+//      r7    |  Const   - Base address of data buffer
 
 INIT:
 	// Enable OCP master port -- allows external memory access
@@ -45,16 +45,21 @@ INIT:
 	MOV r0, 8 // init offset to ninth byte
 	MOV r1, OFFSET_LIM // store end of buffer location
 	MOV r2, PRU0_DELAY // store PRU delay value
+
 	LBBO r3, r7, 0, 4 // read number of packets from RAM
 	SBBO r0, r7, 4, 4 // write initial read offset to RAM 
+
 	MOV r4, 0 // init number of packets sent to 0
 	MOV r5, 0 // init delay counter to 0
 	MOV r6, 0 // init overflow counter to 0
+
 	SBBO r6, r7, 0, 4 // write initial overflow counter to RAM
+
 START:
 	LBBO r8, r7, r0, 88 // load 88 bytes
 	ADD r0, r0, 88 // increment read offset
 	SBBO r0, r7, 4, 4 // store read cursor
+
 	ADD r4, r4, 1 // increment packet counter
 
 MAIN_LOOP:
@@ -62,6 +67,7 @@ MAIN_LOOP:
 
 	// if packet counter reaches total length
 	QBEQ STOP, r4, r3 // jump to STOP and halt operation 
+
 	// else
 	ADD r4, r4, 1 // increment packet count
 
@@ -75,6 +81,7 @@ MAIN_LOOP:
 
 LOAD_DATA:
 	LBBO r8, r7, r0, 88 // load a packet (88B) from RAM
+
 	ADD r0, r0, 88 // increment offset
 	SBBO r0, r7, 4, 4 // store current offset to RAM
 

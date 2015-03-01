@@ -8,7 +8,7 @@
 #define FAIL_CODE 0xffff
 
 .origin 0
-#include "../../../interface/asm.hp"
+#include "../../../../include/asm.hp"
 
 INIT:
 

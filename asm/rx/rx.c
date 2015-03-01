@@ -21,13 +21,19 @@
 /******************************************************************************
 * Local Macro Declarations                                                    *
 ******************************************************************************/
-#define LENGTH 		 166
+#define LENGTH 		 1
 #define PRU_NUM 	 0
-#define CODE1 		 0b01010101010101010101010101010101
+#define BUFFER_LENGTH    186
+#define BUFF_BASEADDR    0x90000000
+
+#define HIGH_CODE 	 0xffff
+#define ALT_CODE 	 0xaaaa
+#define LOW_CODE	 0x0000
+
+// do not change:
 #define DDR_BASEADDR     0x80000000
 #define OFFSET_DDR	 0x00001000 
 #define OFFSET_SHAREDRAM 2048		//equivalent with 0x00002000
-
 #define PRUSS0_SHARED_DATARAM    4
 
 /******************************************************************************
@@ -45,7 +51,9 @@ static unsigned short LOCAL_examplePassed ( unsigned short pruNum );
 /******************************************************************************
 * Local Variable Definitions                                                  *
 ******************************************************************************/
-
+void *length;
+void *cursor;
+void *data;
 
 /******************************************************************************
 * Intertupt Service Routines                                                  *
@@ -91,11 +99,11 @@ int main (void)
     prussdrv_pruintc_init(&pruss_intc_initdata);
 
     /* Initialize example */
-    printf("\tINFO: Initializing example.\r\n");
+    printf("\tINFO: Initializing test.\r\n");
     LOCAL_exampleInit();
     
     /* Execute example on PRU */
-    printf("\tINFO: Executing example.\r\n");
+    printf("\tINFO: Executing test.\r\n");
     prussdrv_exec_program (0, "./pru0.bin");
     prussdrv_exec_program (1, "./pru1.bin");
 
@@ -134,48 +142,39 @@ int main (void)
 
 static int LOCAL_exampleInit (  )
 {
-    void *DDR_regaddr;
-
+    unsigned long numBytes = LENGTH * 88;
     /* open the device */
     mem_fd = open("/dev/mem", O_RDWR);
     if (mem_fd < 0) {
         printf("Failed to open /dev/mem (%s)\n", strerror(errno));
         return -1;
     }	
-
+    // 0x0FFFFFFF
     /* map the DDR memory */
-    ddrMem = mmap(0, 0x0FFFFFFF, PROT_WRITE | PROT_READ, MAP_SHARED, mem_fd, DDR_BASEADDR);
+    ddrMem = mmap(0, numBytes,  PROT_WRITE | PROT_READ, MAP_SHARED, mem_fd, BUFF_BASEADDR);
     if (ddrMem == NULL) {
         printf("Failed to map the device (%s)\n", strerror(errno));
         close(mem_fd);
         return -1;
     }
 
-    /* Store Addends in DDR memory location */
-    DDR_regaddr = ddrMem + OFFSET_DDR;
-    void *length;
-    void *cursor;
-    void *data;
-    length = DDR_regaddr;
+    /* Setup required PRU vars in RAM */
+    length = ddrMem;
     cursor = length + 4;
     data = cursor + 4;
 
-    char packetLength = 88;
-    unsigned long bufferLength = 186;
-    *((unsigned long*) length) = bufferLength+1;
-    *((unsigned long*) cursor) = 0;
-
-    printf("Attempting memset with size of 7040\n");
-    //memset(DDR_regaddr, 0, 100);
+    *((unsigned long*) length) = LENGTH;
+	
+    printf("Attempting memset to (%x) with size of (%li)\n", LOW_CODE, numBytes);
+    memset(data, LOW_CODE, numBytes);
     printf("\t memset passed \n");
     return(0);
 }
 static unsigned short LOCAL_examplePassed ( unsigned short pruNum )
 {
-   void *DDR_regaddr = ddrMem + OFFSET_DDR;
-   printf("Overflow conditions: (%li)\n", (*(unsigned long*) DDR_regaddr));
-   DDR_regaddr = DDR_regaddr + 4;
-   printf("Offset: (%li)\n", (*(unsigned long*) DDR_regaddr));
+   printf("\n\tAfter PRU Completion:\n");
+   printf("Length: (%li)\n", (*(unsigned long*) length));
+   printf("Offset: (%li)\n", (*(unsigned long*) cursor));
    // return(*(unsigned long*) DDR_regaddr == 0xdcba);
     return(1);
 }

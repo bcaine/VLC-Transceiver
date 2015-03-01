@@ -6,7 +6,7 @@
 
 .origin 0
 .entrypoint INIT
-#include "../../../interface/asm.hp"
+#include "../../../../include/asm.hp"
 
 INIT:
 

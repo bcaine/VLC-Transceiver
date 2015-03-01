@@ -4,7 +4,9 @@
 #define PRU0_DELAY 70196 // delay needed to wait for PRU0
 #define INIT_DELAY 70400 // delay needed for initial read-in
 #define OFFSET_LIM 16376 // maximum byte offset
-#include "rx.hp"
+#define READ_ADDRESS 0x90000000
+
+#include "../../include/asm.hp"
 
 // NOTE: Delay assuems 140799 cycles between PRU0 XOUTs
 // and allows for all LBCO/SBCO to take 200 cycles each.
@@ -25,15 +27,16 @@ INIT:
 	MOV		  r1, PRU1CTPPR_1
 	SBBO	  r0, r1, 0, 4
 
+	MOV r7, READ_ADDRESS
+
 	MOV		  r0, 8 // init write offset to ninth byte
 	MOV		  r1, 0 // init delay counter to 0
 	MOV		  r2, PRU0_DELAY // store PRU delay value
-	LBCO	  r3, CONST_DDR, 0, 4 // read number of packets from RAM
-	SBCO	  r0, CONST_DDR, 4, 4 // write initial write offset to RAM
+	LBBO	  r3, r7, 0, 4 // read number of packets from RAM
+	SBBO	  r0, r7, 4, 4 // write initial write offset to RAM
 	MOV		  r4, 0 // init number of packets received to 0
 	MOV		  r5, INIT_DELAY // store initial delay value
 	MOV		  r6, OFFSET_LIM // store end of buffer location
-	MOV		  r7, 0 // init overflow counter to 0
 
 START_DELAY: // init special-case delay
 	ADD r1, r1, 1
@@ -46,14 +49,12 @@ MAIN_LOOP:
 	QBNE STORE_DATA, r0, r6 // jump to STORE_DATA
 
 	// else
-	ADD r7, r7, 1 // increment overflow counter
-	SBCO r7, CONST_DDR, 0, 4 // write number of overflows
 	MOV r0, 8 // reset offset to start of buffer
 
 STORE_DATA:
-	SBCO r8, CONST_DDR, r0, 88 // push packet to RAM
+	SBBO r8, r7, r0, 88 // push packet to RAM
 	ADD r0, r0, 88 // increment offset
-	SBCO r0, CONST_DDR, 4, 4 // store write offset to RAM
+	SBBO r0, r7, 4, 4 // store write offset to RAM
 
 	ADD r4, r4, 1 // increment packet count
 

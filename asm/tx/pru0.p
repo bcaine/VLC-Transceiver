@@ -10,7 +10,7 @@
 
 .origin 0
 .entrypoint INIT
-#include "tx.hp"
+#include "../../include/asm.hp"
 
 #define READ_ADDRESS 0x90000000
 
@@ -24,6 +24,7 @@
 //      r2    |  Counter - packets modulated
 //      r3    |  Const   - packets to transfer
 //      r4    |  Holder  - bit to modulate
+//      r5    |  Const   - base address of data buffer
 //    r8-r29  |  Holder  - hold packet bytes
 //      r30   |  I/O     - holds GPO pin register (.t15)
 
@@ -37,13 +38,13 @@ INIT:
     CLR       r0, r0, 4         // Clear SYSCFG[STANDBY_INIT] to enable OCP master port
     SBCO      r0, C4, 4, 4
 		
-    MOV r7, READ_ADDRESS
+    MOV r5, READ_ADDRESS
     MOV r1.b0, 0 // init delay counter to 0
     MOV r1.b1, 97 // store forward delay value
     MOV r1.b2, 91 // store backward delay value
     MOV r1.b3, 0 // init register counter to 0
     MOV r2, 0 // init packet counter to 0
-    LBBO r3, r7, 0, 4 // load transfer length from RAM
+    LBBO r3, r5, 0, 4 // load transfer length from RAM
 
     XIN 10, r8, 88 // pull a packet from the scratchpad
     JMP CLC_B1b1 // jump to modulation (start loop)
