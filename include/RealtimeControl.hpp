@@ -24,8 +24,7 @@
 #include <stdint.h>
 #include <iostream>
 
-#define DDR_BASEADDR     0x80000000
-#define OFFSET_DDR	 0x00001000
+#define DDR_BASEADDR     0x90000000
 
 const int PACKET_SIZE = 88;
 

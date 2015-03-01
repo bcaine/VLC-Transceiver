@@ -167,6 +167,7 @@ static int LOCAL_exampleInit (  )
 	
     printf("Attempting memset to (%x) with size of (%li)\n", LOW_CODE, numBytes);
     memset(data, LOW_CODE, numBytes);
+
     printf("\t memset passed \n");
     return(0);
 }

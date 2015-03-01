@@ -4,7 +4,7 @@ import socket
 import sys
 import struct
 
-HOST="192.168.2.2"
+HOST="192.168.7.2"
 
 def get_socket(port):
     # Create a TCP/IP socket
@@ -17,9 +17,10 @@ def get_socket(port):
 def send_data(port, n):
     sock = get_socket(port)
     # 5 Bytes * whatever
-    # message = 'Hello' * n
-    message = 'a' * n
-    # print >>sys.stderr, 'sending "%s"' % message
+
+    message = 'hello' * (n / 5)
+
+
     len_in_bytes = struct.pack("I", len(message))
     print "Sending Length"
     sock.sendall(len_in_bytes)

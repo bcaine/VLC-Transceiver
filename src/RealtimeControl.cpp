@@ -83,9 +83,9 @@ void RealtimeControl::DisablePRU() {
 
 bool RealtimeControl::OpenMem() {
   // Start up Memory
-  mem_fd = open("/dev/mem", O_RDWR);
-  // Multiple of 88 closest to 16kb
-  max_bytes = 16368;
+  mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
+  // Use about 16MB (multiple of 88)
+  max_bytes = 16777200;
   max_packets = max_bytes / PACKET_SIZE;
 
   if (mem_fd < 0) {
@@ -94,7 +94,7 @@ bool RealtimeControl::OpenMem() {
   }
   
   /* map the DDR memory */
-  ddrMem = mmap(0, max_bytes + OFFSET_DDR + 8, PROT_WRITE | PROT_READ, 
+  ddrMem = mmap(0, max_bytes + 8, PROT_WRITE | PROT_READ, 
 		MAP_SHARED, mem_fd, DDR_BASEADDR);
 
   if (ddrMem == NULL) {
@@ -103,7 +103,7 @@ bool RealtimeControl::OpenMem() {
     return false;
   }
 
-  _length = ddrMem + OFFSET_DDR;
+  _length = ddrMem;
   _pru_cursor = _length + 4;
   _data = _pru_cursor + 4;
 
@@ -118,7 +118,7 @@ bool RealtimeControl::OpenMem() {
 
 void RealtimeControl::CloseMem() {
   close(mem_fd);
-  munmap(ddrMem, max_bytes + OFFSET_DDR + 8);
+  munmap(ddrMem, max_bytes + 8);
 }
 
 
