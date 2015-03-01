@@ -648,12 +648,12 @@ CHECK_DONE:
 
 CPY_R9:
 	MOV r8, r9
-	MOV r2, 44
-	MOV r2, 44
+	MOV r2, 88
+	MOV r2, 88
 	JMP BCK_B4b8
 CPY_R10:
 	MOV r8, r10
-	MOV r2, 44
+	MOV r2, 88
 	JMP BCK_B4b8
 CPY_R11:
 	MOV r8, r11

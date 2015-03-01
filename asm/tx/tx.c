@@ -69,7 +69,7 @@ int main (void)
     unsigned int ret0, ret1;
     tpruss_intc_initdata pruss_intc_initdata = PRUSS_INTC_INITDATA;
     
-    printf("\nINFO: Starting %s example.\r\n", "Waves are for squares");
+    printf("\nINFO: Starting test.\r\n");
     /* Initialize the PRU */
     prussdrv_init ();		
     
@@ -96,8 +96,8 @@ int main (void)
     
     /* Execute example on PRU */
     printf("\tINFO: Executing example.\r\n");
-    prussdrv_exec_program (0, "./tx-pru0.bin");
-    prussdrv_exec_program (1, "./tx-pru1.bin");
+    prussdrv_exec_program (0, "./pru0.bin");
+    prussdrv_exec_program (1, "./pru1.bin");
 
     /* Wait until PRU0 has finished execution */
     printf("\tINFO: Waiting for HALT1 command.\r\n");
