@@ -116,30 +116,42 @@ void TestByteQueue() {
 }
 
 void TestManchester() {
-  int data_length = 2;
-  unsigned char* data = GenerateData(data_length);
+  int data_length = 1000;
+  unsigned char* data = new unsigned char[data_length];
   unsigned char* encoded = new unsigned char[data_length * 2];
   unsigned char* decoded = new unsigned char[data_length];
 
+  unsigned char val = 0xaa;
+  for (int i = 0; i < data_length; i++) {
+    data[i] = val;
+    if (val == 0xaa)
+      val = 0x55;
+    else
+      val = 0xaa;
+  }
+
   ForwardErrorCorrection fec;
   
-  cout << data << endl;
+  for(int i = 0; i <  data_length; i++)
+    printf("%02x", data[i]);
+  cout << endl;
   cout << "---------------------" << endl;
-  fec.ManchesterEncode(data, encoded,
-		       data_length, data_length * 2);
+  fec.ManchesterEncode(data, encoded, data_length * 8);
 
-  cout << encoded << endl;
+  for(int i = 0; i < data_length * 2; i++)
+    printf("%02x", encoded[i]);
+  cout << endl;
+
   cout << "---------------------" << endl;
-  fec.ManchesterDecode(encoded, decoded,
-		       data_length * 2, data_length);
+  fec.ManchesterDecode(encoded, decoded, data_length * 2 * 8);
 
-  cout << decoded << endl;
+  for(int i = 0; i <  data_length; i++)
+    printf("%02x", decoded[i]);
+  cout << endl;
 
   assert(HammingDistance(data, decoded, 2) == 0);
   
   delete[] data;
-  delete[] encoded;
-  delete[] decoded;
 }
 
 void TestBasicPacketization() {
@@ -309,6 +321,7 @@ void TestDataStorage() {
 
 int main() {
 
+  /*
   cout << "Forward Error Correction Test Running...\n" << endl;
   TestFEC();
 
@@ -317,6 +330,7 @@ int main() {
 
   cout << "ByteQueue Test Running...\n" << endl;
   TestByteQueue();
+  */
 
   cout << "----------------------------------------";
   cout << "----------------------------------------" << endl;
@@ -327,6 +341,7 @@ int main() {
   cout << "----------------------------------------";
   cout << "----------------------------------------" << endl;
 
+  /*
   cout << "Basic Packetization Test Running...\n" << endl;
   TestBasicPacketization();
 
@@ -346,7 +361,8 @@ int main() {
   cout << "----------------------------------------" << endl;
 
   cout << "Data Storage Test Running...\n" << endl;
-  TestDataStorage();
+  //TestDataStorage();
+  */
 
   return 0;
 };

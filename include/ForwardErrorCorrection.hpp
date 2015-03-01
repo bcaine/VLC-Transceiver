@@ -17,10 +17,10 @@ public:
 
   void ManchesterEncode(unsigned char *data_in,
 			unsigned char *data_out,
-			int in_len, int out_len);
+			int num_bits_in);
   void ManchesterDecode(unsigned char *data_in,
 			unsigned char *data_out,
-			int in_len, int out_len);
+			int num_bits_in);
 };
 
 #endif // FEC_HPP

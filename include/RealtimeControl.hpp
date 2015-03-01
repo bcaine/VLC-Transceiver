@@ -34,6 +34,10 @@ const int PACKET_SIZE = TOTAL_SIZE - PREAMBLE_LEN;
 // Packet size - 2 for length
 const int DATA_SIZE = PACKET_SIZE - 2;
 
+const int HALF_PACKET_SIZE = PACKET_SIZE / 2;
+const int HALF_DATA_SIZE = HALF_PACKET_SIZE - 2;
+  
+
 using namespace std;
 
 class RealtimeControl {
