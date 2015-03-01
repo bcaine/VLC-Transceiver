@@ -29,6 +29,8 @@ void BasicReceiveSocket()
   len = sock.Receive(buf, 4);
   totallen = buf[0] | (buf[1] << 8) | (buf[2] << 16) | (buf[3] << 24);
 
+  cout << "Total Length is: " << totallen << endl;
+
   int packet_num = totallen / 43;
   if (totallen % 43 != 0)
     packet_num += 1;
@@ -49,11 +51,11 @@ void BasicReceiveSocket()
 void BasicSendSocket()
 {
 
-  int data_len = 100;
+  int data_len = 1032 * 2;
   SocketConnection sock(9000);
   uint8_t *buf = GenerateData(data_len);
 
-  int flushsize = 10;
+  int flushsize = 1032;
   int sent = 0;
 
   cout << "Waiting for client to connect" << endl;

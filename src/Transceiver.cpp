@@ -125,11 +125,11 @@ void Transceiver::Receive() {
   int sendsize = 0;
   
   _pru.OpenMem();
-  
-  // Wait for client to connect.
+
+  cout << "Waiting for client to connect..." << endl;
   _sock.WaitForClient();
-  
-  // Set up PRUs
+
+  cout << "Setting up the PRUs to receive..."<< endl;
   _pru.InitPRU();
   _pru.Receive();
 
@@ -144,6 +144,8 @@ void Transceiver::Receive() {
 
     // Loop while we wait for cursor to increment
     if (_pru.internalCursor() + 88 <= _pru.pruCursor()) {
+      cout << "Pru Cursor: " << _pru.pruCursor() << endl;
+      cout << "Internal Cursor: " << _pru.internalCursor() << endl;
       usleep(SLEEP_US);
       continue;
     }
@@ -176,6 +178,7 @@ void Transceiver::Receive() {
     if (sendsize >= flushsize) {
       _sock.Send(buf, sendsize);
       sendsize = 0;
+      last_send = time(NULL);
     }
   }
 
