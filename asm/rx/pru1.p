@@ -44,16 +44,16 @@ POLL_PX: // poll until PRU0 says a packet is ready
 	LBCO r3.b1, CONST_PRUSHAREDRAM, 0, 1 
 	QBNE POLL_PX, r3.b1, READY_CODE
 
-READ_DATA: // pull in data from PRU0
+READ: // pull in data from PRU0
 	XIN 10, r8, PACK_LEN // read from SP
 	
 	// if overflow condition not met
-	QBNE STORE_DATA, r0, r1 // jump to STORE_DATA
+	QBNE STORE, r0, r1 // jump to STORE_DATA
 
 	// else
 	MOV r0, INIT_OFFSET // reset offset to start of buffer
 
-STORE_DATA:
+STORE:
 	SBBO r8, r2, r0, PACK_LEN // push packet to RAM
 	ADD r0, r0, PACK_LEN // increment offset
 	SBBO r0, r2, 4, 4 // store write offset to RAM
