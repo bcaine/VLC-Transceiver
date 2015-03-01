@@ -146,8 +146,17 @@ void Transceiver::Receive() {
   int high = 0;
   bool last_packet_high = false;
 
+  bool first = true;
+
   for (int i = 0; i < num_packets; i++) {
     _pru.pop(encoded);
+
+    if (first) {
+      for (int u = 0; u < PACKET_SIZE * 8; u++)
+	cout << getBit(encoded, u);
+      cout << endl;
+      first = false;
+    }
 
     for (int j = 0; j < PACKET_SIZE; j++)
       high += packet[j] == 0xFF;
@@ -164,6 +173,7 @@ void Transceiver::Receive() {
     high = 0;
     
     _fec.ManchesterDecode(encoded, packet, HALF_PACKET_SIZE * 8);
+    //cout << packet << endl;
 
     packetlen_bits = depacketize(packet, data);
     packetlen = packetlen_bits / 8;

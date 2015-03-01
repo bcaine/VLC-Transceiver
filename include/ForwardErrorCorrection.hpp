@@ -20,7 +20,7 @@ public:
 			int num_bits_in);
   void ManchesterDecode(unsigned char *data_in,
 			unsigned char *data_out,
-			int num_bits_in);
+			int num_bits_out);
 };
 
 #endif // FEC_HPP

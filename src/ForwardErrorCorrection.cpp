@@ -85,10 +85,10 @@ void ForwardErrorCorrection::ManchesterEncode(
 void ForwardErrorCorrection::ManchesterDecode(
 		      unsigned char *data_in,
 		      unsigned char *data_out,
-		      int num_bits_in)
+		      int num_bits_out)
 {
   int in = 0;
-  for(int out = 0; out < num_bits_in; out++) {
+  for(int out = 0; out < num_bits_out; out++) {
     if ((getBit(data_in, in) == 0) &&
 	(getBit(data_in, in+1) == 1))
     {
