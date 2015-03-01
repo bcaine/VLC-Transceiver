@@ -9,7 +9,7 @@
 .origin 0
 .entrypoint READ_TEST
 
-#include "../../../../interface/asm.hp"
+#include "../../../../../include/asm.hp"
 
 READ_TEST:
 

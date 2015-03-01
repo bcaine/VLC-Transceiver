@@ -1,17 +1,14 @@
 .origin 0
 .entrypoint INIT
-#include "rx.hp"
+#include "../../include/asm.hp"
+
+#define READ_ADDRESS 0x90000000
 
 INIT:
 	// Enable OCP master port
 	LBCO      r0, C4, 4, 4
 	CLR       r0, r0, 4         // Clear SYSCFG[STANDBY_INIT] to enable OCP master port
 	SBCO      r0, C4, 4, 4
-
-	// make C31 (CONST_DDR) point to DDR base address
-	MOV r0, 0x100000
-	MOV r1, PRU0CTPPR_1
-	SBBO r0, r1, 0, 4
 
 	MOV r0.b0, 0 // counter -- register number
 	MOV r0.b1, 0 // counter -- preamble verified bits
@@ -22,7 +19,7 @@ INIT:
 	MOV r1.b3, 96 // loop delay --preamble (init not req, here for visibility)
 
 	MOV r2, 0 // counter --packet length
-	LBCO r3, CONST_DDR, 0, 4 // what's the offset?
+	LBBO r3, r7, 0, 4 // what's the offset?
 
 	// Free Registers: r5, r6, r7
 	// Cycle Count: 140800

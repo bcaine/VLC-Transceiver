@@ -6,7 +6,7 @@
 
 .origin 0
 .entrypoint INIT
-#include "../../../interface/asm.hp"
+#include "../../../../../include/asm.hp"
 
 INIT:
     	
@@ -17,7 +17,7 @@ INIT:
 
 	// make CONST_DDR (C31) point to DDR base address
 	MOV r0, 0x00100000
-    	MOV r1, CTPPR_1
+    	MOV r1, PRU0CTPPR_1
     	SBBO r0, r1, 0, 4
 
         MOV r1, 0 // delay loop counter

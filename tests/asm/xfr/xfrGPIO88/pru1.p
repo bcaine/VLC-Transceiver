@@ -5,7 +5,7 @@
 // determine if XFR is taking more than the specified 1 cycle per data transfer.
 
 .origin 0
-#include "../../../interface/asm.hp"
+#include "../../../../include/asm.hp"
 
 INIT:
 

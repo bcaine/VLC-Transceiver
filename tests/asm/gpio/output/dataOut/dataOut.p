@@ -8,7 +8,7 @@
 
 .origin 0
 .entrypoint INIT
-#include "../../../interface/asm.hp"
+#include "../../../../../include/asm.hp"
 
 #define ALL_HIGH 0b11111111111111111111111111111111
 #define ALL_LOW  0b00000000000000000000000000000000

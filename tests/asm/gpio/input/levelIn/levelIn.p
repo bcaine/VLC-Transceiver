@@ -10,7 +10,7 @@
 
 .origin 0
 .entrypoint INIT
-#include "../../../../interface/asm.hp"
+#include "../../../../../include/asm.hp"
 
 #define HIGH  1
 #define LOW   0
