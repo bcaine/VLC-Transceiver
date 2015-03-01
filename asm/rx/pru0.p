@@ -32,16 +32,18 @@
 #define ERROR_CODES 0x00
 
 // Delay Constants:
-#define DELAY_FWD 97
-#define INIT_DELAY_BWD 93
-#define DELAY_PRE 82
-
-#ifdef GPIO_DEBUG
-	#define SETBACK_IO	1
-	#define DELAY_FWD   ?
-	#define DELAY_BWD   ?
-	#define DELAY_PRE   ?
+#ifndef GPIO_DEBUG
+	#define SETBACK_IO       0
+	#define DELAY_FWD       97
+	#define INIT_DELAY_BWD  93
+	#define DELAY_PRE       82
+#else
+	#define SETBACK_IO	 1
+	#define DELAY_FWD        1
+	#define INIT_DELAY_BWD   1
+	#define DELAY_PRE        1
 #endif
+
 //  _____________________
 //  Register  |  Purpose
 //		      
