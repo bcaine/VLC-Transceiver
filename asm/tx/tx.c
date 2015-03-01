@@ -46,7 +46,9 @@ static unsigned short LOCAL_examplePassed ( unsigned short pruNum );
 /******************************************************************************
 * Local Variable Definitions                                                  *
 ******************************************************************************/
-
+void *length;
+void *cursor;
+void *data;
 
 /******************************************************************************
 * Intertupt Service Routines                                                  *
@@ -92,11 +94,11 @@ int main (void)
     prussdrv_pruintc_init(&pruss_intc_initdata);
 
     /* Initialize example */
-    printf("\tINFO: Initializing example.\r\n");
+    printf("\tINFO: Initializing test.\r\n");
     LOCAL_exampleInit();
     
     /* Execute example on PRU */
-    printf("\tINFO: Executing example.\r\n");
+    printf("\tINFO: Executing test.\r\n");
     prussdrv_exec_program (0, "./pru0.bin");
     prussdrv_exec_program (1, "./pru1.bin");
 
@@ -152,24 +154,27 @@ static int LOCAL_exampleInit (  )
         return -1;
     }
 
-    /* Store Addends in DDR memory location */
+    /* Setup required PRU vars in RAM */
     DDR_regaddr = ddrMem + OFFSET_DDR;
-    void *length;
-    void *cursor;
-    void *data;
+
     length = DDR_regaddr;
     cursor = length + 4;
     data = cursor + 4;
-    int packetLength = 186;
-    *((unsigned long*) length) = 10*packetLength+1;
-    printf("Attempting memset with size of 1000\n");
-    memset(DDR_regaddr+8, 0xaaaa, 1000);
+
+    int bufferLength = 186;
+    *((unsigned long*) length) = 3*bufferLength + 1;
+    // note: without + 1 above, buffer will sit at MAX (16376)
+
+    unsigned long memLength =  1000;
+    printf("Attempting memset with size of (%li)\n", memLength);
+    memset(DDR_regaddr+8, 0xaaaa, memLength);
     printf("\t memset passed \n");
     return(0);
 }
 static unsigned short LOCAL_examplePassed ( unsigned short pruNum )
 {
    void *DDR_regaddr = ddrMem + OFFSET_DDR;
+   printf("\n\tAfter PRU Completion:\n");
    printf("Length field: (%li)\n", (*(unsigned long*) DDR_regaddr));
    DDR_regaddr = DDR_regaddr + 4;
    printf("Offset field: (%li)\n", (*(unsigned long*) DDR_regaddr));
