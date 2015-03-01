@@ -92,7 +92,7 @@ int main (void)
 
     /* Initialize example */
     printf("\tINFO: Initializing example.\r\n");
-    LOCAL_exampleInit(PRU_NUM);
+    LOCAL_exampleInit();
     
     /* Execute example on PRU */
     printf("\tINFO: Executing example.\r\n");
@@ -150,34 +150,44 @@ static int LOCAL_exampleInit (  )
         close(mem_fd);
         return -1;
     }
-    int wrCode = 0;
 
     /* Store Addends in DDR memory location */
     DDR_regaddr = ddrMem + OFFSET_DDR;
-    *(unsigned long*) DDR_regaddr = 0xfff;
-    DDR_regaddr = DDR_regaddr + 12;
-    memset(DDR_regaddr, 0/*0b10101010101010101010101010101010*/, 60);
+    void *length;
+    void *cursor;
+    void *data;
+    length = DDR_regaddr;
+    cursor = length + 4;
+    data = cursor + 4;
+    *((unsigned long*) length) = 5;
+    *((unsigned long*) cursor) = 0;
+    printf("Attempting memset with size of 7040\n");
+    //memset(DDR_regaddr, 0, 100);
+    printf("\t memset passed \n");
     return(0);
 }
 static unsigned short LOCAL_examplePassed ( unsigned short pruNum )
 {
-    void *DDR_regaddr = ddrMem + OFFSET_DDR + 12;
-   printf("(%x)\n", 0b10101010101010101010101010101010);
-   printf("Memory buffer:");
-   printf("(%x)\n", (*(unsigned long*) DDR_regaddr));
-   DDR_regaddr = DDR_regaddr + 4;
-   printf("(%x)\n", (*(unsigned long*) DDR_regaddr));
-   DDR_regaddr = DDR_regaddr + 4;
-   printf("(%x)\n", (*(unsigned long*) DDR_regaddr));
-   DDR_regaddr = DDR_regaddr + 4;
-   printf("(%x)\n", (*(unsigned long*) DDR_regaddr));
-   DDR_regaddr = DDR_regaddr + 4;
-   printf("(%x)\n", (*(unsigned long*) DDR_regaddr));
-   DDR_regaddr = DDR_regaddr + 4;
-   printf("(%x)\n", (*(unsigned long*) DDR_regaddr));
-   DDR_regaddr = DDR_regaddr + 4;
-   printf("(%x)\n", (*(unsigned long*) DDR_regaddr));
-   DDR_regaddr = DDR_regaddr + 4;
+   void *DDR_regaddr = ddrMem + OFFSET_DDR + 8;
+   printf("Start: (%x)\n", (*(unsigned char*) DDR_regaddr));
+   DDR_regaddr = DDR_regaddr + 1;
+   printf("Plus 1: (%x)\n", (*(unsigned char*) DDR_regaddr));
+   DDR_regaddr = DDR_regaddr + 1;
+   printf("Plus 2: (%x)\n", (*(unsigned char*) DDR_regaddr));
+   DDR_regaddr = DDR_regaddr + 1;
+   printf("Plus 3: (%x)\n", (*(unsigned char*) DDR_regaddr));
+   DDR_regaddr = DDR_regaddr + 1;
+   printf("Plus 4: (%x)\n", (*(unsigned char*) DDR_regaddr));
+   DDR_regaddr = DDR_regaddr + 1;
+   printf("Plus 5: (%x)\n", (*(unsigned char*) DDR_regaddr));
+   DDR_regaddr = DDR_regaddr + 1;
+   printf("Plus 6: (%x)\n", (*(unsigned char*) DDR_regaddr));
+   DDR_regaddr = DDR_regaddr + 1;
+   printf("Plus 7: (%x)\n", (*(unsigned char*) DDR_regaddr));
+   DDR_regaddr = DDR_regaddr + 1;
+   printf("Plus 8: (%x)\n", (*(unsigned char*) DDR_regaddr));
+   DDR_regaddr = DDR_regaddr + 1;
+   printf("Plus 9: (%x)\n", (*(unsigned char*) DDR_regaddr));
    // return(*(unsigned long*) DDR_regaddr == 0xdcba);
     return(1);
 }

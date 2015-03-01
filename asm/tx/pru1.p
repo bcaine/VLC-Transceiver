@@ -2,6 +2,7 @@
 .entrypoint INIT
 
 #define PRU0_DELAY 70365 // delay needed to wait for PRU0
+#define OFFSET_LIM 16376 // maximum byte offset
 #include "tx.hp"
 
 // NOTE: Delay assumes 140799 cycles between PRU0 XINs
@@ -22,12 +23,12 @@ INIT:
 	MOV r1, PRU1CTPPR_1
 	SBBO r0, r1, 0, 4
 
-	MOV r0, 5 // initial offset
-	MOV r1, 0 // delay counter
-	MOV r2, PRU0_DELAY // packet length counter
-	MOV r4, 0 // packet counter
-
-	LBCO r3, CONST_DDR, 0, 4 // what's the offset?
+	MOV r0, 8 // counter -- read offset
+	MOV r1, 0 // counter --loop delay
+	MOV r2, PRU0_DELAY // limit --loop delay
+	LBCO r3, CONST_DDR, 0, 4 // limit --num packets
+	MOV r4, 0 // counter --num packets
+	MOV r5, OFFSET_LIM // limit --read offset
 
 START:
 	LBCO r8, CONST_DDR, r0, 88 // load 88 bytes
@@ -36,21 +37,27 @@ START:
 
 MAIN_LOOP:
 	XOUT 10, r8, 88 // write to SP
+
 	QBEQ STOP, r4, r3 // if done, branch to stop
+	ADD r4, r4, 1 // increment packet count
 
-	ADD r4, r4, 1 // if not done, increment packet length and keep going
+	QBNE LOAD_DATA, r0, r5
+	MOV r0, 8
 
-	LBCO r8, CONST_DDR, r0, 88 // pull another 88 bytes
-	ADD r0, r0, 88 // increment read offset
-	SBCO r4, CONST_DDR, 4, 4 // store packet count
+LOAD_DATA:
+	LBCO r8, CONST_DDR, r0, 88 // read 88 bytes
+	SBCO r0, CONST_DDR, 4, 4 // store to RAM
+	ADD r0, r0, 88 // increment offset
 
-	LDI r1, 0 // reset delay counter
+	MOV r1, 0 // reset delay counter
 
 WAIT:
 	ADD r1, r1, 1 // increment delay
 	QBLT WAIT, r1, r2 
+
 	JMP MAIN_LOOP // if sufficient delay, return to main loop
 
 STOP:
 	MOV r31.b0, PRU1_ARM_INTERRUPT+16
 	HALT
+
