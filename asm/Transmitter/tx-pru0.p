@@ -25,7 +25,7 @@ INIT:
 
 MAIN_LOOP:
 	XIN 10, r8, 88 // load 88 bytes in from SP
-	MOV r2, 34
+	MOV r2, 84
 
 DEL_R8:
         ADD r0, r0, 1
