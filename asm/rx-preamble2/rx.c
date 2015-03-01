@@ -9,7 +9,6 @@
 #include <errno.h>
 #include <unistd.h>
 #include <string.h>
-#include <stdlib.h>
 
 // Driver header file
 #include "prussdrv.h"
@@ -22,8 +21,7 @@
 /******************************************************************************
 * Local Macro Declarations                                                    *
 ******************************************************************************/
-#define LENGTH		 3000
-#define PACK_LEN	 83
+#define LENGTH 		 50000
 #define PRU_NUM 	 0
 #define BUFFER_LENGTH    186
 #define BUFF_BASEADDR    0x90000000
@@ -50,9 +48,9 @@ static unsigned short LOCAL_examplePassed ( unsigned short pruNum );
 ******************************************************************************/
 volatile void *length;
 volatile void *cursor;
-volatile void *data;
-unsigned long numBytes = LENGTH * PACK_LEN;
-unsigned long numPacks = PACK_LEN;
+void *data;
+unsigned long numBytes = LENGTH * 88;
+unsigned long binTest = 0b11100;
 /******************************************************************************
 * Intertupt Service Routines                                                  *
 ******************************************************************************/
@@ -66,40 +64,34 @@ static int mem_fd;
 static void *ddrMem, *sharedMem;
 static unsigned int *sharedMem_int;
 
-int offset = 0;
-
 /******************************************************************************
 * Global Function Definitions                                                 *
 ******************************************************************************/
 
-int main (int argc, char *argv[])
+int main (void)
 {
-  if (argc == 2)
-    offset = atoi(argv[1]);
-
-  printf("Offset %li", offset);
-  unsigned int ret0, ret1;
-  tpruss_intc_initdata pruss_intc_initdata = PRUSS_INTC_INITDATA;
-  
-  printf("\nINFO: Starting test.\r\n");
-  /* Initialize the PRU */
-  prussdrv_init ();		
-  
-  /* Open PRU Interrupt */
-  ret0 = prussdrv_open(PRU_EVTOUT_0);
-  if (ret0)
+    unsigned int ret0, ret1;
+    tpruss_intc_initdata pruss_intc_initdata = PRUSS_INTC_INITDATA;
+    
+    printf("\nINFO: Starting test.\r\n");
+    /* Initialize the PRU */
+    prussdrv_init ();		
+    
+    /* Open PRU Interrupt */
+    ret0 = prussdrv_open(PRU_EVTOUT_0);
+    if (ret0)
     {
-      printf("prussdrv_open 0 failed\n");
-      return (ret0);
+        printf("prussdrv_open 0 failed\n");
+        return (ret0);
     }
-  ret1 = prussdrv_open(PRU_EVTOUT_1);
-  if (ret1)
+    ret1 = prussdrv_open(PRU_EVTOUT_1);
+    if (ret1)
     {
-      printf("prussdrv_open 1 failed\n");
-      return (ret1);
+        printf("prussdrv_open 1 failed\n");
+	return (ret1);
     }
-  
-  /* Get the interrupt initialized */
+    
+    /* Get the interrupt initialized */
     prussdrv_pruintc_init(&pruss_intc_initdata);
 
     /* Initialize example */
@@ -163,7 +155,7 @@ static int LOCAL_exampleInit (  )
     /* Setup required PRU vars in RAM */
     length = ddrMem;
     cursor = ddrMem + 4;
-    data = ddrMem + 8 + offset;
+    data = ddrMem + 8;
 
     *((unsigned long*) length) = 0;
     *((unsigned long*) cursor) = 0;
@@ -181,38 +173,35 @@ static unsigned short LOCAL_examplePassed ( unsigned short pruNum )
 
    printf("Data: \n\n");
    int i = 4;
-   unsigned char packetNum = 0;
-   unsigned char received[PACK_LEN];
+   unsigned char received[88];
    unsigned long problems = 0;
-   for(i; i < 100; i=i+1){
+   for(i; i < LENGTH-4; i=i+1){
 	int j = 0;
-	while (j < PACK_LEN){
-	  received[j] = (*(unsigned char*) (data + (i * PACK_LEN) +  j));
+	while (j < 88){
+	  received[j] = (*(unsigned char*) (data + (i * 88) +  j));
 	  j=j+1;
 	}
-	
 	int clockDrift = 0;
-
-	/*int m = 2;
-	for(m=2; m < PACK_LEN; m=m+1){
+	int m = 2;
+	for(m=4; m < 88; m=m+1){
 	    if(received[m] != 0xaa){
 	        clockDrift = 1;
                 problems = problems + 1;
                 break;
             }
 	}
-	if(clockDrift){*/ 
+	if(clockDrift){
 	    printf("\n Packet number: %li\n", i);
 	    int k = 0;
-	    for(k=0; k < PACK_LEN; k=k+1){
+	    for(k=0; k < 88; k=k+1){
 	        printf("%x ", received[k]);
 	    }
 	    printf("\n\n");
- 	//} 
+ 	} 
    }
-	//printf("Out of %li packets, %li had drift.\n", LENGTH-4, problems);
-	//float perc = problems/(float)(LENGTH-4);
-   	//printf("Corresponding to a %f chance of we're fucked.\n\n\n", perc);
+	printf("Out of %li packets, %li had drift.\n", LENGTH, problems);
+	float perc = problems/(float)(LENGTH-4);
+   	printf("Corresponding to a %f chance of we're fucked.\n\n\n", perc);
 
    // return(*(unsigned long*) DDR_regaddr == 0xdcba);
     return(1);

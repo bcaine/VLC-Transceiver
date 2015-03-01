@@ -16,15 +16,15 @@
 #ifndef GPIO_DEBUG
 	#define SETBACK_IO  0
 	#define DELAY_P1   74 // delay to maintain 200 cycles between preamble bit checks
-	#define DELAY_P2  245 // delay to sync on middle of bit after preamble part 2
+	#define DELAY_P2  200 // delay to sync on middle of bit after preamble part 2
 	#define DELAY_FWD  97 // delay between sequential data reads in normal operation
-	#define DELAY_BWD  92
+	#define DELAY_BWD  93
 #else
 	#define SETBACK_IO  1
 	#define DELAY_P1   73
-	#define DELAY_P2  244
+	#define DELAY_P2  180
 	#define DELAY_FWD  96
-	#define DELAY_BWD  91
+	#define DELAY_BWD  92
 #endif
 
 //  _____________________
@@ -133,7 +133,6 @@ P2_SMP:
 	QBLT P1_RESET, r0.w0, SYNC_TIMEOUT // if taken too long, revert to P stage 1
 	GET_BIT r31, PIN_OFFSET_BIT, r4
 	QBNE P2_SMP, r4, 0 // loop until pin reads 0
-	
 	MOV r0.w0, 0 // reset delay counter
 	
 P2_DEL: 
