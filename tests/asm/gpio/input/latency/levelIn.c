@@ -21,15 +21,14 @@
 /******************************************************************************
 * Local Macro Declarations                                                    *
 ******************************************************************************/
-#define LENGTH 		 100
+
 #define PRU_NUM 	 0
-#define BUFFER_LENGTH    186
-#define BUFF_BASEADDR    0x90000000
 
-#define HIGH_CODE 	 0xffff
-#define ALT_CODE 	 0xaaaa
-#define LOW_CODE	 0x0000
+#define DDR_BASEADDR     0x80000000
+#define OFFSET_DDR	 0x00001000 
+#define OFFSET_SHAREDRAM 2048		//equivalent with 0x00002000
 
+#define PRUSS0_SHARED_DATARAM    4
 
 /******************************************************************************
 * Local Typedef Declarations                                                  *
@@ -46,11 +45,8 @@ static unsigned short LOCAL_examplePassed ( unsigned short pruNum );
 /******************************************************************************
 * Local Variable Definitions                                                  *
 ******************************************************************************/
-volatile void *length;
-volatile void *cursor;
-void *data;
-unsigned long numBytes = LENGTH * 88;
-unsigned long binTest = 0b11100;
+
+
 /******************************************************************************
 * Intertupt Service Routines                                                  *
 ******************************************************************************/
@@ -70,85 +66,52 @@ static unsigned int *sharedMem_int;
 
 int main (void)
 {
-    unsigned int ret0, ret1;
+    unsigned int ret;
     tpruss_intc_initdata pruss_intc_initdata = PRUSS_INTC_INITDATA;
     
-    printf("\nINFO: Starting test.\r\n");
+    printf("\nINFO: Starting %s test.\r\n", "GPIO input level");
     /* Initialize the PRU */
     prussdrv_init ();		
     
     /* Open PRU Interrupt */
-    ret0 = prussdrv_open(PRU_EVTOUT_0);
-    if (ret0)
+    ret = prussdrv_open(PRU_EVTOUT_0);
+    if (ret)
     {
-        printf("prussdrv_open 0 failed\n");
-        return (ret0);
-    }
-    ret1 = prussdrv_open(PRU_EVTOUT_1);
-    if (ret1)
-    {
-        printf("prussdrv_open 1 failed\n");
-	return (ret1);
+        printf("prussdrv_open open failed\n");
+        return (ret);
     }
     
     /* Get the interrupt initialized */
     prussdrv_pruintc_init(&pruss_intc_initdata);
 
     /* Initialize example */
-    printf("\tINFO: Initializing test: (%li) packets.\r\n", LENGTH);
-    LOCAL_exampleInit();
+    printf("\tINFO: Initializing test.\r\n");
+    LOCAL_exampleInit(PRU_NUM);
     
-   printf("Data: \n\n");
-   int i = 0;
-   unsigned long received[22];
-   for(i; i < 5; i=i+1){
-	int j = 0;
-	while (j < 22){
-	  received[j] = (*(unsigned long*)(data + (j*4)));
-	  j=j+1;
-	}
-
-	int k = 0;
-	for(k; k < 22; k=k+1){
-	    printf("%x ", received[k]);
-	}
-	printf("\n\n");
-   }
-
     /* Execute example on PRU */
-    //printf("\tINFO: Executing test.\r\n");
-    prussdrv_exec_program (0, "./pru0.bin");
-    prussdrv_exec_program (1, "./pru1.bin");
-
-    printf("\tWaiting for PRU cursor.\r\n");
-    //while((*(unsigned long*) cursor) < 8880){};
-    i = 0;
-    while(i < 100000000){
-        i++;
-    }
-    *((unsigned char*) length) = 0xff;
+    printf("\tINFO: Executing test.\r\n");
+    prussdrv_exec_program (PRU_NUM, "./levelIn.bin");
 
     /* Wait until PRU0 has finished execution */
-    printf("\tWaiting for PRU1 done recognition.\r\n");
-    prussdrv_pru_wait_event (PRU_EVTOUT_1);
-    //printf("\tINFO: PRU1 completed execution.\r\n");
-    prussdrv_pru_clear_event (PRU1_ARM_INTERRUPT);
-    printf("\tWaiting for PRU0 done recognition.\r\n");
+    printf("\tINFO: Waiting for HALT command.\r\n");
     prussdrv_pru_wait_event (PRU_EVTOUT_0);
-    //printf("\tINFO: PRU0 completed execution.\r\n");
+    printf("\tINFO: PRU completed transfer.\r\n");
     prussdrv_pru_clear_event (PRU0_ARM_INTERRUPT);
-    /* Check if example passed */
-    LOCAL_examplePassed(PRU_NUM);
 
-    printf("Clearing after");
-    memset(ddrMem, LOW_CODE, numBytes);
-    printf("\t memset passed \n");
+    /* Check if example passed */
+    if ( LOCAL_examplePassed(PRU_NUM) )
+    {
+        printf("Test executed succesfully.\r\n");
+    }
+    else
+    {
+        printf("Test failed.\r\n");
+    }
     
     /* Disable PRU and close memory mapping*/
-    prussdrv_pru_disable(0);
-    prussdrv_pru_disable(1); 
+    prussdrv_pru_disable(PRU_NUM); 
     prussdrv_exit ();
-    munmap(ddrMem, numBytes);
+    munmap(ddrMem, 0x0FFFFFFF);
     close(mem_fd);
 
     return(0);
@@ -160,6 +123,8 @@ int main (void)
 
 static int LOCAL_exampleInit (  )
 {
+    void *DDR_regaddr;
+
     /* open the device */
     mem_fd = open("/dev/mem", O_RDWR);
     if (mem_fd < 0) {
@@ -168,50 +133,29 @@ static int LOCAL_exampleInit (  )
     }	
 
     /* map the DDR memory */
-    ddrMem = mmap(0, numBytes,  PROT_WRITE | PROT_READ, MAP_SHARED, mem_fd, BUFF_BASEADDR);
+    ddrMem = mmap(0, 0x0FFFFFFF, PROT_WRITE | PROT_READ, MAP_SHARED, mem_fd, DDR_BASEADDR);
     if (ddrMem == NULL) {
         printf("Failed to map the device (%s)\n", strerror(errno));
         close(mem_fd);
         return -1;
     }
-    printf("Base address: %x", ddrMem);
-    /* Setup required PRU vars in RAM */
-    length = ddrMem;
-    cursor = ddrMem + 4;
-    data = ddrMem + 8;
 
-    *((unsigned long*) length) = 0;
-    *((unsigned long*) cursor) = 0;
-	
-    printf("Clearing before");
-    memset(ddrMem, LOW_CODE, numBytes);
-    printf("\t memset passed \n");
+    DDR_regaddr = ddrMem + OFFSET_DDR;
+
+    void *numSamples = DDR_regaddr;
+
+    *((unsigned long*) numSamples) = 1000001;    
+
     return(0);
 }
+
 static unsigned short LOCAL_examplePassed ( unsigned short pruNum )
 {
-   printf("\n\tAfter PRU Completion:\n");
-   printf("Length: (%li)\n", (*(unsigned long*) length));
-   printf("Cursor: (%li)\n", (*(unsigned long*) cursor));
+    void *mismatchLoc = ddrMem + OFFSET_DDR + 4;
 
-   printf("Data: \n\n");
-   int i = 0;
-   unsigned long received[22];
-   for(i; i < 5; i=i+1){
-	int j = 0;
-	while (j < 22){
-	  received[j] = (*(unsigned long*) (data + (i * 88) + (4 * j)));
-	  j=j+1;
-	}
-
-	int k = 0;
-	for(k; k < 22; k=k+1){
-	    printf("%x ", received[k]);
-	}
-	printf("\n\n");
-   }
-
-   // return(*(unsigned long*) DDR_regaddr == 0xdcba);
-    return(1);
+    unsigned long numMismatched = (*(unsigned long*) mismatchLoc);
+    printf("\n\tAfter PRU Completion:\n");
+    printf("Mismatch count (%li)\n", numMismatched);
+    return(numMismatched == 0);
 }
 

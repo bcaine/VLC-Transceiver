@@ -13,7 +13,7 @@
 
 echo bspm_P8_11_6 > /sys/devices/bone_capemgr.9/slots // configure output pin
 
-echo bspm_P8_15_20 > /sys/devices/bone_capemgr.9/slots // configure input pin
+echo bspm_P8_15_26 > /sys/devices/bone_capemgr.9/slots // configure input pin
 
 exit 0
 
