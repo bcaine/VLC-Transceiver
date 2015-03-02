@@ -133,20 +133,22 @@ static int LOCAL_exampleInit (  )
         close(mem_fd);
         return -1;
     }
-
+    char preByte = 0b11111100;
     /* Setup required PRU vars in RAM */
     tryByte    = ddrMem;
     xorResult  = tryByte + 1;
     notResult  = xorResult + 1;
     addResult  = notResult + 1;
-    *((unsigned long*) tryByte) = 0b00000001;
-	
+    *((unsigned long*) tryByte) = preByte;
+    printf("Performing Preamble operation on (%x)\n", preByte);	
     return(0);
 }
 static unsigned short LOCAL_examplePassed ( unsigned short pruNum )
 {
    printf("\n\tAfter PRU Completion:\n");
-   printf("Byte: (%x)\n", (*(unsigned char*) tryByte));
+   printf("Adjacent byte before LSR: (%x)\n", (*(unsigned char*) (tryByte+5)));
+   printf("LSR with itself: (%x)\n", (*(unsigned char*) tryByte));
+   printf("After LSR (%x)\n", (*(unsigned char*) (tryByte+6)));
    printf("XOR: (%x)\n", (*(unsigned char*) xorResult));
    printf("NOT: (%x)\n", (*(unsigned char*) notResult));
    printf("ADD: (%x)\n", (*(unsigned char*) addResult));

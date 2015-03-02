@@ -19,10 +19,10 @@
 	#define INIT_DELAY_BWD  93
 	#define DELAY_PRE       82
 #else
-	#define SETBACK_IO	 1
-	#define DELAY_FWD        1
-	#define INIT_DELAY_BWD   1
-	#define DELAY_PRE        1
+	#define SETBACK_IO	     1
+	#define DELAY_FWD       96
+	#define INIT_DELAY_BWD  92
+	#define DELAY_PRE       81
 #endif
 
 //  _____________________
@@ -31,6 +31,7 @@
 //    r0.b0   |  Counter - delay loops performed
 //    r0.b1   |  Holder  - delays to perform (after reg copy)
 //    r0.b2   |  Counter - registers filled
+//    r0.b3   |  Holder  - hold XOR result (preamble)
 //			  |
 //    r1.b0   |  Holder  - recent input bits (preamble)
 //    r1.b1   |  Holder  - hold preamble for comparison
@@ -63,29 +64,31 @@ INIT:
 
 	MOV r0.b0, 0 // init delay counter to 0
 	MOV r0.b2, 0 // init reg number to 0
+	MOV r0.b3, 0 // XOR result
 
-	MOV r1.b0, INIT_PRE // recent bits holder  
-	MOV r1.b1, PREAMBLE // hold actual preamble for comparison
+	MOV r1.b0, INIT_PRE1 // recent bits holder  
+	MOV r1.b1, PREAMBLE1 // hold actual preamble for comparison
 	MOV r1.b2, 0 // init bit matches counter to 0
 	MOV r1.b3, 0 // AND result
 
 	MOV r2, DDR_ADDRESS
 	MOV r7.b0, 0
 	MOV r7.b1, READY_CODE
-	MOV r7.b2, 0 // number of packets counter
 
+	MOV r3, PACKETS_2_RCV // max packets
+	MOV r5, 0 // number of packets counter
 	JMP PRE_LP
 
 NEW_PACKET:
     XOUT 10, r8, PACK_LEN
 
-    MOV r1.b0, INIT_PRE // reset bit holder
+    MOV r1.b0, INIT_PRE1 // reset bit holder
     MOV r1.b2, 0 // reset matching bits counter
 
 PRE_LP:
     MOV r0.b0, 0 // reset delay
     LSL r1.b0, r1.b0, 1 // shift preamble holder to prepare for new bit
-    READ_DATA
+    READ_DATA PIN_OFFSET_BIT, r4
     QBEQ PRE_SET, r4, 1 // if bit set, jump to set
 
 PRE_CLR:
@@ -103,42 +106,8 @@ PRE_DEL:
     QBNE PRE_DEL, r0.b0, DELAY_PRE
 
 PRE_CHK:
-    XOR r1.b0, r1.b0, r1.b1 // get bitwise differences b/w preamble and current
-    NOT r1.b0, r1.b0 // NOT - get bitwise similarities
-
-    LSR r1.b0, r1.b0, 0 // shift to bit of interest
-    AND r1.b3, r1.b0, 1 // isolate that bit
-    ADD r1.b2, r1.b2, r1.b3 // add it to the counter
-
-    LSR r1.b0, r1.b0, 1 // repeat for each bit
-    AND r1.b3, r1.b0, 1 
-    ADD r1.b2, r1.b2, r1.b3
-
-    LSR r1.b0, r1.b0, 1
-    AND r1.b3, r1.b0, 1 
-    ADD r1.b2, r1.b2, r1.b3
-
-    LSR r1.b0, r1.b0, 1
-    AND r1.b3, r1.b0, 1 
-    ADD r1.b2, r1.b2, r1.b3
-
-    LSR r1.b0, r1.b0, 1
-    AND r1.b3, r1.b0, 1 
-    ADD r1.b2, r1.b2, r1.b3
-
-    LSR r1.b0, r1.b0, 1
-    AND r1.b3, r1.b0, 1 
-    ADD r1.b2, r1.b2, r1.b3
-
-    LSR r1.b0, r1.b0, 1
-    AND r1.b3, r1.b0, 1 
-    ADD r1.b2, r1.b2, r1.b3
-
-    LSR r1.b0, r1.b0, 1
-    AND r1.b3, r1.b0, 1 
-    ADD r1.b2, r1.b2, r1.b3
-
-    QBLT CPY_P1b1, r1.b2, REQ_BITS // if enough bits match, jump out of preamble
+    GET_DIFF_8 r1.b0, r1.b1, r1.b2, r0.b3, r1.b3
+    QBLT CPY_P1b1, r1.b2, REQ_BITS1 // if enough bits match, jump out of preamble
     JMP PRE_LP
 
 CPY_P1b1:
@@ -151,7 +120,7 @@ DEL_CPY:
 
 SMP_B1b1:
     MOV r0.b0, 0
-    READ_DATA
+    READ_DATA PIN_OFFSET_BIT, r4
     QBEQ SET_B1b1, r4, 1
 
 CLR_B1b1:
@@ -168,7 +137,7 @@ DEL_B1b1:
 
 SMP_B1b2:
 	MOV r0.b0, 0
-	READ_DATA
+	READ_DATA PIN_OFFSET_BIT, r4
 	QBEQ SET_B1b2, r4, 1
 
 CLR_B1b2:
@@ -185,7 +154,7 @@ DEL_B1b2:
 
 SMP_B1b3:
 	MOV r0.b0, 0
-	READ_DATA
+	READ_DATA PIN_OFFSET_BIT, r4
 	QBEQ SET_B1b3, r4, 1
 
 CLR_B1b3:
@@ -202,7 +171,7 @@ DEL_B1b3:
 
 SMP_B1b4:
 	MOV r0.b0, 0
-	READ_DATA
+	READ_DATA PIN_OFFSET_BIT, r4
 	QBEQ SET_B1b4, r4, 1
 
 CLR_B1b4:
@@ -219,7 +188,7 @@ DEL_B1b4:
 
 SMP_B1b5:
 	MOV r0.b0, 0
-	READ_DATA
+	READ_DATA PIN_OFFSET_BIT, r4
 	QBEQ SET_B1b5, r4, 1
 
 CLR_B1b5:
@@ -236,7 +205,7 @@ DEL_B1b5:
 
 SMP_B1b6:
 	MOV r0.b0, 0
-	READ_DATA
+	READ_DATA PIN_OFFSET_BIT, r4
 	QBEQ SET_B1b6, r4, 1
 
 CLR_B1b6:
@@ -253,7 +222,7 @@ DEL_B1b6:
 
 SMP_B1b7:
 	MOV r0.b0, 0
-	READ_DATA
+	READ_DATA PIN_OFFSET_BIT, r4
 	QBEQ SET_B1b7, r4, 1
 
 CLR_B1b7:
@@ -270,7 +239,7 @@ DEL_B1b7:
 
 SMP_B1b8:
 	MOV r0.b0, 0
-	READ_DATA
+	READ_DATA PIN_OFFSET_BIT, r4
 	QBEQ SET_B1b8, r4, 1
 
 CLR_B1b8:
@@ -293,7 +262,7 @@ DEL_B1b8:
 
 SMP_B2b1:
 	MOV r0.b0, 0
-	READ_DATA
+	READ_DATA PIN_OFFSET_BIT, r4
 	QBEQ SET_B2b1, r4, 1
 
 CLR_B2b1:
@@ -310,7 +279,7 @@ DEL_B2b1:
 
 SMP_B2b2:
 	MOV r0.b0, 0
-	READ_DATA
+	READ_DATA PIN_OFFSET_BIT, r4
 	QBEQ SET_B2b2, r4, 1
 
 CLR_B2b2:
@@ -327,7 +296,7 @@ DEL_B2b2:
 
 SMP_B2b3:
 	MOV r0.b0, 0
-	READ_DATA
+	READ_DATA PIN_OFFSET_BIT, r4
 	QBEQ SET_B2b3, r4, 1
 
 CLR_B2b3:
@@ -344,7 +313,7 @@ DEL_B2b3:
 
 SMP_B2b4:
 	MOV r0.b0, 0
-	READ_DATA
+	READ_DATA PIN_OFFSET_BIT, r4
 	QBEQ SET_B2b4, r4, 1
 
 CLR_B2b4:
@@ -361,7 +330,7 @@ DEL_B2b4:
 
 SMP_B2b5:
 	MOV r0.b0, 0
-	READ_DATA
+	READ_DATA PIN_OFFSET_BIT, r4
 	QBEQ SET_B2b5, r4, 1
 
 CLR_B2b5:
@@ -378,7 +347,7 @@ DEL_B2b5:
 
 SMP_B2b6:
 	MOV r0.b0, 0
-	READ_DATA
+	READ_DATA PIN_OFFSET_BIT, r4
 	QBEQ SET_B2b6, r4, 1
 
 CLR_B2b6:
@@ -395,7 +364,7 @@ DEL_B2b6:
 
 SMP_B2b7:
 	MOV r0.b0, 0
-	READ_DATA
+	READ_DATA PIN_OFFSET_BIT, r4
 	QBEQ SET_B2b7, r4, 1
 
 CLR_B2b7:
@@ -412,7 +381,7 @@ DEL_B2b7:
 
 SMP_B2b8:
 	MOV r0.b0, 0
-	READ_DATA
+	READ_DATA PIN_OFFSET_BIT, r4
 	QBEQ SET_B2b8, r4, 1
 
 CLR_B2b8:
@@ -435,7 +404,7 @@ DEL_B2b8:
 
 SMP_B3b1:
 	MOV r0.b0, 0
-	READ_DATA
+	READ_DATA PIN_OFFSET_BIT, r4
 	QBEQ SET_B3b1, r4, 1
 
 CLR_B3b1:
@@ -452,7 +421,7 @@ DEL_B3b1:
 
 SMP_B3b2:
 	MOV r0.b0, 0
-	READ_DATA
+	READ_DATA PIN_OFFSET_BIT, r4
 	QBEQ SET_B3b2, r4, 1
 
 CLR_B3b2:
@@ -469,7 +438,7 @@ DEL_B3b2:
 
 SMP_B3b3:
 	MOV r0.b0, 0
-	READ_DATA
+	READ_DATA PIN_OFFSET_BIT, r4
 	QBEQ SET_B3b3, r4, 1
 
 CLR_B3b3:
@@ -486,7 +455,7 @@ DEL_B3b3:
 
 SMP_B3b4:
 	MOV r0.b0, 0
-	READ_DATA
+	READ_DATA PIN_OFFSET_BIT, r4
 	QBEQ SET_B3b4, r4, 1
 
 CLR_B3b4:
@@ -503,7 +472,7 @@ DEL_B3b4:
 
 SMP_B3b5:
 	MOV r0.b0, 0
-	READ_DATA
+	READ_DATA PIN_OFFSET_BIT, r4
 	QBEQ SET_B3b5, r4, 1
 
 CLR_B3b5:
@@ -520,7 +489,7 @@ DEL_B3b5:
 
 SMP_B3b6:
 	MOV r0.b0, 0
-	READ_DATA
+	READ_DATA PIN_OFFSET_BIT, r4
 	QBEQ SET_B3b6, r4, 1
 
 CLR_B3b6:
@@ -537,7 +506,7 @@ DEL_B3b6:
 
 SMP_B3b7:
 	MOV r0.b0, 0
-	READ_DATA
+	READ_DATA PIN_OFFSET_BIT, r4
 	QBEQ SET_B3b7, r4, 1
 
 CLR_B3b7:
@@ -554,7 +523,7 @@ DEL_B3b7:
 
 SMP_B3b8:
 	MOV r0.b0, 0
-	READ_DATA
+	READ_DATA PIN_OFFSET_BIT, r4
 	QBEQ SET_B3b8, r4, 1
 
 CLR_B3b8:
@@ -577,7 +546,7 @@ DEL_B3b8:
 
 SMP_B4b1:
 	MOV r0.b0, 0
-	READ_DATA
+	READ_DATA PIN_OFFSET_BIT, r4
 	QBEQ SET_B4b1, r4, 1
 
 CLR_B4b1:
@@ -594,7 +563,7 @@ DEL_B4b1:
 
 SMP_B4b2:
 	MOV r0.b0, 0
-	READ_DATA
+	READ_DATA PIN_OFFSET_BIT, r4
 	QBEQ SET_B4b2, r4, 1
 
 CLR_B4b2:
@@ -611,7 +580,7 @@ DEL_B4b2:
 
 SMP_B4b3:
 	MOV r0.b0, 0
-	READ_DATA
+	READ_DATA PIN_OFFSET_BIT, r4
 	QBEQ SET_B4b3, r4, 1
 
 CLR_B4b3:
@@ -628,7 +597,7 @@ DEL_B4b3:
 
 SMP_B4b4:
 	MOV r0.b0, 0
-	READ_DATA
+	READ_DATA PIN_OFFSET_BIT, r4
 	QBEQ SET_B4b4, r4, 1
 
 CLR_B4b4:
@@ -645,7 +614,7 @@ DEL_B4b4:
 
 SMP_B4b5:
 	MOV r0.b0, 0
-	READ_DATA
+	READ_DATA PIN_OFFSET_BIT, r4
 	QBEQ SET_B4b5, r4, 1
 
 CLR_B4b5:
@@ -662,7 +631,7 @@ DEL_B4b5:
 
 SMP_B4b6:
 	MOV r0.b0, 0
-	READ_DATA
+	READ_DATA PIN_OFFSET_BIT, r4
 	QBEQ SET_B4b6, r4, 1
 
 CLR_B4b6:
@@ -679,7 +648,7 @@ DEL_B4b6:
 
 SMP_B4b7:
 	MOV r0.b0, 0
-	READ_DATA
+	READ_DATA PIN_OFFSET_BIT, r4
 	QBEQ SET_B4b7, r4, 1
 
 CLR_B4b7:
@@ -696,7 +665,7 @@ DEL_B4b7:
 
 SMP_B4b8:
 	MOV r0.b0, 0
-	READ_DATA
+	READ_DATA PIN_OFFSET_BIT, r4
 	QBEQ SET_B4b8, r4, 1
 
 CLR_B4b8:
@@ -737,11 +706,10 @@ UPD_R29:
 	MOV r0.b2, 0
 
 CHECK_DONE:
-	ADD r7.b2, r7.b2, 1
-	QBNE BCK_P4b8, r7.b2, PACKETS_2_RCV
+	ADD r5, r5, 1
+	QBNE BCK_P4b8, r5, r3
 	//LBBO r7.b0, r2, 0, 1 // load done code from main RAM
 	//QBNE BCK_P4b8, r7.b0, DONE_CODE
-
 	XOUT 10, r8, PACK_LEN
 	JMP STOP
 
@@ -821,6 +789,10 @@ CPY_R28:
 	JMP BCK_B3b8
 
 STOP:
+#ifdef GPIO_DEBUG
+        SET r30.t15
+#endif
 	MOV r31.b0, PRU0_ARM_INTERRUPT+16
 	HALT
+
 

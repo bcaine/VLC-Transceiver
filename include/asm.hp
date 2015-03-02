@@ -7,17 +7,23 @@
 // ***************************************
 
 // Testing
-#define PACKETS_2_RCV 15
-#define GPIO_DEBUG     1
+#define PACKETS_2_RCV 50000
+#define GPIO_DEBUG    1
 
 // Implementation Constants:
 #define PACK_LEN 88
 #define PIN_OFFSET_BIT 15
 
 // Preamble:
-#define PREAMBLE 0b00111100
-#define REQ_BITS 7
-#define INIT_PRE 0x0000
+#define PREAMBLE1 0b00111100
+#define REQ_BITS1 7
+#define INIT_PRE1 0x0000
+
+#define PREAMBLE2 0b0011110000111
+#define REQ_BITS2 12
+#define INIT_PRE2 0x00000000
+#define PRE_BITMASK 0b0000111111111111
+#define SYNC_TIMEOUT 40 // timeout if not receiving preamble transition
 
 // Memory Access:
 #define DDR_ADDRESS 0x90000000
@@ -27,11 +33,11 @@
 #define OFFSET_LIM 16777208 // maximum byte offset
 #define INIT_OFFSET 8
 
-
 // Macros:
 .macro READ_DATA
-    LSR r4, r31, PIN_OFFSET_BIT // sample GPI reg, shift sample value to 0th index
-    AND r4, r4, 1 // and to zero out all other bits
+.mparam pin, dst
+    LSR dst, r31, pin // sample GPI reg, shift sample value to 0th index
+    AND dst, dst, 1 // and to zero out all other bits
 .endm
 
 .macro SET_BIT
@@ -52,6 +58,104 @@
 #endif
 .endm
 
+.macro GET_DIFF_8
+.mparam rcvd, preamble, dst, hold1, hold2
+    XOR hold1, rcvd, preamble // get bitwise differences b/w preamble and current
+    NOT hold1, hold1 // NOT - get bitwise similarities
+
+    LSR hold2, hold1, 0 // shift to bit of interest
+    AND hold2, hold2, 1 // isolate that bit
+    ADD dst, dst, hold2 // add it to the counter
+
+    LSR hold2, hold1, 1 // repeat for each bit
+    AND hold2, hold2, 1 
+    ADD dst, dst, hold2
+
+    LSR hold2, hold1, 2
+    AND hold2, hold2, 1 
+    ADD dst, dst, hold2
+
+    LSR hold2, hold1, 3
+    AND hold2, hold2, 1 
+    ADD dst, dst, hold2
+    
+    LSR hold2, hold1, 4
+    AND hold2, hold2, 1 
+    ADD dst, dst, hold2
+
+    LSR hold2, hold1, 5
+    AND hold2, hold2, 1 
+    ADD dst, dst, hold2
+
+    LSR hold2, hold1, 6
+    AND hold2, hold2, 1 
+    ADD dst, dst, hold2
+
+    LSR hold2, hold1, 7
+    AND hold2, hold2, 1 
+    ADD dst, dst, hold2
+
+.endm
+
+.macro GET_DIFF_13
+.mparam rcvd, preamble, dst, hold1, hold2, bitmask
+    AND hold1, rcvd, bitmask
+    XOR hold1, hold1, preamble // get bitwise differences b/w preamble and current
+    NOT hold1, hold1 // NOT - get bitwise similarities
+
+    LSR hold2, hold1, 0 // shift to bit of interest
+    AND hold2, hold2, 1 // isolate that bit
+    ADD dst, dst, hold2 // add it to the counter
+
+    LSR hold2, hold1, 1 // repeat for each bit
+    AND hold2, hold2, 1 
+    ADD dst, dst, hold2
+
+    LSR hold2, hold1, 2
+    AND hold2, hold2, 1 
+    ADD dst, dst, hold2
+
+    LSR hold2, hold1, 3
+    AND hold2, hold2, 1 
+    ADD dst, dst, hold2
+    
+    LSR hold2, hold1, 4
+    AND hold2, hold2, 1 
+    ADD dst, dst, hold2
+
+    LSR hold2, hold1, 5
+    AND hold2, hold2, 1 
+    ADD dst, dst, hold2
+
+    LSR hold2, hold1, 6
+    AND hold2, hold2, 1 
+    ADD dst, dst, hold2
+
+    LSR hold2, hold1, 7
+    AND hold2, hold2, 1 
+    ADD dst, dst, hold2
+
+    LSR hold2, hold1, 8
+    AND hold2, hold2, 1 
+    ADD dst, dst, hold2
+
+    LSR hold2, hold1, 9
+    AND hold2, hold2, 1 
+    ADD dst, dst, hold2
+
+    LSR hold2, hold1, 10
+    AND hold2, hold2, 1 
+    ADD dst, dst, hold2
+
+    LSR hold2, hold1, 11
+    AND hold2, hold2, 1 
+    ADD dst, dst, hold2
+
+    LSR hold2, hold1, 12
+    AND hold2, hold2, 1 
+    ADD dst, dst, hold2
+
+.endm
 
 // ***************************************
 // *      Global Macro definitions       *

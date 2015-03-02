@@ -7,15 +7,14 @@
 //  Register  |  Purpose
 //		      
 //      r0    |  Counter - write offset for RAM stores
-//		r1	  |  Holder  - end of buffer offset (wraparound)
+//	r1    |  Holder  - end of buffer offset (wraparound)
 //      r2    |  Holder  - address of start of buffer (no offset)
-//	   r3.b0  |  Check   - holds zero value to reset packet ready code
-//	   r3.b1  |  Check   - holds value at 'packet ready' code location
+//     r3.b0  |  Check   - holds zero value to reset packet ready code
+//     r3.b1  |  Check   - holds value at 'packet ready' code location
 //     r3.b2  |  Holder  - holds value at done code location
 //
 //      r4    |  Counter - number of packets received
 //
-//			  |
 //    r8-r29  |  Holder  - hold sampled bytes
 //      r30   |  I/O     - holds GPI pin register (.t15)
 
@@ -34,8 +33,8 @@ INIT:
 	MOV r2, DDR_ADDRESS
 	MOV r3.b0, 0 // holder for resetting packet ready code
 
-	MOV r4, 0
-	
+	MOV r4, 0 // init packet counter to 0
+        MOV r5, PACKETS_2_RCV	
 	SBBO r0, r2, 4, 4 // write initial offset to RAM
 	SBCO r3.b0, CONST_PRUSHAREDRAM, 0, 1 // make sure packet ready on init is not true
 
@@ -43,10 +42,10 @@ INIT:
 POLL_PX: // poll until PRU0 says a packet is ready
 	LBCO r3.b1, CONST_PRUSHAREDRAM, 0, 1 
 	QBNE POLL_PX, r3.b1, READY_CODE
-
+	
 READ: // pull in data from PRU0
 	XIN 10, r8, PACK_LEN // read from SP
-	
+
 	// if overflow condition not met
 	QBNE STORE, r0, r1 // jump to STORE_DATA
 
@@ -61,7 +60,7 @@ STORE:
 	SBCO r3.b0, CONST_PRUSHAREDRAM, 0, 1 // overwrite the packet ready code
 	
 	ADD r4, r4, 1
-	QBEQ STOP, r4, PACKETS_2_RCV
+	QBEQ STOP, r4, r5
 	
 	//LBBO r3.b2, r2, 0, 1 // check the value of the done code
 	// if host has written done code

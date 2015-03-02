@@ -21,7 +21,7 @@
 /******************************************************************************
 * Local Macro Declarations                                                    *
 ******************************************************************************/
-#define LENGTH 		 100
+#define LENGTH 		 50000
 #define PRU_NUM 	 0
 #define BUFFER_LENGTH    186
 #define BUFF_BASEADDR    0x90000000
@@ -106,11 +106,11 @@ int main (void)
     printf("\tDelaying very stupidly.\r\n");
     //while((*(unsigned long*) cursor) < 8880){};
     *((unsigned char*) length) = 0xff;
-
     printf("\tWaiting for PRU0 done recognition.\r\n");
     prussdrv_pru_wait_event (PRU_EVTOUT_0);
     //printf("\tINFO: PRU0 completed execution.\r\n");
     prussdrv_pru_clear_event (PRU0_ARM_INTERRUPT);
+
     /* Wait until PRU0 has finished execution */
     printf("\tWaiting for PRU1 done recognition.\r\n");
     prussdrv_pru_wait_event (PRU_EVTOUT_1);
@@ -173,20 +173,35 @@ static unsigned short LOCAL_examplePassed ( unsigned short pruNum )
 
    printf("Data: \n\n");
    int i = 4;
-   unsigned long received[22];
-   for(i; i < 15; i=i+1){
+   unsigned char received[88];
+   unsigned long problems = 0;
+   for(i; i < LENGTH-4; i=i+1){
 	int j = 0;
-	while (j < 22){
-	  received[j] = (*(unsigned long*) (data + (i * 88) + (4 * j)));
+	while (j < 88){
+	  received[j] = (*(unsigned char*) (data + (i * 88) +  j));
 	  j=j+1;
 	}
-
-	int k = 0;
-	for(k; k < 22; k=k+1){
-	    printf("%x ", received[k]);
+	int clockDrift = 0;
+	int m = 2;
+	for(m=4; m < 88; m=m+1){
+	    if(received[m] != 0xaa){
+	        clockDrift = 1;
+                problems = problems + 1;
+                break;
+            }
 	}
-	printf("\n\n");
+	if(clockDrift){
+	    printf("\n Packet number: %li\n", i);
+	    int k = 0;
+	    for(k=0; k < 88; k=k+1){
+	        printf("%x ", received[k]);
+	    }
+	    printf("\n\n");
+ 	} 
    }
+	printf("Out of %li packets, %li had drift.\n", LENGTH, problems);
+	float perc = problems/(float)(LENGTH-4);
+   	printf("Corresponding to a %f chance of we're fucked.\n\n\n", perc);
 
    // return(*(unsigned long*) DDR_regaddr == 0xdcba);
     return(1);
