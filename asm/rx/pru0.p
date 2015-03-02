@@ -76,7 +76,7 @@ INIT:
 
 	// test only
 	MOV r3.w0, 0 // packets counter
-	MOV r3.w2, PACKETS_2_RCV // max packets
+	MOV r3.w2, PACKET_LIMIT // max packets
 	
 	JMP PRE_LP
 
@@ -112,7 +112,7 @@ PRE_CHK:
     JMP PRE_LP
 
 CPY_P1b1:
-    MOV r29.b3, r1.b0 // store preamble
+    MOV r29.b0, r1.b0 // store preamble
     JMP SMP_B2b1
 
 DEL_CPY:

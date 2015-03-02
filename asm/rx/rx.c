@@ -22,6 +22,7 @@
 * Local Macro Declarations                                                    *
 ******************************************************************************/
 #define LENGTH 		 100
+#define PACK_LEN	 83
 #define PRU_NUM 	 0
 #define BUFFER_LENGTH    186
 #define BUFF_BASEADDR    0x90000000
@@ -49,8 +50,8 @@ static unsigned short LOCAL_examplePassed ( unsigned short pruNum );
 volatile void *length;
 volatile void *cursor;
 void *data;
-unsigned long numBytes = LENGTH * 88;
-unsigned long binTest = 0b11100;
+unsigned long numBytes = LENGTH * PACK_LEN;
+unsigned long numPacks = PACK_LEN;
 /******************************************************************************
 * Intertupt Service Routines                                                  *
 ******************************************************************************/
@@ -172,21 +173,37 @@ static unsigned short LOCAL_examplePassed ( unsigned short pruNum )
    printf("Cursor: (%li)\n", (*(unsigned long*) cursor));
 
    printf("Data: \n\n");
-   int i = 4;
-   unsigned long received[22];
+   int i = 0;
+   unsigned char received[PACK_LEN];
+   unsigned long problems = 0;
    for(i; i < LENGTH; i=i+1){
 	int j = 0;
-	while (j < 22){
-	  received[j] = (*(unsigned long*) (data + (i * 88) + (4 * j)));
+	while (j < PACK_LEN){
+	  received[j] = (*(unsigned char*) (data + (i * PACK_LEN) +  j));
 	  j=j+1;
 	}
-	printf("\n Packet number: %li\n", i);
-	int k = 0;
-	for(k; k < 22; k=k+1){
-	    printf("%x ", received[k]);
+/*
+	int clockDrift = 0;
+	int m = 2;
+	for(m=4; m < PACK_LEN; m=m+1){
+	    if(received[m] != 0xaa){
+	        clockDrift = 1;
+                problems = problems + 1;
+                break;
+            }
 	}
-	printf("\n\n");
+	if(clockDrift){*/
+	    printf("\n Packet number: %li\n", i);
+	    int k = 0;
+	    for(k=0; k < PACK_LEN; k=k+1){
+	        printf("%x ", received[k]);
+	    }
+	    printf("\n\n");
+ 	//} 
    }
+	//printf("Out of %li packets, %li had drift.\n", LENGTH, problems);
+	//float perc = problems/(float)(LENGTH-4);
+   	//printf("Corresponding to a %f chance of we're fucked.\n\n\n", perc);
 
    // return(*(unsigned long*) DDR_regaddr == 0xdcba);
     return(1);

@@ -40,7 +40,7 @@ INIT:
 	MOV r5, RX_PRU1_TIMEOUT
 	// test only:
 	MOV r6, 0 // init packet counter to 0
-	MOV r7, PACKETS_2_RCV
+	MOV r7, PACKET_LIMIT
 
 // Initial polling loop has no timeout
 POLL_INIT:
@@ -51,9 +51,7 @@ POLL_INIT:
 
 // Once we've received a packet, return if we go too long without getting one
 POLL_PX: // poll until PRU0 says a packet is ready
-	ADD r4, r4, 1
 	LBCO r3.b1, CONST_PRUSHAREDRAM, 0, 1 
-	QBEQ STOP, r4, r5
 	QBNE POLL_PX, r3.b1, READY_CODE
 	
 READ: // pull in data from PRU0

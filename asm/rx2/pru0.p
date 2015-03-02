@@ -15,14 +15,14 @@
 // Delay Constants:
 #ifndef GPIO_DEBUG
 	#define SETBACK_IO  0
-	#define DELAY_P1   73 // delay to maintain 200 cycles between preamble bit checks
-	#define DELAY_P2  244 // delay to sync on middle of bit after preamble part 2
+	#define DELAY_P1   74 // delay to maintain 200 cycles between preamble bit checks
+	#define DELAY_P2  245 // delay to sync on middle of bit after preamble part 2
 	#define DELAY_FWD  97 // delay between sequential data reads in normal operation
 	#define DELAY_BWD  92
 #else
 	#define SETBACK_IO  1
-	#define DELAY_P1   72
-	#define DELAY_P2  243
+	#define DELAY_P1   73
+	#define DELAY_P2  244
 	#define DELAY_FWD  96
 	#define DELAY_BWD  91
 #endif
@@ -80,14 +80,13 @@ INIT:
 	MOV r3.w2, 0 // LSR/AND holder
 
 	MOV r5.w0, DELAY_P2
-	MOV r5.w1, DELAY_BWD
+	MOV r5.w2, DELAY_BWD
 
 	MOV r6.w0, DELAY_P1
 	MOV r6.w2, DELAY_FWD
 
-	MOV r7.b0, 1 // first packet flag
-	MOV r8.w0, 0 // counter
-	MOV r8.w2, RX_PRU0_TIMEOUT
+	MOV r7.w0, 0 // packet counter
+	MOV r7.w2, PACKET_LIMIT
     	JMP P1_SMP
 
 NEW_PACKET:
@@ -119,10 +118,6 @@ P1_DEL:
 P1_CHK:
 
     GET_DIFF_13 r2.w0, r2.w2, r0.b3, r3.w0, r3.w2, r1.w2
-    QBEQ SKIP_CHECK, r7.b0, 1
-    ADD r8.w0, r8.w0, 1
-    QBEQ STOP_JMP1, r8.w0, r8.w2
-SKIP_CHECK:    
     QBLT P2_INIT, r0.b3, REQ_BITS2  // if enough bits match, jump out of preamble
     JMP P1_SMP
 
@@ -144,12 +139,13 @@ P2_SMP:
 P2_DEL: 
 	ADD r0.w0, r0.w0, 1
 	QBNE P2_DEL, r0.w0, r5.w0 // delay to middle of first data bit
+
 	MOV r29.w0, r2.w0 // copy preamble byte 2 into storage reg
 	JMP SMP_B3b1 // jump to normal operation
 	
 DEL_CPY:
     ADD r0.w0, r0.w0, 1
-    QBNE DEL_CPY, r0.w0, r5.w1
+    QBNE DEL_CPY, r0.w0, r5.w2
 
 SMP_B1b1:
     MOV r0.w0, 0
@@ -747,77 +743,78 @@ UPD_R29:
 CHECK_DONE:
         MOV r4, READY_CODE
         SBCO r4, CONST_PRUSHAREDRAM, 0, 1 // write packet ready code to PRU RAM
-	MOV r7.b0, 0xff
-	MOV r8.w0, 0
         MOV r0.b2, 0 // reset register counter
-        JMP BCK_P4b8
+	ADD r7.w0, r7.w0, 1
+	QBNE BCK_P4b8, r7.w0, r7.w2
+        XOUT 10, r9, PACK_LEN
+        JMP STOP
 
 CPY_R9:
 	MOV r9, r29 	// copy contents of r9 into r9 (modulation reg)
-	MOV r5.w1, DELAY_BWD // reset delay
+	MOV r5.w2, DELAY_BWD // reset delay
 	JMP BCK_B3b8 // jump back to loop start
 CPY_R10:
 	MOV r10, r29
 	JMP BCK_B3b8 
 CPY_R11:
 	MOV r11, r29 
-	SUB r5.w1, r5.w1, 1
+	SUB r5.w2, r5.w2, 1
 	JMP BCK_B3b8 
 CPY_R12:
 	MOV r12, r29 
 	JMP BCK_B3b8
 CPY_R13:
 	MOV r13, r29
-	SUB r5.w1, r5.w1, 1
+	SUB r5.w2, r5.w2, 1
 	JMP BCK_B3b8
 CPY_R14:
 	MOV r14, r29
 	JMP BCK_B3b8
 CPY_R15:
 	MOV r15, r29
-	SUB r5.w1, r5.w1, 1
+	SUB r5.w2, r5.w2, 1
 	JMP BCK_B3b8
 CPY_R16:
 	MOV r16, r29
 	JMP BCK_B3b8
 CPY_R17:
 	MOV r17, r29
-	SUB r5.w1, r5.w1, 1
+	SUB r5.w2, r5.w2, 1
 	JMP BCK_B3b8
 CPY_R18:
 	MOV r18, r29
 	JMP BCK_B3b8
 CPY_R19:
 	MOV r19, r29
-	SUB r5.w1, r5.w1, 1
+	SUB r5.w2, r5.w2, 1
 	JMP BCK_B3b8
 CPY_R20:
 	MOV r20, r29
 	JMP BCK_B3b8
 CPY_R21:
 	MOV r21, r29
-	SUB r5.w1, r5.w1, 1
+	SUB r5.w2, r5.w2, 1
 	JMP BCK_B3b8
 CPY_R22:
 	MOV r22, r29
 	JMP BCK_B3b8
 CPY_R23:
 	MOV r23, r29
-	SUB r5.w1, r5.w1, 1
+	SUB r5.w2, r5.w2, 1
 	JMP BCK_B3b8
 CPY_R24:
 	MOV r24, r29
 	JMP BCK_B3b8
 CPY_R25:
 	MOV r25, r29
-	SUB r5.w1, r5.w1, 1
+	SUB r5.w2, r5.w2, 1
 	JMP BCK_B3b8
 CPY_R26:
 	MOV r26, r29
 	JMP BCK_B3b8
 CPY_R27:
 	MOV r27, r29
-	SUB r5.w1, r5.w1, 1
+	SUB r5.w2, r5.w2, 1
 	JMP BCK_B3b8
 
 CPY_R28:
@@ -825,12 +822,12 @@ CPY_R28:
 
 SMP_R29:
         MOV r0.w0, 0
-	ADD r5.w1, r5.w1, 2
-	MOV r5.w1, r5.w1
+	ADD r5.w2, r5.w2, 2
+	MOV r5.w2, r5.w2
 
 DEL_R29:
 	ADD r0.w0, r0.w0, 1
-	QBNE DEL_R29, r0.w0, r5.w1 // needs to be 85
+	QBNE DEL_R29, r0.w0, r5.w2 // needs to be 85
 	
 SMP_R29_B1b1:
         MOV r0.w0, 0
