@@ -2,7 +2,8 @@
 .entrypoint INIT
 #include "../../include/asm.hp"
 
-#define READ_ADDRESS 0x90000000
+#define PREAMBLE 0b00111100
+#define REQBITS 7
 
 INIT:
 	// Enable OCP master port
@@ -10,22 +11,22 @@ INIT:
 	CLR       r0, r0, 4         // Clear SYSCFG[STANDBY_INIT] to enable OCP master port
 	SBCO      r0, C4, 4, 4
 
-	MOV r7, READ_ADDRESS
-	
 	MOV r0.b0, 0 // counter -- register number
 	MOV r0.b1, 0 // counter -- preamble verified bits
 	
 	MOV r1.b0, 0 // counter --delay
 	MOV r1.b1, 97 // loop delay --forward
 	MOV r1.b2, 92 // loop delay --backward (init not req, here for visibility)
-	MOV r1.b3, 96 // loop delay --preamble (init not req, here for visibility)
+	MOV r1.b3, 95 // loop delay --preamble (init not req, here for visibility)
 
-	MOV r2, 0 // counter --packet length
-	LBBO r3, r7, 0, 4 // what's the offset?
+	MOV r2, 0 // preamble holder
+	MOV r3, PREAMBLE
+	MOV r5.b2, REQBITS // preamble check
+
 
 	// Free Registers: r5, r6, r7
 	// Cycle Count: 140800
-	JMP START_PRE
+	JMP SAMPLE
 
 NEW_PACKET:
 	XOUT 10, r8, 88
@@ -33,186 +34,73 @@ NEW_PACKET:
 DEL_NEW:
 	ADD r1.b0, r1.b0, 1
 	QBNE DEL_NEW, r1.b0, r1.b2
+	
+	MOV r5.b1, r5.b1 // NOP
+	MOV r5.b3, 0 // reset verified
 
-	MOV r0.b1, 0 // reset verified
-	JMP START_PRE
+SAMPLE:
+	MOV r1.b0, 0 // reset delay
+	LSR r2, r2, 1 // shift preamble holder to prepare for new bit
+	LSR r4, r31, 15 // sample GPI reg, shift sample value to 0th index
+	AND r4, r4, 1 // and to zero out all other bits
+	QBEQ PRE_SET, r4, 1 // if bit set, jump to set
 
-PRE_P1b1: // restarting preamble - 200c
-	MOV r0.b1, 0 // reset verified
-START_PRE: // coming from valid data - 199c
-	MOV r1.b0, 0
-	LSR r4, r31, 15
-	AND r4, r4, 1
-	QBEQ SET_P1b1, r4, 1
+PRE_CLR:
+	CLR r2.t0 // clear new bit
+	MOV r1.b0, 0 // NOP
+	JMP DELAY
 
-CLR_P1b1:
-	CLR r29.t31
-	MOV r0.b1, r0.b1
-	JMP DEL_P1b1
+PRE_SET:
+	SET r2.t0 // set new bit
+	MOV r1.b0, 0 // NOP
+	JMP DELAY
 
-SET_P1b1:
-	SET r29.t31
-	ADD r0.b1, r0.b1, 1
-	JMP DEL_P1b1
-
-DEL_P1b1:
+DELAY:
 	ADD r1.b0, r1.b0, 1
-	QBNE DEL_P1b1, r1.b0, r1.b3
+	QBNE DELAY, r1.b0, r1.b1 // 83 cycles -- 166 total
 
-PRE_P1b2: // 200c
-	MOV r1.b0, 0
-	MOV r1.b0, 0
-	LSR r4, r31, 15
-	AND r4, r4, 1
-	QBEQ SET_P1b2, r4, 1
+CHECK:
+	XOR r3.b3, r2.b0, r3.b0 // get bitwise differences b/w preamble and current
+        NOT r3.b3, r3.b3 // NOT - get bitwise similarities
 
-CLR_P1b2:
-	CLR r29.t30
-	MOV r0.b1, r0.b1
-	JMP DEL_P1b2
+        LSR r5.b0, r3.b3, 0 // shift to bit of interest
+        AND r5.b2, r5.b0, 1 // isolate that bit
+        ADD r5.b3, r5.b3, r5.b2 // add it to the counter
 
-SET_P1b2:
-	SET r29.t30
-	ADD r0.b1, r0.b1, 1
-	JMP DEL_P1b2
+        LSR r5.b0, r3.b3, 1 // repeat for each bit
+        AND r5.b2, r5.b0, 1
+        ADD r5.b3, r5.b3, r5.b2
 
-DEL_P1b2:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_P1b2, r1.b0, r1.b3
+        LSR r5.b0, r3.b3, 2
+        AND r5.b2, r5.b0, 1
+        ADD r5.b3, r5.b3, r5.b2
 
-PRE_P1b3: //200c
-	MOV r1.b0, 0
-	MOV r1.b0, 0
-	LSR r4, r31, 15
-	AND r4, r4, 1
-	QBEQ SET_P1b3, r4, 1
+        LSR r5.b0, r3.b3, 3
+        AND r5.b2, r5.b0, 1
+        ADD r5.b3, r5.b3, r5.b2
 
-CLR_P1b3:
-	CLR r29.t29
-	MOV r0.b1, r0.b1
-	JMP DEL_P1b3
+        LSR r5.b0, r3.b3, 4
+        AND r5.b2, r5.b0, 1
+        ADD r5.b3, r5.b3, r5.b2
 
-SET_P1b3:
-	SET r29.t29
-	ADD r0.b1, r0.b1, 1
-	JMP DEL_P1b3
+        LSR r5.b0, r3.b3, 5
+        AND r5.b2, r5.b0, 1
+        ADD r5.b3, r5.b3, r5.b2
 
-DEL_P1b3:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_P1b3, r1.b0, r1.b3
+        LSR r5.b0, r3.b3, 6
+        AND r5.b2, r5.b0, 1
+        ADD r5.b3, r5.b3, r5.b2
 
-PRE_P1b4: // 200c
-	MOV r1.b0, 0
-	MOV r1.b0, 0
-	LSR r4, r31, 15
-	AND r4, r4, 1
-	QBEQ SET_P1b4, r4, 1
+        LSR r5.b0, r3.b3, 7
+        AND r5.b2, r5.b0, 1
+        ADD r5.b3, r5.b3, r5.b2
+	
+	QBGT COPY_P1b1, r5.b3, r5.b1 // if enough bits match, jump out of preamble
+        JMP SAMPLE
 
-CLR_P1b4:
-	CLR r29.t28
-	MOV r0.b1, r0.b1
-	JMP DEL_P1b4
-
-SET_P1b4:
-	SET r29.t28
-	ADD r0.b1, r0.b1, 1
-	JMP DEL_P1b4
-
-DEL_P1b4:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_P1b5, r1.b0, r1.b3
-
-PRE_P1b5: // 200c
-	MOV r1.b0, 0
-	MOV r1.b0, 0
-	LSR r4, r31, 15
-	AND r4, r4, 1
-	QBEQ SET_P1b5, r4, 1
-
-CLR_P1b5:
-	CLR r29.t27
-	MOV r0.b1, r0.b1
-	JMP DEL_P1b5
-
-SET_P1b5:
-	SET r29.t27
-	ADD r0.b1, r0.b1, 1
-	JMP DEL_P1b5
-
-DEL_P1b5:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_P1b5, r1.b0, r1.b3
-
-PRE_P1b6: // 200c
-	MOV r1.b0, 0
-	MOV r1.b0, 0
-	LSR r4, r31, 15
-	AND r4, r4, 1
-	QBEQ SET_P1b6, r4, 1
-
-CLR_P1b6:
-	CLR r29.t26
-	MOV r0.b1, r0.b1
-	JMP DEL_P1b6
-
-SET_P1b6:
-	SET r29.t26
-	ADD r0.b1, r0.b1, 1
-	JMP DEL_P1b6
-
-DEL_P1b6:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_P1b6, r1.b0, r1.b3
-
-PRE_P1b7: // 200c 
-	MOV r1.b0, 0
-	MOV r1.b0, 0
-	LSR r4, r31, 15
-	AND r4, r4, 1
-	QBEQ SET_P1b7, r4, 1
-
-CLR_P1b7:
-	CLR r29.t25
-	MOV r0.b1, r0.b1
-	JMP DEL_P1b7
-
-SET_P1b7:
-	SET r29.t25
-	ADD r0.b1, r0.b1, 1
-	JMP DEL_P1b7
-
-DEL_P1b7:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_P1b7, r1.b0, r1.b3
-
-PRE_P1b8: // 200c (pre) - 201c (data)
-	MOV r1.b0, 0
-	MOV r1.b0, 0
-	LSR r4, r31, 15
-	AND r4, r4, 1
-	QBEQ SET_P1b8, r4, 1
-
-CLR_P1b8:
-	CLR r29.t24
-	MOV r0.b1, r0.b1
-	MOV r1.b3, 94
-	JMP DEL_P1b8 
-
-SET_P1b8:
-	SET r29.t24
-	ADD r0.b1, r0.b1, 1
-	MOV r1.b3, 94
-	JMP DEL_P1b8
-
-DEL_P1b8:
-	ADD r1.b0, r1.b0, 1
-	QBNE DEL_P1b8, r1.b0, r1.b3 
-
-CHK_PRE:
-	MOV r1.b0, 0
-	MOV r1.b3, 96 // reset preamble delay
-	QBLT PRE_P1b1, r0.b1, 7 // repeat preamble - 200c
-	JMP SMP_B2b8 // go to data - 201c
+COPY_P1b1:
+	MOV r29.b3, r2.b0 // store preamble
+	JMP SMP_B2b1
 
 DEL_CPY:
 	ADD r1.b0, r1.b0, 1
@@ -362,6 +250,7 @@ BCK_P1b8:
 	JMP NEW_PACKET
 
 BCK_B1b8:
+
 	JMP DEL_CPY
 
 DEL_B1b8:
