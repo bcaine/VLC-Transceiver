@@ -20,11 +20,11 @@
 	#define DELAY_PRE       82
 	#define DELAY_LAST_REG  85
 #else
-	#define SETBACK_IO	     1
-	#define DELAY_FWD       96
-	#define INIT_DELAY_BWD  92
-	#define DELAY_PRE       81
-	#define DELAY_LAST_REG  84
+	#define SETBACK_IO	  1
+	#define DELAY_FWD       196
+	#define INIT_DELAY_BWD  192
+	#define DELAY_PRE       181
+	#define DELAY_LAST_REG  184
 #endif
 
 //  _____________________

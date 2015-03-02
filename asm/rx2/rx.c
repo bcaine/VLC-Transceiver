@@ -22,7 +22,7 @@
 /******************************************************************************
 * Local Macro Declarations                                                    *
 ******************************************************************************/
-#define LENGTH		 5000
+#define LENGTH		 1000
 #define PACK_LEN	 83
 #define PRU_NUM 	 0
 #define BUFFER_LENGTH    186
@@ -111,9 +111,6 @@ int main (int argc, char *argv[])
     prussdrv_exec_program (0, "./pru0.bin");
     prussdrv_exec_program (1, "./pru1.bin");
 
-    printf("\tDelaying very stupidly.\r\n");
-    //while((*(unsigned long*) cursor) < 8880){};
-    *((unsigned char*) length) = 0xff;
     printf("\tWaiting for PRU0 done recognition.\r\n");
     prussdrv_pru_wait_event (PRU_EVTOUT_0);
     //printf("\tINFO: PRU0 completed execution.\r\n");
@@ -180,7 +177,8 @@ static unsigned short LOCAL_examplePassed ( unsigned short pruNum )
    printf("Cursor: (%li)\n", (*(unsigned long*) cursor));
 
    printf("Data: \n\n");
-   int i = 6;
+   int i = 5;
+   unsigned char packReceived[LENGTH];
    unsigned char packetNum = 0;
    unsigned char received[PACK_LEN];
    unsigned long problems = 0;
@@ -190,8 +188,8 @@ static unsigned short LOCAL_examplePassed ( unsigned short pruNum )
 	  received[j] = (*(unsigned char*) (data + (i * PACK_LEN) +  j));
 	  j=j+1;
 	}
-	
-	int clockDrift = 0;
+	packReceived[i] = received[4];
+	/*int clockDrift = 0;
 
 	int m = 2;
 	for(m=2; m < PACK_LEN; m=m+1){
@@ -201,20 +199,31 @@ static unsigned short LOCAL_examplePassed ( unsigned short pruNum )
                 break;
             }
 	}
-	if(clockDrift){ 
-	    printf("\n Packet number: %li\n", i);
-	    int k = 0;
-	    for(k=0; k < PACK_LEN; k=k+1){
-	        printf("%x ", received[k]);
+	if(clockDrift){ */
+	    //printf("\n Packet number: %li\n", i);
+	    //int k = 0;
+	    //for(k=0; k < PACK_LEN; k=k+1){
+	    //    printf("%x ", received[k]);
+	    //}
+	    //printf("\n\n");
+ 	//} 
+   }	
+	printf("\n");
+	int offCount = 0;
+	int j = 0;
+	for(j=4; j < LENGTH; j=j+1){
+	    if(packReceived[j] - packReceived[j-1] > 1){
+		printf("At packet [%i]: Before: %i\tCurrent: %i\n", j, packReceived[j-1], packReceived[j]);
+	        offCount = offCount + 1;
 	    }
-	    printf("\n\n");
- 	} 
-   }
-	printf("Out of %li packets, %li had drift.\n", LENGTH-4, problems);
-	float perc = problems/(float)(LENGTH-4);
-   	printf("Corresponding to a %f chance of we're fucked.\n\n\n", perc);
+	    //printf("%i\n", packReceived[j]);
+	}
 
-   // return(*(unsigned long*) DDR_regaddr == 0xdcba);
+	printf("\n Number off: %i\n", offCount);
+	//printf("Out of %li packets, %li had drift.\n", LENGTH-4, problems);
+	//float perc = problems/(float)(LENGTH-4);
+   	//printf("Corresponding to a %f chance of we're fucked.\n\n\n", perc);
+
     return(1);
 }
 

@@ -44,14 +44,16 @@ INIT:
 
 // Initial polling loop has no timeout
 POLL_INIT:
-	LBCO r3.b1, CONST_PRUSHAREDRAM, 0, 1
-	QBNE POLL_PX, r3.b1, READY_CODE
+ 	LBCO r3.b1, CONST_PRUSHAREDRAM, 0, 1
+	QBNE POLL_INIT, r3.b1, READY_CODE
 	
 	JMP READ
 
 // Once we've received a packet, return if we go too long without getting one
 POLL_PX: // poll until PRU0 says a packet is ready
+	ADD r4, r4, 1
 	LBCO r3.b1, CONST_PRUSHAREDRAM, 0, 1 
+	QBEQ STOP, r4, r5
 	QBNE POLL_PX, r3.b1, READY_CODE
 	
 READ: // pull in data from PRU0
@@ -70,7 +72,7 @@ STORE:
 
 	SBCO r3.b0, CONST_PRUSHAREDRAM, 0, 1 // overwrite the packet ready code
 	
-	MOV r4, 0 // reset timeout delay
+	//MOV r4, 0 // reset timeout delay
 	
 	// test only:
 	ADD r6, r6, 1

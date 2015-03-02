@@ -21,7 +21,7 @@
 /******************************************************************************
 * Local Macro Declarations                                                    *
 ******************************************************************************/
-#define LENGTH 		 100
+#define LENGTH 		 1000
 #define PACK_LEN	 83
 #define PRU_NUM 	 0
 #define BUFFER_LENGTH    186
@@ -176,7 +176,7 @@ static unsigned short LOCAL_examplePassed ( unsigned short pruNum )
    int i = 0;
    unsigned char received[PACK_LEN];
    unsigned long problems = 0;
-   for(i; i < LENGTH; i=i+1){
+   for(i; i < 100; i=i+1){
 	int j = 0;
 	while (j < PACK_LEN){
 	  received[j] = (*(unsigned char*) (data + (i * PACK_LEN) +  j));
