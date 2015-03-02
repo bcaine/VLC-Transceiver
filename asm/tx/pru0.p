@@ -1,6 +1,7 @@
 .origin 0
 .entrypoint INIT
 #include "tx.hp"
+//140800 cycles per loop
 
 INIT:
 	// Enable OCP master port
@@ -16,16 +17,16 @@ INIT:
 
 	LBCO r3, CONST_DDR, 0, 4 // what's the offset?
 	MOV r0, 0 // delay counter
-	MOV r1, 970 // loop delay forward
-	MOV r2, 940 // loop delay backward
+	MOV r1, 97 // loop delay forward
 	MOV r5, 0 // packet length counter
 	MOV r6, 0 // register number counter
 
-// CYCLE COSTS - actual modulation - 140800 cycles per loop, constant 1mbit/s 
+	XIN 10, r8, 88
+	JMP CLC_B1b1
 
 MAIN_LOOP:
-	XIN 10, r8, 88 // load 88 bytes in from SP
-	MOV r2, 840
+	XIN 10, r8, 88
+	MOV r2, 81
 
 DEL_R8:
         ADD r0, r0, 1
@@ -648,12 +649,12 @@ CHECK_DONE:
 
 CPY_R9:
 	MOV r8, r9
-	MOV r2, 880
-	MOV r2, 880
+	MOV r2, 91
+	MOV r2, 91
 	JMP BCK_B4b8
 CPY_R10:
 	MOV r8, r10
-	MOV r2, 880
+	MOV r2, 91
 	JMP BCK_B4b8
 CPY_R11:
 	MOV r8, r11
