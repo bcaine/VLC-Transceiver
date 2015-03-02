@@ -21,8 +21,7 @@
 /******************************************************************************
 * Local Macro Declarations                                                    *
 ******************************************************************************/
-#define LENGTH 		 5000
-#define PACKETLENGTH	 83
+#define LENGTH 		 100
 #define PRU_NUM 	 0
 #define BUFFER_LENGTH    186
 #define BUFF_BASEADDR    0x90000000
@@ -40,18 +39,18 @@
 /******************************************************************************
 * Local Function Declarations                                                 *
 ******************************************************************************/
-unsigned long numBytes = LENGTH * PACKETLENGTH;
-unsigned long numPackets = LENGTH/PACKETLENGTH;
+
 static int LOCAL_exampleInit ( );
 static unsigned short LOCAL_examplePassed ( unsigned short pruNum );
 
 /******************************************************************************
 * Local Variable Definitions                                                  *
 ******************************************************************************/
-void *length;
-void *cursor;
+volatile void *length;
+volatile void *cursor;
 void *data;
-
+unsigned long numBytes = LENGTH * 88;
+unsigned long binTest = 0b11100;
 /******************************************************************************
 * Intertupt Service Routines                                                  *
 ******************************************************************************/
@@ -96,32 +95,31 @@ int main (void)
     prussdrv_pruintc_init(&pruss_intc_initdata);
 
     /* Initialize example */
-    printf("\tINFO: Initializing test.\r\n");
+    printf("\tINFO: Initializing test: (%li) packets.\r\n", LENGTH);
     LOCAL_exampleInit();
     
     /* Execute example on PRU */
-    printf("\tINFO: Executing test.\r\n");
+    //printf("\tINFO: Executing test.\r\n");
     prussdrv_exec_program (0, "./pru0.bin");
     prussdrv_exec_program (1, "./pru1.bin");
 
-    /* Wait until PRU0 has finished execution */
-    printf("\tINFO: Waiting for HALT1 command.\r\n");
-    prussdrv_pru_wait_event (PRU_EVTOUT_1);
-    printf("\tINFO: PRU1 completed execution.\r\n");
-    prussdrv_pru_clear_event (PRU1_ARM_INTERRUPT);
-    printf("\tINFO: Waiting for HALT0 command.\r\n");
+    printf("\tDelaying very stupidly.\r\n");
+    //while((*(unsigned long*) cursor) < 8880){};
+    *((unsigned char*) length) = 0xff;
+    printf("\tWaiting for PRU0 done recognition.\r\n");
     prussdrv_pru_wait_event (PRU_EVTOUT_0);
-    printf("\tINFO: PRU0 completed execution.\r\n");
+    //printf("\tINFO: PRU0 completed execution.\r\n");
     prussdrv_pru_clear_event (PRU0_ARM_INTERRUPT);
+
+    /* Wait until PRU0 has finished execution */
+    printf("\tWaiting for PRU1 done recognition.\r\n");
+    prussdrv_pru_wait_event (PRU_EVTOUT_1);
+    //printf("\tINFO: PRU1 completed execution.\r\n");
+    prussdrv_pru_clear_event (PRU1_ARM_INTERRUPT);
     /* Check if example passed */
-    if ( LOCAL_examplePassed(PRU_NUM) )
-    {
-        printf("Example executed succesfully.\r\n");
-    }
-    else
-    {
-        printf("Example failed.\r\n");
-    }
+    LOCAL_examplePassed(PRU_NUM);
+
+    memset(ddrMem, LOW_CODE, numBytes);
     
     /* Disable PRU and close memory mapping*/
     prussdrv_pru_disable(0);
@@ -140,12 +138,12 @@ int main (void)
 static int LOCAL_exampleInit (  )
 {
     /* open the device */
-    mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
+    mem_fd = open("/dev/mem", O_RDWR);
     if (mem_fd < 0) {
         printf("Failed to open /dev/mem (%s)\n", strerror(errno));
         return -1;
     }	
-    // 0x0FFFFFFF
+
     /* map the DDR memory */
     ddrMem = mmap(0, numBytes,  PROT_WRITE | PROT_READ, MAP_SHARED, mem_fd, BUFF_BASEADDR);
     if (ddrMem == NULL) {
@@ -156,24 +154,14 @@ static int LOCAL_exampleInit (  )
 
     /* Setup required PRU vars in RAM */
     length = ddrMem;
-    cursor = length + 4;
-    data = cursor + 4;
+    cursor = ddrMem + 4;
+    data = ddrMem + 8;
 
-    *((unsigned long*) length) = LENGTH;
-    int i = 0;
-    int j = 0;
-    void *storeData = data;
-    for(i=0; i < numPackets; i++){
-    	(*(unsigned char*) (storeData+PACKETLENGTH*i)) = 0b00111100;
-	(*(unsigned char*) (storeData+PACKETLENGTH*i+1)) = 0b00111100;
-	for(j=2; j < PACKETLENGTH; j++){
-	    (*(unsigned char*) (storeData+PACKETLENGTH*i+j)) = i;
-	}
-    }
+    *((unsigned long*) length) = 0;
+    *((unsigned long*) cursor) = 0;
 	
-    // printf("Attempting memset to (%x) with size of (%li)\n", LOW_CODE, numBytes);
-    //memset(data, ALT_CODE, numBytes);
-
+    printf("Clearing before");
+    memset(ddrMem, LOW_CODE, numBytes);
     printf("\t memset passed \n");
     return(0);
 }
@@ -181,18 +169,25 @@ static unsigned short LOCAL_examplePassed ( unsigned short pruNum )
 {
    printf("\n\tAfter PRU Completion:\n");
    printf("Length: (%li)\n", (*(unsigned long*) length));
-   printf("Offset: (%li)\n", (*(unsigned long*) cursor));
-   printf("Data:\n");
+   printf("Cursor: (%li)\n", (*(unsigned long*) cursor));
 
-   int i = 0, j = 0;
-   for(i=0; i < numPackets; i++){
-       printf("Preamble: (%x)\t", (*(unsigned char*) (data+PACKETLENGTH*i)));
-	for(j=1; j < PACKETLENGTH; j++){
-	    printf("%x ", (*(unsigned char*) (data+PACKETLENGTH*i+j)));
+   printf("Data: \n\n");
+   int i = 4;
+   unsigned long received[22];
+   for(i; i < LENGTH; i=i+1){
+	int j = 0;
+	while (j < 22){
+	  received[j] = (*(unsigned long*) (data + (i * 88) + (4 * j)));
+	  j=j+1;
 	}
-	printf("\n");
-    }
-   
+	printf("\n Packet number: %li\n", i);
+	int k = 0;
+	for(k; k < 22; k=k+1){
+	    printf("%x ", received[k]);
+	}
+	printf("\n\n");
+   }
+
    // return(*(unsigned long*) DDR_regaddr == 0xdcba);
     return(1);
 }

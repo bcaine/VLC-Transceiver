@@ -7,36 +7,39 @@
 // ***************************************
 
 // Testing
-#define PACKETS_2_RCV 50000
+#define PACKETS_2_RCV 100
 #define GPIO_DEBUG    1
 
 // Implementation Constants:
-#define PACK_LEN 88
+#define PACK_LEN 83
 #define PIN_OFFSET_BIT 15
 
+// Timing:
+#define RX_PRU1_TIMEOUT 1328000
+#define SYNC_TIMEOUT         40
+
 // Preamble:
-#define PREAMBLE1 0b00111100
-#define REQ_BITS1 7
+#define PREAMBLE1 0//b00111100
+#define REQ_BITS1 7 // out of 8
 #define INIT_PRE1 0x0000
 
 #define PREAMBLE2 0b0011110000111
-#define REQ_BITS2 12
+#define REQ_BITS2 12 // out of 13
 #define INIT_PRE2 0x00000000
 #define PRE_BITMASK 0b0000111111111111
-#define SYNC_TIMEOUT 40 // timeout if not receiving preamble transition
 
 // Memory Access:
 #define DDR_ADDRESS 0x90000000
 #define READY_CODE 0xaa
 #define DONE_CODE 0xff
 #define ERROR_CODES 0x00
-#define OFFSET_LIM 16777208 // maximum byte offset
+#define OFFSET_LIM 16777130 // maximum byte offset
 #define INIT_OFFSET 8
 
 // Macros:
-.macro READ_DATA
-.mparam pin, dst
-    LSR dst, r31, pin // sample GPI reg, shift sample value to 0th index
+.macro GET_BIT
+.mparam reg, pin, dst
+    LSR dst, reg, pin // sample GPI reg, shift sample value to 0th index
     AND dst, dst, 1 // and to zero out all other bits
 .endm
 

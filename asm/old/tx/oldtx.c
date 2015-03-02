@@ -21,8 +21,7 @@
 /******************************************************************************
 * Local Macro Declarations                                                    *
 ******************************************************************************/
-#define LENGTH 		 5000
-#define PACKETLENGTH	 83
+#define LENGTH 		 1000
 #define PRU_NUM 	 0
 #define BUFFER_LENGTH    186
 #define BUFF_BASEADDR    0x90000000
@@ -40,8 +39,8 @@
 /******************************************************************************
 * Local Function Declarations                                                 *
 ******************************************************************************/
-unsigned long numBytes = LENGTH * PACKETLENGTH;
-unsigned long numPackets = LENGTH/PACKETLENGTH;
+unsigned long numBytes = LENGTH * 88;
+
 static int LOCAL_exampleInit ( );
 static unsigned short LOCAL_examplePassed ( unsigned short pruNum );
 
@@ -101,8 +100,8 @@ int main (void)
     
     /* Execute example on PRU */
     printf("\tINFO: Executing test.\r\n");
-    prussdrv_exec_program (0, "./pru0.bin");
-    prussdrv_exec_program (1, "./pru1.bin");
+    prussdrv_exec_program (0, "./oldpru0.bin");
+    prussdrv_exec_program (1, "./oldpru1.bin");
 
     /* Wait until PRU0 has finished execution */
     printf("\tINFO: Waiting for HALT1 command.\r\n");
@@ -163,16 +162,15 @@ static int LOCAL_exampleInit (  )
     int i = 0;
     int j = 0;
     void *storeData = data;
-    for(i=0; i < numPackets; i++){
-    	(*(unsigned char*) (storeData+PACKETLENGTH*i)) = 0b00111100;
-	(*(unsigned char*) (storeData+PACKETLENGTH*i+1)) = 0b00111100;
-	for(j=2; j < PACKETLENGTH; j++){
-	    (*(unsigned char*) (storeData+PACKETLENGTH*i+j)) = i;
+    for(i=0; i < LENGTH/83; i++){
+    	(*(unsigned char*) (storeData+83*i)) = 0b00111100;
+	for(j=1; j < 83; j++){
+	    (*(unsigned char*) (storeData+83*i+j)) = i;
 	}
     }
 	
     // printf("Attempting memset to (%x) with size of (%li)\n", LOW_CODE, numBytes);
-    //memset(data, ALT_CODE, numBytes);
+   // memset(data, HIGH_CODE, numBytes);
 
     printf("\t memset passed \n");
     return(0);
@@ -185,10 +183,10 @@ static unsigned short LOCAL_examplePassed ( unsigned short pruNum )
    printf("Data:\n");
 
    int i = 0, j = 0;
-   for(i=0; i < numPackets; i++){
-       printf("Preamble: (%x)\t", (*(unsigned char*) (data+PACKETLENGTH*i)));
-	for(j=1; j < PACKETLENGTH; j++){
-	    printf("%x ", (*(unsigned char*) (data+PACKETLENGTH*i+j)));
+   for(i=0; i < LENGTH/83; i++){
+       printf("Preamble: (%x)\t", (*(unsigned char*) (data+83*i)));
+	for(j=1; j < 83; j++){
+	    printf("%x ", (*(unsigned char*) (data+83*i+j)));
 	}
 	printf("\n");
     }
