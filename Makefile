@@ -23,7 +23,7 @@ transceiver_o: src/Transceiver.cpp
 	$(CCPP) $(CFLAGS) -c src/Transceiver.cpp
 
 test_o: test/test.cpp
-	$(CCPP) $(CFLAGS) -c test/test.cpp
+	$(CCPP) $(CFLAGS) -c tests/Test.cpp
 
 test: clean $(test_o)
 	$(CCPP) $(LIBS) -o test $(test_o)
