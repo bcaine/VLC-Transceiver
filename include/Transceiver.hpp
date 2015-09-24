@@ -9,6 +9,12 @@
 #ifndef TRANSCEIVER_HPP
 #define TRANSCEIVER_HPP
 
+#include "ForwardErrorCorrection.hpp"
+
+/*
+  This module wraps the Transmitter and Receiver module into one for
+  easy use.
+ */
 class Transceiver {
 
 };
