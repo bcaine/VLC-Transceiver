@@ -1,0 +1,3 @@
+[submodule "longhair"]
+	path = longhair
+	url = https://github.com/catid/longhair
