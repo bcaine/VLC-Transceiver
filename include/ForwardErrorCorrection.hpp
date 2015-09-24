@@ -3,9 +3,10 @@
    Author: Ben Caine
    Date: September 24, 2015
 */
-
 #ifndef FEC_HPP
 #define FEC_HPP
+
+#include "cauchy_256.h"
 
 class ForwardErrorCorrection {
   int _k, _m;
@@ -13,9 +14,16 @@ class ForwardErrorCorrection {
 
 public:
   ForwardErrorCorrection(int k, int m, int bytes) {
+    // Check that the values are usable
+    assert(bytes % 8 == 0);
+
     _k = k;
     _m = m;
     _bytes = bytes;
+    
+    if (cauchy_init()) {
+      exit(1);
+    }
   }
 
   ~ForwardErrorCorrection() {
@@ -23,6 +31,6 @@ public:
   }
 
 
-  bool Encode();
-  bool Decode();
+  bool Encode(u8 *data);
+  bool Decode(u8 *data);
 };
