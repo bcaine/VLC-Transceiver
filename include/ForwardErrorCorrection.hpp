@@ -9,8 +9,6 @@
 #include "cauchy_256.h"
 
 class ForwardErrorCorrection {
-  int _k, _m;
-  int _bytes;
 
 public:
   ForwardErrorCorrection(int k, int m, int bytes) {
@@ -33,4 +31,9 @@ public:
 
   bool Encode(u8 *data);
   bool Decode(u8 *data);
+
+private:
+  int _k, _m;
+  int _bytes;
+
 };
