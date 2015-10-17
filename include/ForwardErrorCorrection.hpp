@@ -37,4 +37,7 @@ private:
   int _k, _m;
   int _bytes;
 
+  bool RLLEncode(u8 *data);
+  bool RLLDecode(u8 *data);
+
 };

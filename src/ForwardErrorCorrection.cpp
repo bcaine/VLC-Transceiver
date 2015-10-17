@@ -11,7 +11,7 @@
 // This code was created using the following as a reference:
 // https://github.com/catid/longhair/README.md
 bool ForwardErrorCorrection::Encode(u8 *data) {
-
+  /*
   // Check that the length of our data is the same as we expect
   // with _k * _bytes length
   int data_length = sizeof(data)/sizeof(data[0]);
@@ -43,8 +43,19 @@ bool ForwardErrorCorrection::Encode(u8 *data) {
   }
 
   delete []recovery_blocks;
+  */
+  return true;
 }
 
-bool ForwardErrorCorrection::Decode() {
-
+bool ForwardErrorCorrection::Decode(u8 *data) {
+  return true;
 }
+
+bool ForwardErrorCorrection::RLLEncode(u8 *data) {
+  return true;
+}
+
+bool ForwardErrorCorrection::RLLDecode(u8 *data) {
+  return true;
+}
+  

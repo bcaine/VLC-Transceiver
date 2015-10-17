@@ -19,7 +19,10 @@
 class Transceiver {
 
 public:
-  Transceiver(SocketConnection sockconn, ForwardErrorCorrection fec);
+  Transceiver(SocketConnection sockconn,
+	      ForwardErrorCorrection fec,
+	      RealtimeControl pru);
+  
   ~Transceiver();
 
   void Transmit();
@@ -28,5 +31,5 @@ public:
 private:
   SocketConnection _sockconn;
   ForwardErrorCorrection _fec;
-
+  RealtimeControl _pru;
 };

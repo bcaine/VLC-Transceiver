@@ -18,14 +18,14 @@ public:
   RealtimeControl(int buffer_size);
   ~RealtimeControl();
 
-  void Write();
-  void Read();
+  void Write(u8 *data);
+  void Read(u8 *data);
 
 private:
   bool InitPRU();
     
-  int _bufsize;
+  int _buffer_size;
   int _buf_position;
-  char *_buf;
+  u8 *_buf;
 
 };
