@@ -10,6 +10,7 @@
 #ifndef REALTIME_HPP
 #define REALTIME_HPP
 
+typedef unsigned u8;
 
 class RealtimeControl {
 
@@ -29,3 +30,5 @@ private:
   u8 *_buf;
 
 };
+
+#endif // REALTIME_HPP

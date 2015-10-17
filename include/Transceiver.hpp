@@ -19,9 +19,9 @@
 class Transceiver {
 
 public:
-  Transceiver(SocketConnection sockconn,
-	      ForwardErrorCorrection fec,
-	      RealtimeControl pru);
+  Transceiver(const SocketConnection &sockconn,
+	      const ForwardErrorCorrection &fec,
+	      const RealtimeControl &pru);
   
   ~Transceiver();
 
@@ -33,3 +33,5 @@ private:
   ForwardErrorCorrection _fec;
   RealtimeControl _pru;
 };
+
+#endif // TRANSCEIVER_HPP

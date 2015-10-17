@@ -2,8 +2,9 @@
 #include<iostream>
 using namespace std;
 
-void FunctionalTest() {
+bool FunctionalTest() {
   // Put code to do a system wide functional test
+  return true;
 }
 
 int main() {

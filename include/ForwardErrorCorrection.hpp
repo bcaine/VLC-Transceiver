@@ -6,7 +6,10 @@
 #ifndef FEC_HPP
 #define FEC_HPP
 
+typedef unsigned u8;
+
 #include "cauchy_256.h"
+#include <assert.h>
 
 
 class ForwardErrorCorrection {
@@ -20,7 +23,7 @@ public:
     _m = m;
     _bytes = bytes;
     
-    if (cauchy_init()) {
+    if (cauchy_256_init()) {
       exit(1);
     }
   }
@@ -41,3 +44,5 @@ private:
   bool RLLDecode(u8 *data);
 
 };
+
+#endif // FEC_HPP
