@@ -8,6 +8,7 @@
 
 #include "cauchy_256.h"
 
+
 class ForwardErrorCorrection {
 
 public:

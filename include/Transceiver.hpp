@@ -11,9 +11,9 @@
 #ifndef TRANSCEIVER_HPP
 #define TRANSCEIVER_HPP
 
-
 #include "ForwardErrorCorrection.hpp"
 #include "SocketConnection.hpp"
+#include "RealtimeControl.hpp"
 
 
 class Transceiver {
