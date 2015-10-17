@@ -49,4 +49,4 @@ all: test
 
 clean:
 	git submodule update --init --recursive
-	-rm *.o
+	-rm *.o test
