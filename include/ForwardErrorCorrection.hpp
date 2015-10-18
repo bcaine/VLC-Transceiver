@@ -31,8 +31,8 @@ public:
   }
 
 
-  bool Encode(char *data);
-  bool Decode(char *data);
+  unsigned char* Encode(unsigned char *data, int data_length);
+  unsigned char* Decode(unsigned char *data, int data_length);
 
 private:
   int _k, _m;

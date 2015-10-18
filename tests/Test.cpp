@@ -6,8 +6,8 @@
 
 using namespace std;
 
-char* GenerateData(int k, int bytes) {
-  char *data = new char[k * bytes];
+unsigned char* GenerateData(int k, int bytes) {
+  unsigned char *data = new unsigned char[k * bytes];
 
   // Generate Alphabet over and over
   for (int i = 0; i < k * bytes; i++) {
@@ -18,20 +18,35 @@ char* GenerateData(int k, int bytes) {
 }
 
 
-bool TestFEC() {
-  char *data = GenerateData(64, 1000);
+void TestFEC() {
+  int k = 64;
+  int m = 32;
+  int bytes = 1000;
+  unsigned char *data = GenerateData(k, bytes);
   // k = 64, m = 32, bytes = 1000
-  ForwardErrorCorrection fec(64, 32, 1000);
-  fec.Encode(data);
+  ForwardErrorCorrection fec(k, m, bytes);
+  unsigned char* recovery_blocks = fec.Encode(data, k * bytes);
+
+  for (int i = 0; i < m; ++i) {
+    unsigned char *block = recovery_blocks + i * bytes;
+    unsigned char row = k + i;
+    // TODO: Store block data somewhere we can access it.
+    // Either write to file, to a mem location the PRU has access to, etc.
+
+    cout << "Block data: " << block << std::endl;
+    cout << "Row: " << row << endl;
+  }
+  // Verify length?
+
   
-  // Put in code to test ForwardErrorCorrection
-  return true;
+  delete []recovery_blocks;
 }
 
 
 int main() {
 
-  cout << "Forward Error Correction Test: " << (TestFEC() == true ? "Passed" : "Failed" )<< endl;
+  cout << "Forward Error Correction Test Running..." << endl;
+  TestFEC();
   
   return 0;
 };
