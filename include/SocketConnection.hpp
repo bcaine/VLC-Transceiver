@@ -6,7 +6,6 @@
 #ifndef SOCKET_HPP
 #define SOCKET_HPP
 
-typedef unsigned u8;
 
 // TODO: Figure out which of these I can get rid of...
 // Going off C Socket Programming example from Wireless Networks class
@@ -23,8 +22,8 @@ public:
   SocketConnection(int port, bool is_server);
   ~SocketConnection();
 
-  bool Receive(u8 *buf);
-  bool Send(u8 *buf);
+  bool Receive(char *buf);
+  bool Send(char *buf);
   
 private:
   int _sock_m, _recv_result;

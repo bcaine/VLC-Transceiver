@@ -10,7 +10,6 @@
 #ifndef REALTIME_HPP
 #define REALTIME_HPP
 
-typedef unsigned u8;
 
 class RealtimeControl {
 
@@ -19,15 +18,15 @@ public:
   RealtimeControl(int buffer_size);
   ~RealtimeControl();
 
-  void Write(u8 *data);
-  void Read(u8 *data);
+  void Write(char *data);
+  void Read(char *data);
 
 private:
   bool InitPRU();
     
   int _buffer_size;
   int _buf_position;
-  u8 *_buf;
+  char *_buf;
 
 };
 

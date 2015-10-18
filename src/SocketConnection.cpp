@@ -21,7 +21,7 @@ SocketConnection::~SocketConnection() {
   // - Close Socket
 }
 
-bool SocketConnection::Receive(u8 *buf) {
+bool SocketConnection::Receive(char *buf) {
   // TODO:
   // - Behave differently if server/client
   // - Transfer this data into the buffer that is
@@ -29,7 +29,7 @@ bool SocketConnection::Receive(u8 *buf) {
   return true;
 }
 
-bool SocketConnection::Send(u8 *buf) {
+bool SocketConnection::Send(char *buf) {
   // TODO:
   // - Behave differently if server/client
   // - Take data from buffer and push to

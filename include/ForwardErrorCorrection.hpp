@@ -6,8 +6,6 @@
 #ifndef FEC_HPP
 #define FEC_HPP
 
-typedef unsigned u8;
-
 #include "cauchy_256.h"
 #include <assert.h>
 
@@ -33,15 +31,15 @@ public:
   }
 
 
-  bool Encode(u8 *data);
-  bool Decode(u8 *data);
+  bool Encode(char *data);
+  bool Decode(char *data);
 
 private:
   int _k, _m;
   int _bytes;
 
-  bool RLLEncode(u8 *data);
-  bool RLLDecode(u8 *data);
+  bool RLLEncode(char *data);
+  bool RLLDecode(char *data);
 
 };
 

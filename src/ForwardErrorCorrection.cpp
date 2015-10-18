@@ -6,18 +6,18 @@
 */
 
 #include "ForwardErrorCorrection.hpp"
+#include <iostream>
 
 
 // This code was created using the following as a reference:
 // https://github.com/catid/longhair/README.md
-bool ForwardErrorCorrection::Encode(u8 *data) {
-  /*
+bool ForwardErrorCorrection::Encode(char *data) {
   // Check that the length of our data is the same as we expect
   // with _k * _bytes length
   int data_length = sizeof(data)/sizeof(data[0]);
   assert(data_length == _k * _bytes);
 
-  char *recovery_blocks = new u8[_m * _bytes];
+  char *recovery_blocks = new char[_m * _bytes];
   char *data_ptrs[_k];
 
   // Get a pointer to the start of each block
@@ -43,19 +43,19 @@ bool ForwardErrorCorrection::Encode(u8 *data) {
   }
 
   delete []recovery_blocks;
-  */
+
   return true;
 }
 
-bool ForwardErrorCorrection::Decode(u8 *data) {
+bool ForwardErrorCorrection::Decode(char *data) {
   return true;
 }
 
-bool ForwardErrorCorrection::RLLEncode(u8 *data) {
+bool ForwardErrorCorrection::RLLEncode(char *data) {
   return true;
 }
 
-bool ForwardErrorCorrection::RLLDecode(u8 *data) {
+bool ForwardErrorCorrection::RLLDecode(char *data) {
   return true;
 }
   

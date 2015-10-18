@@ -18,11 +18,11 @@ RealtimeControl::~RealtimeControl() {
   // Delete Buffer
 }
 
-void RealtimeControl::Write(u8 *data) {
+void RealtimeControl::Write(char *data) {
   // TODO
 }
 
-void RealtimeControl::Read(u8 *data) {
+void RealtimeControl::Read(char *data) {
   // TODO
 }
 
