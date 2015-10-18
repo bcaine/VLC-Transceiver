@@ -32,7 +32,7 @@ public:
 
 
   unsigned char* Encode(unsigned char *data, int data_length);
-  unsigned char* Decode(unsigned char *data, int data_length);
+  unsigned char* Decode(unsigned char *data);
 
 private:
   int _k, _m;

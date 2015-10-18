@@ -3,6 +3,7 @@
 #include "RealtimeControl.hpp"
 #include "SocketConnection.hpp"
 #include<iostream>
+#include<exception>
 
 using namespace std;
 
@@ -25,21 +26,17 @@ void TestFEC() {
   unsigned char *data = GenerateData(k, bytes);
   // k = 64, m = 32, bytes = 1000
   ForwardErrorCorrection fec(k, m, bytes);
-  unsigned char* recovery_blocks = fec.Encode(data, k * bytes);
-
-  for (int i = 0; i < m; ++i) {
-    unsigned char *block = recovery_blocks + i * bytes;
-    unsigned char row = k + i;
-    // TODO: Store block data somewhere we can access it.
-    // Either write to file, to a mem location the PRU has access to, etc.
-
-    cout << "Block data: " << block << std::endl;
-    cout << "Row: " << row << endl;
-  }
-  // Verify length?
-
   
-  delete []recovery_blocks;
+  try {
+    unsigned char* recovery_blocks = fec.Encode(data, k * bytes);
+    unsigned char* recovered_data = fec.Decode(recovery_blocks);
+    cout<< recovered_data << endl;
+    delete []recovery_blocks;
+    delete []recovered_data;
+  } catch (const exception& e) {
+    cout << "Exception occurred: " << e.what() << endl;
+  }
+  
 }
 
 

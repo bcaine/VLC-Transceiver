@@ -7,6 +7,7 @@
 
 #include "ForwardErrorCorrection.hpp"
 #include <iostream>
+#include <exception>
 
 using namespace std;
 
@@ -28,16 +29,33 @@ unsigned char* ForwardErrorCorrection::Encode(unsigned char *data, int data_leng
   }
 
   if (cauchy_256_encode(_k, _m, data_ptrs, recovery_blocks, _bytes)) {
-    cout << "Encoding Failure" << endl;
-    return false;
+    throw runtime_error("Encoding Error");
   }
 
   return recovery_blocks;
 }
 
-unsigned char* ForwardErrorCorrection::Decode(unsigned char *data, int data_length) {
-  unsigned char* foo = new unsigned char[10];
-  return foo;
+unsigned char* ForwardErrorCorrection::Decode(unsigned char *data) {
+  Block *block_info = new Block[_k];
+
+  if (cauchy_256_decode(_k, _m, block_info, _bytes)) {
+      assert(_k + _m <= 256);
+      assert(block_info != 0);
+      assert(_bytes % 8 == 0);
+      throw runtime_error("Decoding Error");
+  }
+
+  unsigned char *decoded_data = new unsigned char[_k * _bytes];
+
+  // TODO: Currently causing seg fault. So fix that.
+  // Also, can I use memcpy here instead?
+  for (int ki = 0; ki < _k; ++ki) {
+    for (int bi = 0; bi < _bytes; ++bi) {
+      decoded_data[ki * bi] = block_info[ki].data[bi];
+    }
+  }
+
+  return decoded_data;
 }
 
 bool ForwardErrorCorrection::RLLEncode(char *data) {
