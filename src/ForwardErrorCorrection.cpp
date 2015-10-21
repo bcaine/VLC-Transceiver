@@ -16,11 +16,12 @@ using namespace std;
 unsigned char* ForwardErrorCorrection::Encode(unsigned char *data, int data_length) {
   // Check that the length of our data is the same as we expect
   // with _k * _bytes length
-  cout<<"Data Length: " << data_length << endl;
+  int data_size = _k * _bytes;
+  int redundancy_size = _m * _bytes;
   
-  assert(data_length == _k * _bytes);
+  assert(data_length == data_size);
 
-  unsigned char *recovery_blocks = new unsigned char[_m * _bytes];
+  unsigned char *recovery_blocks = new unsigned char[redundancy_size];
   const unsigned char *data_ptrs[_k];
 
   // Get a pointer to the start of each block
@@ -32,11 +33,24 @@ unsigned char* ForwardErrorCorrection::Encode(unsigned char *data, int data_leng
     throw runtime_error("Encoding Error");
   }
 
-  return recovery_blocks;
+  // Combine the data with the redundancy
+  unsigned char* encoded_data = new unsigned char[data_size + redundancy_size];
+  copy(data, data + data_size, encoded_data);
+  copy(recovery_blocks, recovery_blocks + redundancy_size, encoded_data + data_size);
+
+  // Recovery blocks no longer needed
+  delete []recovery_blocks;
+
+  return encoded_data;
 }
 
 unsigned char* ForwardErrorCorrection::Decode(unsigned char *data) {
-  Block *block_info = new Block[_k];
+  Block *block_info = new Block[_k + _m];
+
+  for (int i = 0; i < _k + _m; ++i) {
+    block_info[i].data = (unsigned char*) data + i * _bytes;
+    block_info[i].row = (unsigned char)i;
+  }
 
   if (cauchy_256_decode(_k, _m, block_info, _bytes)) {
       assert(_k + _m <= 256);
@@ -47,12 +61,10 @@ unsigned char* ForwardErrorCorrection::Decode(unsigned char *data) {
 
   unsigned char *decoded_data = new unsigned char[_k * _bytes];
 
-  // TODO: Currently causing seg fault. So fix that.
-  // Also, can I use memcpy here instead?
   for (int ki = 0; ki < _k; ++ki) {
-    for (int bi = 0; bi < _bytes; ++bi) {
-      decoded_data[ki * bi] = block_info[ki].data[bi];
-    }
+    cout << ki << endl;
+    cout << block_info[ki].data << endl;
+    cout << "--------------" << endl;
   }
 
   return decoded_data;
