@@ -1,0 +1,8 @@
+GPIO:
+ - Need to test accessing individual bits of given register
+
+XFR / Dual-PRU Tests
+ - Interface between PRUs -- Clock sync?
+
+DDR
+ - Interface between PRUs and BBB
