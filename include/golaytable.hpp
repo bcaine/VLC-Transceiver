@@ -1,10 +1,8 @@
 #ifndef GOLAYTABLE_HPP
 #define GOLAYTABLE_HPP
 
-const
-
 /*Golay : Coloumn 0..11 of the parity check matrix :*/
-unsigned int  pc[12] =
+const unsigned int  pc[12] =
    {  1594,
        797,
       1972,
@@ -19,7 +17,7 @@ unsigned int  pc[12] =
       1141};
 
 /*Error pattern table :*/
-unsigned int  ep[2048] =
+const unsigned int  ep[2048] =
        { 0,
          1,
          1,
