@@ -7,7 +7,7 @@
 #define FEC_HPP
 
 #include <assert.h>
-#include "golay.hpp"
+#include "Golay.hpp"
 
 class ForwardErrorCorrection {
 

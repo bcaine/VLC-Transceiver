@@ -2,7 +2,7 @@
 #include "ForwardErrorCorrection.hpp"
 #include "RealtimeControl.hpp"
 #include "SocketConnection.hpp"
-#include "golay.hpp"
+#include "Golay.hpp"
 #include<iostream>
 #include<exception>
 #include<ctime>

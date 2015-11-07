@@ -1,4 +1,4 @@
-#include "golay.hpp"
+#include "Golay.hpp"
 
 int getBit(unsigned char* bytes, int location) {
   int loc = location % 8;

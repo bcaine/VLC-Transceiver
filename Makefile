@@ -5,7 +5,7 @@ CFLAGS = -Wall -I ./include
 CPFLAGS = $(CFLAGS)
 LIBS =
 
-golay_o = golay.o
+golay_o = Golay.o
 fec_o = ForwardErrorCorrection.o $(golay_o)
 realtime_o = RealtimeControl.o
 socket_o = SocketConnection.o
@@ -33,8 +33,8 @@ SocketConnection.o: src/SocketConnection.cpp
 Test.o: tests/Test.cpp
 	$(CCPP) $(CFLAGS) -c tests/Test.cpp
 
-golay.o: src/golay.cpp
-	$(CC) $(CFLAGS) -c src/golay.cpp
+Golay.o: src/Golay.cpp
+	$(CC) $(CFLAGS) -c src/Golay.cpp
 
 test: clean $(test_o)
 	$(CCPP) $(LIBS) -o test $(test_o)

@@ -1,7 +1,7 @@
 #ifndef GOLAY_HPP
 #define GOLAY_HPP
 
-#include "golaytable.hpp"
+#include "GolayTable.hpp"
 
 int getBit(unsigned char* bytes, int location);
 void setBit(unsigned char* bytes, int location, int val);
