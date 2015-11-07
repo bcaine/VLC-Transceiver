@@ -1,4 +1,4 @@
-/* Encoding Library for Reed-Solomon based on Longhair implementation
+/* Encoding Library for Reed-Solomon based on Golay(12, 24) Coding
 
    Author: Ben Caine
    Date: September 24, 2015
@@ -12,8 +12,8 @@
 class ForwardErrorCorrection {
 
 public:
-  unsigned char* Encode(unsigned char *data, int data_length);
-  unsigned char* Decode(unsigned char *data, int data_length);
+  void Encode(unsigned char *data, unsigned char* encoded, int len);
+  void Decode(unsigned char *encoded, unsigned char* data, int len);
 
 private:
   unsigned char* ManchesterEncode(unsigned char *data);

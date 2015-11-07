@@ -13,7 +13,7 @@ int getBit(unsigned char* bytes, int location) {
 void setBit(unsigned char* bytes, int location, int val) {
   int loc = location % 8;
   int idx = location / 8;
-  bytes[idx] ^= (-val^ bytes[idx]) & (1 << 7 - loc);
+  bytes[idx] ^= (-val^ bytes[idx]) & (1 << (7 - loc));
 }
 
 // 2 bytes in (0-11 or 3-15), 3 bytes out. 
