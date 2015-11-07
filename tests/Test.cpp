@@ -11,7 +11,7 @@
 using namespace std;
 
 unsigned char* GenerateData(int data_length) {
-  unsigned char *data = new unsigned char[data_length / 12];
+  unsigned char *data = new unsigned char[data_length / 8];
 
   // Generate Alphabet over and over
   for (int i = 0; i < data_length; i++) {
@@ -27,21 +27,23 @@ void CorruptData(unsigned char* data,
 
   for (int i = 0; i < n_corruptions; ++i) {
     // Corrupt a single bit
-    int position = rand()%(data_length*8 + 1);
+    int position = rand() % data_length;
     setBit(data, position, getBit(data, position) ^ 1);
   }
 }
 
-unsigned int HammingDistance(const unsigned char* a,
-			     const unsigned char* b,
-			     unsigned int na) {
+unsigned int HammingDistance(unsigned char* a,
+			     unsigned char* b,
+			     unsigned int n) {
 
   unsigned int num_mismatches = 0;
-  while (na) {
-    if (*a != *b)
-      ++num_mismatches;
+  while (n) {
+    if (*a != *b) {
+      for (int i = 0; i < 8; ++i)
+	num_mismatches += (getBit(a, i) == getBit(b, i));
+    }
     
-    --na;
+    --n;
     ++a;
     ++b;
   }
@@ -51,28 +53,24 @@ unsigned int HammingDistance(const unsigned char* a,
 
 void TestFEC() {
   int data_length = 96;
-  int num_errors = 12;
+  int num_errors = 20;
   unsigned char *data = GenerateData(data_length);
   unsigned char *encoded = new unsigned char[data_length * 2];
   unsigned char *decoded = new unsigned char[data_length];
   
   ForwardErrorCorrection fec;
+
+  cout << "Data of length: " << data_length << endl;
+  cout << "Introducing " << num_errors << " Errors" << endl;
+  cout << endl;
   
   cout << data << endl;
   cout << "--------------------------------" << endl;
 
   fec.Encode(data, encoded, data_length);
 
-  cout << "ENCODED (Pre errors)" << endl;
-  cout << encoded << endl;
-  cout << "--------------------------------" << endl;
-
   // Corrupt the data a bit
   CorruptData(encoded, num_errors, data_length * 2);
-
-  cout << "ENCODED (Post errors)" << endl;
-  cout << encoded << endl;
-  cout << "--------------------------------" << endl;
 
   // Take that, and decode to get recovered data
   fec.Decode(encoded, decoded, data_length);
