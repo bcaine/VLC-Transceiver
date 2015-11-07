@@ -1,3 +1,5 @@
+#ifndef GOLAYTABLE_HPP
+#define GOLAYTABLE_HPP
 
 const
 
@@ -2066,3 +2068,5 @@ unsigned int  ep[2048] =
        547,
      16515,
       1283};
+
+#endif // GOLAYTABLE_HPP

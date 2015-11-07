@@ -33,8 +33,8 @@ SocketConnection.o: src/SocketConnection.cpp
 Test.o: tests/Test.cpp
 	$(CCPP) $(CFLAGS) -c tests/Test.cpp
 
-golay.o: src/golay.c
-	$(CC) $(CFLAGS) -c src/golay.c
+golay.o: src/golay.cpp
+	$(CC) $(CFLAGS) -c src/golay.cpp
 
 test: clean $(test_o)
 	$(CCPP) $(LIBS) -o test $(test_o)

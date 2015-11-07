@@ -1,8 +1,4 @@
-#include "golaytable.h"
-
-typedef int bool;
-#define true 1
-#define false 0
+#include "golay.hpp"
 
 int getBit(unsigned char* bytes, int location) {
   int loc = location % 8;
