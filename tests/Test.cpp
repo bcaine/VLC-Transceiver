@@ -4,6 +4,8 @@
 #include "SocketConnection.hpp"
 #include<iostream>
 #include<exception>
+#include<ctime>
+#include<cstdlib>
 
 using namespace std;
 
@@ -32,12 +34,13 @@ void TestFEC() {
   int bytes = 8;
   unsigned char *data = GenerateData(k, bytes);
   // k = 64, m = 32, bytes = 1000
-  ForwardErrorCorrection fec(k, m, bytes);
+  ForwardErrorCorrection fec();
   
   try {
     cout << data << endl;
     cout << "--------------------------------" << endl;
     // Return Data + Recovery Blocks (appended)
+    /*
     unsigned char* encoded_data = fec.Encode(data, k * bytes);
 
     int length = (k + m) * bytes;
@@ -55,7 +58,7 @@ void TestFEC() {
     
     delete []encoded_data;
     delete []recovered_data;
-    
+    */
   } catch (const exception& e) {
     cout << "Exception occurred: " << e.what() << endl;
   }
