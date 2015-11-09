@@ -52,8 +52,8 @@ unsigned int HammingDistance(unsigned char* a,
 }
 
 void TestFEC() {
-  int data_length = 96;
-  int num_errors = 20;
+  int data_length = 96 * 8;
+  int num_errors = 40;
   unsigned char *data = GenerateData(data_length);
   unsigned char *encoded = new unsigned char[data_length * 2];
   unsigned char *decoded = new unsigned char[data_length];
