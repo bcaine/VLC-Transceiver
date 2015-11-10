@@ -1,15 +1,16 @@
 # We want to add compiler settings for our different platforms
-CCPP = clang++
-CC = clang
+CCPP = g++
+CC = gcc
 CFLAGS = -Wall -I ./include 
 CPFLAGS = $(CFLAGS)
 LIBS =
 
+queue_o = ByteQueue.o
 golay_o = Golay.o
 fec_o = ForwardErrorCorrection.o $(golay_o)
 realtime_o = RealtimeControl.o
 socket_o = SocketConnection.o
-transceiver_o = Transceiver.o $(fec_o) $(realtime_o) $(socket_o)
+transceiver_o = Transceiver.o $(fec_o) $(realtime_o) $(socket_o) $(queue_o)
 test_o = Test.o $(transceiver_o)
 
 # -------------------------------
@@ -35,6 +36,9 @@ Test.o: tests/Test.cpp
 
 Golay.o: src/Golay.cpp
 	$(CC) $(CFLAGS) -c src/Golay.cpp
+
+ByteQueue.o: src/ByteQueue.cpp
+	$(CC) $(CFLAGS) -c src/ByteQueue.cpp
 
 test: clean $(test_o)
 	$(CCPP) $(LIBS) -o test $(test_o)
