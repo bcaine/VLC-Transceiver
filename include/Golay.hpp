@@ -6,7 +6,9 @@
 int getBit(unsigned char* bytes, int location);
 void setBit(unsigned char* bytes, int location, int val);
 
-void golayEncode(unsigned char* in, unsigned char* out, bool first);
-int golayDecode(unsigned char* in, unsigned char* out, bool first);
+void golayEncode(unsigned char* in, unsigned char* out,
+		 int start_in, int start_out);
+int golayDecode(unsigned char* in, unsigned char* out,
+		int start_in, int start_out);
 
 #endif // GOLAY_HPP

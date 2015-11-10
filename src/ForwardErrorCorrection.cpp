@@ -25,16 +25,12 @@ void ForwardErrorCorrection::Encode(unsigned char *data, unsigned char *encoded,
   int num_bits = len * 8;
   assert(num_bits % 12 == 0);
   
-  bool first = true;
   // Go 12 bits at a time (each input length)
-  for (int i = 0; i < num_bits; i+= 12) {
-    // We need to use 12 and 24 bits.
-    // So we need to access every 12 bits, which
-    // corresponds with byte i / 12...
-    // Output is simply every 3 bytes,
-    // So that is 12 / 4
-    golayEncode(&data[i / 12], &encoded[i / 4], first);
-    first = !first;
+  int i = 0, j = 0;
+  while (i < num_bits) {
+    golayEncode(&data, &encoded, i, j);
+    i += 12;
+    j += 23;
   }
 }
 
@@ -51,13 +47,12 @@ void ForwardErrorCorrection::Decode(unsigned char *encoded, unsigned char* data,
   
   // Make sure data size is correct
   int num_bits = len * 8;
-  int num_bits_out = num_bits / 2;
-  assert(num_bits % 24 == 0);
-  
-  bool first = true;
-  // Send in 24 bits each time, get back 12
-  for (int i = 0; i < num_bits_out; i+= 12) {
-    golayDecode(&encoded[i/4], &data[i / 12], first);
-    first = !first;
+  assert(num_bits % 23 == 0);
+
+  int i = 0, j = 0;
+  while (i < num_bits) {
+    golayDecode(&encoded, &data, i, j);
+    i += 23;
+    j += 12;
   }
 }
