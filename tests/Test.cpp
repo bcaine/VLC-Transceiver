@@ -51,7 +51,7 @@ unsigned int HammingDistance(unsigned char* a,
   return num_mismatches;
 }
 
-void TestFEC() {
+void TestFEC1() {
   int data_length = 96 * 8;
   int num_errors = 40;
   unsigned char *data = GenerateData(data_length);
@@ -82,11 +82,38 @@ void TestFEC() {
   cout << endl;
 }
 
+void TestFEC2() {
+  int data_length = 96;
+
+  assert(data_length % 3 == 0);
+
+  unsigned char* data = new unsigned char[data_length];
+  unsigned char* encoded = new unsigned char[data_length * 2];
+  unsigned char* decoded = new unsigned char[data_length];
+
+  for (int i = 0; i < data_length; i++) {
+    data[i] = 'x';
+  }
+  
+  cout << data << endl;
+
+  ForwardErrorCorrection fec;
+
+  fec.Encode(data, encoded, data_length);
+
+  cout << encoded << endl;
+
+  fec.Decode(encoded, decoded, data_length * 2);
+
+  cout << decoded << endl;
+
+}
+
 
 int main() {
 
   cout << "Forward Error Correction Test Running..." << endl;
-  TestFEC();
+  TestFEC2();
   
   return 0;
 };

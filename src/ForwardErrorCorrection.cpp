@@ -28,7 +28,7 @@ void ForwardErrorCorrection::Encode(unsigned char *data, unsigned char *encoded,
   // Go 12 bits at a time (each input length)
   int i = 0, j = 0;
   while (i < num_bits) {
-    golayEncode(&data, &encoded, i, j);
+    golayEncode(data, encoded, i, j);
     i += 12;
     j += 23;
   }
@@ -47,11 +47,11 @@ void ForwardErrorCorrection::Decode(unsigned char *encoded, unsigned char* data,
   
   // Make sure data size is correct
   int num_bits = len * 8;
-  assert(num_bits % 23 == 0);
+  // assert(num_bits % 23 == 0);
 
   int i = 0, j = 0;
   while (i < num_bits) {
-    golayDecode(&encoded, &data, i, j);
+    golayDecode(encoded, data, i, j);
     i += 23;
     j += 12;
   }
