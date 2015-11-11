@@ -86,13 +86,13 @@ void TestByteQueue() {
   uint32_t* pru_cursor = new uint32_t;
   *pru_cursor = 0;
 
-  ByteQueue queue(pru_cursor, 200);
+  ByteQueue queue(200);
   cout << "Queue Created" << endl;
 
   queue.push(GenerateData(100), 100);
 
   for (int i = 0; i < 4; i++) {
-    cout << queue.pop() << endl;
+    cout << (char*)queue.pop() << endl;
   }
 }
 
@@ -103,7 +103,7 @@ int main() {
   TestFEC();
 
   for(int i = 0; i < 5; i++)
-    cout << endl;
+    cout << "." << endl;
 
   cout << "ByteQueue Test Running..." << endl;
   TestByteQueue();
