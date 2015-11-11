@@ -18,7 +18,10 @@ len: number of bytes of data we are encoding
 OUTPUT: 
 encoded: bytes of encoded data
 */
-void ForwardErrorCorrection::Encode(unsigned char *data, unsigned char *encoded, int len) {
+void ForwardErrorCorrection::Encode(unsigned char *data,
+				    unsigned char *encoded,
+				    int len)
+{
   // TODO: Make sure len(encoded) == blockcount * 2
 
   // Make sure data size is correct
@@ -42,7 +45,10 @@ len: Number of bytes of encoded
 OUTPUTS:
 data: bytes of our decoded data
 */
-void ForwardErrorCorrection::Decode(unsigned char *encoded, unsigned char* data, int len) {
+void ForwardErrorCorrection::Decode(unsigned char *encoded,
+				    unsigned char* data,
+				    int len)
+{
   // TODO: Make sure len(data) == block_count / 2
   
   // Make sure data size is correct
