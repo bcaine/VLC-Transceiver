@@ -15,9 +15,12 @@ public:
   void Encode(unsigned char *data, unsigned char* encoded, int len);
   void Decode(unsigned char *encoded, unsigned char* data, int len);
 
-private:
-  unsigned char* ManchesterEncode(unsigned char *data);
-  unsigned char* ManchesterDecode(unsigned char *data);
+  void ManchesterEncode(unsigned char *data_in,
+			unsigned char *data_out,
+			int in_len, int out_len);
+  void ManchesterDecode(unsigned char *data_in,
+			unsigned char *data_out,
+			int in_len, int out_len);
 };
 
 #endif // FEC_HPP

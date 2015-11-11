@@ -96,8 +96,31 @@ void TestByteQueue() {
   }
 }
 
+void TestManchester() {
+  int data_length = 2;
+  unsigned char* data = GenerateData(data_length);
+  unsigned char* encoded = new unsigned char[data_length * 2];
+  unsigned char* decoded = new unsigned char[data_length];
+
+  ForwardErrorCorrection fec;
+  
+  cout << data << endl;
+  cout << "---------------------" << endl;
+  fec.ManchesterEncode(data, encoded,
+		       data_length, data_length * 2);
+
+  cout << encoded << endl;
+  cout << "---------------------" << endl;
+  fec.ManchesterDecode(encoded, decoded,
+		       data_length * 2, data_length);
+
+  cout << decoded << endl;
+}
+
 
 int main() {
+
+  /*
 
   cout << "Forward Error Correction Test Running..." << endl;
   TestFEC();
@@ -107,6 +130,10 @@ int main() {
 
   cout << "ByteQueue Test Running..." << endl;
   TestByteQueue();
+  */
+
+  cout << "Testing Manchester Encoding" << endl;
+  TestManchester();
 
   return 0;
 };

@@ -46,7 +46,7 @@ OUTPUTS:
 data: bytes of our decoded data
 */
 void ForwardErrorCorrection::Decode(unsigned char *encoded,
-				    unsigned char* data,
+				    unsigned char *data,
 				    int len)
 {
   // TODO: Make sure len(data) == block_count / 2
@@ -60,5 +60,49 @@ void ForwardErrorCorrection::Decode(unsigned char *encoded,
     golayDecode(encoded, data, i, j);
     i += 23;
     j += 12;
+  }
+}
+
+void ForwardErrorCorrection::ManchesterEncode(
+		      unsigned char *data_in,
+		      unsigned char *data_out,
+		      int in_len,
+		      int out_len)
+{
+  assert((in_len * 2) == out_len);
+  int num_bits = in_len * 8;
+
+  int out = 0;
+  for(int in = 0; in < num_bits; in++) {
+    if (getBit(data_in, in) == 0) {
+      setBit(data_out, out, 0);
+      setBit(data_out, out + 1, 1);
+    } else {
+      setBit(data_out, out, 1);
+      setBit(data_out, out + 1, 0);
+    }
+    out += 2;
+  }
+}
+
+void ForwardErrorCorrection::ManchesterDecode(
+		      unsigned char *data_in,
+		      unsigned char *data_out,
+		      int in_len,
+		      int out_len)
+{
+  assert((in_len / 2) == out_len);
+  int num_bits = out_len * 8;
+
+  int in = 0;
+  for(int out = 0; out < num_bits; out++) {
+    if ((getBit(data_in, in) == 0) &&
+	(getBit(data_in, in+1) == 1))
+    {
+      setBit(data_out, out, 0);
+    } else {
+      setBit(data_out, out, 1);
+    }
+    in += 2;
   }
 }
