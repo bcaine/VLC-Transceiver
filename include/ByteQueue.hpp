@@ -30,9 +30,22 @@ public:
   // Assumes you want 100 bytes at a time
   // NOTE: Pop is receiver specific
   void* pop();
+  
   // Adds data to the queue
   // NOTE: Push is transmitter specific
   void push(unsigned char* bytes, int len);
+  bool isDone() { return (unsigned char*)_data != 0; }
+
+  // Pru will have cursor be 5, 105, 205 etc.
+  // We have a set addr for _data, so we
+  // want to reference it by 0, 100, 200 etc.
+  uint32_t pruCursor() {
+    if (*((uint32_t*)_pru_cursor) == 5)
+      return 0;
+    else
+      return *((uint32_t*)_pru_cursor) - 5;
+  }
+  
   void* dataLocation() { return _data; }
 
   // Returns pointer to current location of queue
@@ -47,12 +60,11 @@ private:
   int _internal_cursor;
   // One byte for done
   void* _done;
-  // Four bytes for PRU location
-  void* _pru_location;
+  // Four bytes for PRU cursor
+  void* _pru_cursor;
   // The rest is data
   void* _data;
   int _mem_fd;
-
 };
 
 #endif // BYTEQUEUE_HPP

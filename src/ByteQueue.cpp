@@ -21,8 +21,11 @@ ByteQueue::ByteQueue(int max_bytes) {
     // Create data block
     _done = mmap(0, max_bytes + 5, PROT_WRITE | PROT_READ,
 		 MAP_SHARED, _mem_fd, 0);
-    _pru_location = _done + 1;
-    _data = _pru_location + 4;
+    _pru_cursor = _done + 1;
+    _data = _pru_cursor + 4;
+
+    *((unsigned char*)_done) = 0;
+    *((uint32_t*)_pru_cursor) = 0;
 }
 
 // Pops 100 bytes at a time
