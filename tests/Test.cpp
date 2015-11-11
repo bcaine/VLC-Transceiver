@@ -3,6 +3,7 @@
 #include "RealtimeControl.hpp"
 #include "SocketConnection.hpp"
 #include "Golay.hpp"
+#include "ByteQueue.hpp"
 #include<iostream>
 #include<exception>
 #include<ctime>
@@ -81,11 +82,31 @@ void TestFEC() {
 
 }
 
+void TestByteQueue() {
+  uint32_t* pru_cursor = new uint32_t;
+  *pru_cursor = 0;
+
+  ByteQueue queue(pru_cursor, 200);
+  cout << "Queue Created" << endl;
+
+  queue.push(GenerateData(100), 100);
+
+  for (int i = 0; i < 4; i++) {
+    cout << queue.pop() << endl;
+  }
+}
+
 
 int main() {
 
   cout << "Forward Error Correction Test Running..." << endl;
   TestFEC();
-  
+
+  for(int i = 0; i < 5; i++)
+    cout << endl;
+
+  cout << "ByteQueue Test Running..." << endl;
+  TestByteQueue();
+
   return 0;
 };
