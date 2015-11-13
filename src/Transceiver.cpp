@@ -26,7 +26,22 @@ Transceiver::~Transceiver() {
   */
 }
 
-void Transceiver::Transmit() {
+void Transceiver::Transmit()
+{
+  /*
+    unsigned char* buf = unsigned char[100]
+    unsigned char* encoded = unsigned char[100]
+    while(true):
+      length, buf = recv(1000)
+      encode(buf, encoded, length)
+      // Queue should packetize
+      queue.push(encoded)
+      
+      
+    
+
+
+  */
   // Loop through, take in data from socket, encode, write to memory
 }
 

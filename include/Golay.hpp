@@ -2,9 +2,7 @@
 #define GOLAY_HPP
 
 #include "GolayTable.hpp"
-
-int getBit(unsigned char* bytes, int location);
-void setBit(unsigned char* bytes, int location, int val);
+#include "Util.hpp"
 
 void golayEncode(unsigned char* in, unsigned char* out,
 		 int start_in, int start_out);

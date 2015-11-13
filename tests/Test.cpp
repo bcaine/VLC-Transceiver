@@ -4,6 +4,7 @@
 #include "SocketConnection.hpp"
 #include "Golay.hpp"
 #include "ByteQueue.hpp"
+#include "Util.hpp"
 #include<iostream>
 #include<exception>
 #include<ctime>

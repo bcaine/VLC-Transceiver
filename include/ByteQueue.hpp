@@ -49,7 +49,7 @@ public:
   void* dataLocation() { return _data; }
 
   // Returns pointer to current location of queue
-  void* peak() { return _data + (_internal_cursor * 8); }
+  void* peek() { return _data + (_internal_cursor * 8); }
   
 private:
   int _max_bytes;
@@ -65,6 +65,9 @@ private:
   // The rest is data
   void* _data;
   int _mem_fd;
+
+  // Packetize functions
+  unsigned char* packetize(unsigned char* bytes, int len);
 };
 
 #endif // BYTEQUEUE_HPP

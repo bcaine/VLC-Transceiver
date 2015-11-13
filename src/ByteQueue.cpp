@@ -31,7 +31,7 @@ ByteQueue::ByteQueue(int max_bytes) {
 // Pops 100 bytes at a time
 void* ByteQueue::pop() {
   // Get addr of current queue before incrementing
-  void *addr = peak();
+  void *addr = peek();
 
   // TODO: We need the PRU to keep track of where BBB is reading
   _internal_cursor += 100;
@@ -42,9 +42,21 @@ void* ByteQueue::pop() {
 
 void ByteQueue::push(unsigned char* bytes, int len) {
   // Get the current loc with peak, and save data to it
-  std::memcpy(peak(), bytes, len);
+  std::memcpy(peek(), bytes, len);
 
   // TODO: Check where the PRU is before writing
   _internal_cursor += 100;
   _internal_cursor %= _max_bytes;
+}
+
+unsigned char* packetize(unsigned char* bytes, int len) {
+  /* We want the packet to be 100 bytes long:
+     Preamble: 12 bits
+     Length: 6 bits
+     Data: 782 bits
+  */
+  
+  unsigned char* packets = new unsigned char[100];
+
+  return packets;
 }
