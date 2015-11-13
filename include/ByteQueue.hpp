@@ -49,7 +49,7 @@ public:
   void* dataLocation() { return _data; }
 
   // Returns pointer to current location of queue
-  void* peek() { return _data + (_internal_cursor * 8); }
+  void* peek() { return (int8_t*)_data + (_internal_cursor * 8); }
   
 private:
   int _max_bytes;
