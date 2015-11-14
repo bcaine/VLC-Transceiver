@@ -4,7 +4,7 @@
 using namespace std;
 
 ByteQueue::ByteQueue(uint32_t max_bytes) {
-    assert(max_bytes % 100 == 0);
+    assert(max_bytes % 95 == 0);
     // Size params
     _max_bytes = max_bytes;
 
@@ -78,7 +78,7 @@ void ByteQueue::push(uint8_t* bytes, uint16_t bitlen) {
     memcpy(peek(), packet, 95);
   
     // TODO: Check where the PRU is before writing
-    // _internal_cursor += 95;
+    _internal_cursor += 95;
     _internal_cursor %= _max_bytes;
   }
   cout << "Push done" << endl;
