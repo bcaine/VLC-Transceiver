@@ -18,23 +18,24 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <errno.h>
+#include "Util.hpp"
 
 
 class ByteQueue {
 
 public:
 
-  ByteQueue(int max_bytes);
+  ByteQueue(uint32_t max_bytes);
 
   // Returns pointer to current location of queue and moves cursor
   // Assumes you want 100 bytes at a time
   // NOTE: Pop is receiver specific
-  void* pop();
+  uint8_t* pop();
   
   // Adds data to the queue
   // NOTE: Push is transmitter specific
-  void push(unsigned char* bytes, int len);
-  bool isDone() { return (unsigned char*)_data != 0; }
+  void push(uint8_t* bytes, uint16_t len);
+  bool isDone() { return (uint8_t*)_data != 0; }
 
   // Pru will have cursor be 5, 105, 205 etc.
   // We have a set addr for _data, so we
@@ -49,25 +50,22 @@ public:
   void* dataLocation() { return _data; }
 
   // Returns pointer to current location of queue
-  void* peek() { return (int8_t*)_data + (_internal_cursor * 8); }
+  uint8_t* peek() { return (uint8_t*)_data + (_internal_cursor * 8); }
   
 private:
-  int _max_bytes;
+  uint32_t _max_bytes;
   
   // Internal cursor controls knowing where we are writing
   // or reading data coming from encoding or going towards
   // decoding.
-  int _internal_cursor;
+  uint32_t _internal_cursor;
   // One byte for done
   void* _done;
   // Four bytes for PRU cursor
   void* _pru_cursor;
   // The rest is data
   void* _data;
-  int _mem_fd;
-
-  // Packetize functions
-  unsigned char* packetize(unsigned char* bytes, int len);
+  uint32_t _mem_fd;
 };
 
 #endif // BYTEQUEUE_HPP

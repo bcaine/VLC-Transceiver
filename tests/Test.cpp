@@ -90,10 +90,11 @@ void TestByteQueue() {
   ByteQueue queue(200);
   cout << "Queue Created" << endl;
 
-  queue.push(GenerateData(100), 100);
+  queue.push(GenerateData(92), 736);
+  // cout << (unsigned char*)queue.pop() << endl;
 
   for (int i = 0; i < 4; i++) {
-    cout << (char*)queue.pop() << endl;
+    cout << (unsigned char*)queue.pop() << endl;
   }
 }
 
@@ -129,12 +130,14 @@ int main() {
   for(int i = 0; i < 5; i++)
     cout << "." << endl;
 
+  */
   cout << "ByteQueue Test Running..." << endl;
   TestByteQueue();
-  */
 
+  /*
   cout << "Testing Manchester Encoding" << endl;
   TestManchester();
+  */
 
   return 0;
 };
