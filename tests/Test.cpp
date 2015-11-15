@@ -87,12 +87,17 @@ void TestByteQueue() {
   uint32_t* pru_cursor = new uint32_t;
   *pru_cursor = 0;
 
-  ByteQueue queue(190);
+  ByteQueue queue(95 * 2);
   cout << "Queue Created" << endl;
 
   queue.push(GenerateData(92), 736);
-  cout << (unsigned char*)queue.pop() << endl;
-  cout << (unsigned char*)queue.pop() << endl;
+
+  uint8_t* data = new uint8_t[92];
+  cout << "Length is: " << queue.pop(data) << endl;
+  cout << data << endl;
+
+  cout << "Length is: " << queue.pop(data) << endl;
+  cout << data << endl;
 }
 
 void TestManchester() {

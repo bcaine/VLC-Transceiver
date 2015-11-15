@@ -28,18 +28,17 @@ public:
   ByteQueue(uint32_t max_bytes);
 
   // Returns pointer to current location of queue and moves cursor
-  // Assumes you want 100 bytes at a time
+  // Assumes you want 92 bytes at a time
   // NOTE: Pop is receiver specific
-  uint8_t* pop();
+  uint16_t pop(uint8_t* packet);
   
   // Adds data to the queue
   // NOTE: Push is transmitter specific
   void push(uint8_t* bytes, uint16_t len);
-  bool isDone() { return (uint8_t*)_data != 0; }
 
-  // Pru will have cursor be 5, 105, 205 etc.
+  // Pru will have cursor be 5, 97, 189, 281 etc.
   // We have a set addr for _data, so we
-  // want to reference it by 0, 100, 200 etc.
+  // want to reference it by 0, 92, 184 etc.
   uint32_t pruCursor() {
     if (*((uint32_t*)_pru_cursor) == 5)
       return 0;

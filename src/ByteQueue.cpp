@@ -37,22 +37,18 @@ ByteQueue::ByteQueue(uint32_t max_bytes) {
 }
 
 // Pops 1 packet at a time
-uint8_t* ByteQueue::pop() {
-  // Get addr of current queue before incrementing
-  uint8_t *addr = peek();
+uint16_t ByteQueue::pop(uint8_t* packet) {
+  // Expect packet array length to be 92
 
-  uint8_t* packet = new uint8_t[95];
-
-  uint16_t bitlen = 0;
-  bitlen = *((uint16_t*)((uint8_t*)addr + 1));
-
-  cout << "Bitlength is: " << bitlen << endl;
+  uint8_t* addr = peek();
+  uint16_t bitlen = *(uint16_t*)(addr + 1);
+  memcpy(packet, (addr + 3), 92);
 
   // TODO: We need the PRU to keep track of where BBB is reading
   _internal_cursor += 95;
   _internal_cursor %= _max_bytes;
 
-  return (addr + 3);
+  return bitlen;
 }
 
 void ByteQueue::push(uint8_t* bytes, uint16_t bitlen) {
