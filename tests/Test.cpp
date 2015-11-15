@@ -121,25 +121,76 @@ void TestManchester() {
   cout << decoded << endl;
 }
 
+void TestDataPipeline() {
+  // Generate Data
+
+  int data_length = 1000;
+  int num_errors = 100;
+  uint8_t* data = GenerateData(data_length);
+  uint8_t* encoded = new uint8_t[2000];
+
+  // Encode
+  ForwardErrorCorrection fec;
+  fec.Encode(data, encoded, data_length);
+
+  // Errors
+  CorruptData(encoded, num_errors, data_length * 2);
+
+  int encoded_bit_length = (data_length * 8 * 12) / 23;
+  encoded_bit_length += (data_length * 8 * 12) % 23;
+  
+  // Save
+  ByteQueue queue(2000);
+  cout << "Queue Created" << endl;
+
+  /*
+  int j = 0;
+  for (int i = encoded_bit_length; i > 0; i -= (92 * 8)) {
+    queue.push(&encoded[j * 92], 92 * 8);
+    j++;
+  }
+  // Pop
+
+  uint8_t* data_pop = new uint8_t[92];
+  int len;
+  for(int i = j; i > 0; i--) {
+    
+    len = queue.pop(data_pop);
+    cout << "Length: " << len << endl;
+    cout << data_pop << endl;
+  }
+  
+  // Decode
+  //  fec.Decode(encoded, decoded, data_length * 2);
+
+
+
+  // Data
+
+  */
+}
+
 
 int main() {
 
   /*
-
   cout << "Forward Error Correction Test Running..." << endl;
   TestFEC();
 
   for(int i = 0; i < 5; i++)
     cout << "." << endl;
 
-  */
   cout << "ByteQueue Test Running..." << endl;
   TestByteQueue();
 
-  /*
+  for(int i = 0; i < 5; i++)
+    cout << "." << endl;
+
   cout << "Testing Manchester Encoding" << endl;
   TestManchester();
   */
+  
+  TestDataPipeline();
 
   return 0;
 };
