@@ -6,10 +6,11 @@
 #include "ByteQueue.hpp"
 #include "Util.hpp"
 #include "Packetize.hpp"
-#include<iostream>
-#include<exception>
-#include<ctime>
-#include<cstdlib>
+#include <iostream>
+#include <exception>
+#include <ctime>
+#include <cstdlib>
+#include <cstring>
 
 using namespace std;
 
@@ -135,7 +136,7 @@ void TestManchester() {
   delete [] decoded;
 }
 
-void TestPacketization() {
+void TestBasicPacketization() {
 
   // Basic test of a normal packet size
   uint8_t *data = GenerateData(43);
@@ -146,7 +147,7 @@ void TestPacketization() {
 
   uint16_t bitlen = depacketize(packet, out);
 
-  cout << "IN: " << data << endl;
+  cout << "IN:  " << data << endl;
   cout << "OUT: " << out << endl;
   
   assert(HammingDistance(data, out, 43) == 0);
@@ -155,9 +156,32 @@ void TestPacketization() {
   delete [] data;
   delete [] packet;
   delete [] out;
-  // Test truncation and demo
-
 }
+
+void TestAdvPacketization() {
+
+  // Test truncated packetization with padding
+  uint8_t *data = GenerateData(30);
+  uint8_t *packet = new uint8_t[45];
+  uint8_t *out = new uint8_t[43];
+
+  packetize(data, packet, 30 * 8);
+
+  uint16_t bitlen = depacketize(packet, out);
+
+  cout << "Bitlen: " << bitlen << endl;
+
+  cout << "IN:  " << data << endl;
+  cout << "OUT: " << out << endl;
+
+  assert(HammingDistance(data, out, 30) == 0);
+  assert(bitlen = 30 * 8);
+
+  delete [] data;
+  delete [] packet;
+  delete [] out;
+}
+
 
 void TestDataPipeline() {
   // Generate Data
@@ -229,9 +253,15 @@ int main() {
   cout << "----------------------------------------";
   cout << "----------------------------------------" << endl;
 
-  cout << "Packetization Test Running...\n" << endl;
-  TestPacketization();
-  
+  cout << "Basic Packetization Test Running...\n" << endl;
+  TestBasicPacketization();
+
+  cout << "----------------------------------------";
+  cout << "----------------------------------------" << endl;
+
+  cout << "Advanced Packetization Test Running...\n" << endl;
+  TestAdvPacketization();
+
   // TestDataPipeline();
 
   return 0;
