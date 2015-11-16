@@ -87,16 +87,16 @@ void TestByteQueue() {
   uint32_t* pru_cursor = new uint32_t;
   *pru_cursor = 0;
 
-  ByteQueue queue(95 * 2);
+  ByteQueue queue(88 * 2);
   cout << "Queue Created" << endl;
 
-  queue.push(GenerateData(92), 736);
+  queue.push(GenerateData(87));
 
-  uint8_t* data = new uint8_t[92];
-  cout << "Length is: " << queue.pop(data) << endl;
+  uint8_t* data = new uint8_t[87];
+  queue.pop(data);
   cout << data << endl;
 
-  cout << "Length is: " << queue.pop(data) << endl;
+  queue.pop(data);
   cout << data << endl;
 }
 
@@ -173,24 +173,22 @@ void TestDataPipeline() {
 
 int main() {
 
-  /*
-  cout << "Forward Error Correction Test Running..." << endl;
+  cout << "Forward Error Correction Test Running...\n" << endl;
   TestFEC();
 
-  for(int i = 0; i < 5; i++)
-    cout << "." << endl;
+  cout << "----------------------------------------";
+  cout << "----------------------------------------" << endl;
 
-  cout << "ByteQueue Test Running..." << endl;
+  cout << "ByteQueue Test Running...\n" << endl;
   TestByteQueue();
 
-  for(int i = 0; i < 5; i++)
-    cout << "." << endl;
+  cout << "----------------------------------------";
+  cout << "----------------------------------------" << endl;
 
-  cout << "Testing Manchester Encoding" << endl;
+  cout << "Manchester Encoding Test Running...\n" << endl;
   TestManchester();
-  */
   
-  TestDataPipeline();
+  // TestDataPipeline();
 
   return 0;
 };

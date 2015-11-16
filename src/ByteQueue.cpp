@@ -4,7 +4,7 @@
 using namespace std;
 
 ByteQueue::ByteQueue(uint32_t max_bytes) {
-    assert(max_bytes % 95 == 0);
+    assert(max_bytes % 88 == 0);
     // Size params
     _max_bytes = max_bytes;
 
@@ -36,48 +36,30 @@ ByteQueue::ByteQueue(uint32_t max_bytes) {
 
 }
 
-// Pops 1 packet at a time
-uint16_t ByteQueue::pop(uint8_t* packet) {
+// Pops 1 encoded packet at a time
+// We pop 87 bytes, which is actually 86.25 bytes
+// AKA 690 bits.
+void ByteQueue::pop(uint8_t* packet) {
   // Expect packet array length to be 92
 
   uint8_t* addr = peek();
-  uint16_t bitlen = *(uint16_t*)(addr + 1);
-  memcpy(packet, (addr + 3), 92);
+  // Remove preamble 
+  memcpy(packet, (addr + 1), 87);
 
   // TODO: We need the PRU to keep track of where BBB is reading
-  _internal_cursor += 95;
+  _internal_cursor += 88;
   _internal_cursor %= _max_bytes;
-
-  return bitlen;
 }
 
-void ByteQueue::push(uint8_t* bytes, uint16_t bitlen) {
-    /* We want the packet to be 100 bytes long:
-     Preamble: 8 bits
-     Length: 16 bits
-     Data: 736 bits
-  */
-  uint8_t* packet = new uint8_t[100];
+// Always expect 87 Bytes (86.25 actual in packet)
+void ByteQueue::push(uint8_t* packet) {
 
-  int num_packets = (bitlen / 736) + 1;
+  *peek() = 0xFF;
+  memcpy((peek() + 1), packet, 87);
 
-  for(int n = 0; n < num_packets; n++) {
-    // Set preamble
-    packet[0] = 0xFF;
-
-    *(uint16_t*)(packet + 1) = bitlen;
-
-    for(int i = 0; i < 736; i++)
-      setBit(packet, 24 + i, getBit(bytes, i + ((n-1) * 736)));
-
-      // Get the current loc with peak, and save data to it
-    memcpy(peek(), packet, 95);
   
-    // TODO: Check where the PRU is before writing
-    _internal_cursor += 95;
-    _internal_cursor %= _max_bytes;
-  }
+  // TODO: Check where the PRU is before writing
+  _internal_cursor += 88;
+  _internal_cursor %= _max_bytes;
   cout << "Push done" << endl;
-
-  delete[] packet;
 }

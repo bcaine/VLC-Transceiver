@@ -5,12 +5,13 @@ CFLAGS = -Wall -I ./include
 CPFLAGS = $(CFLAGS)
 LIBS =
 
+packet_o = Packetize.o
 queue_o = ByteQueue.o
 golay_o = Golay.o
 fec_o = ForwardErrorCorrection.o $(golay_o)
 realtime_o = RealtimeControl.o
 socket_o = SocketConnection.o
-transceiver_o = Transceiver.o $(fec_o) $(realtime_o) $(socket_o) $(queue_o)
+transceiver_o = Transceiver.o $(fec_o) $(realtime_o) $(socket_o) $(queue_o) $(packet_o)
 test_o = Test.o $(transceiver_o)
 
 # -------------------------------
@@ -39,6 +40,9 @@ Golay.o: src/Golay.cpp
 
 ByteQueue.o: src/ByteQueue.cpp
 	$(CC) $(CFLAGS) -c src/ByteQueue.cpp
+
+Packetize.o: src/Packetize.cpp
+	$(CC) $(CFLAGS) -c src/Packetize.cpp
 
 test: clean $(test_o)
 	$(CCPP) $(LIBS) -o test $(test_o)
