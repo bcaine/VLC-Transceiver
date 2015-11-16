@@ -5,6 +5,7 @@
 #include "Golay.hpp"
 #include "ByteQueue.hpp"
 #include "Util.hpp"
+#include "Packetize.hpp"
 #include<iostream>
 #include<exception>
 #include<ctime>
@@ -80,7 +81,8 @@ void TestFEC() {
 
   cout << "Hamming Distance between input and output: ";
   cout << HammingDistance(data, decoded, data_length) << endl;
-
+  
+  assert(HammingDistance(data, decoded, data_length) == 0);
 }
 
 void TestByteQueue() {
@@ -90,14 +92,20 @@ void TestByteQueue() {
   ByteQueue queue(88 * 2);
   cout << "Queue Created" << endl;
 
-  queue.push(GenerateData(87));
+  uint8_t* in = GenerateData(87);
+  queue.push(in);
 
-  uint8_t* data = new uint8_t[87];
-  queue.pop(data);
-  cout << data << endl;
+  uint8_t* out = new uint8_t[87];
+  queue.pop(out);
+  cout << out << endl;
 
-  queue.pop(data);
-  cout << data << endl;
+  queue.pop(out);
+  cout << out << endl;
+
+  assert(HammingDistance(in, out, 88) == 0);
+
+  delete [] in;
+  delete [] out;
 }
 
 void TestManchester() {
@@ -119,6 +127,36 @@ void TestManchester() {
 		       data_length * 2, data_length);
 
   cout << decoded << endl;
+
+  assert(HammingDistance(data, decoded, 2) == 0);
+
+  delete [] data;
+  delete [] encoded;
+  delete [] decoded;
+}
+
+void TestPacketization() {
+
+  // Basic test of a normal packet size
+  uint8_t *data = GenerateData(43);
+  uint8_t *packet = new uint8_t[45];
+  uint8_t *out = new uint8_t[43];
+
+  packetize(data, packet, 43 * 8);
+
+  uint16_t bitlen = depacketize(packet, out);
+
+  cout << "IN: " << data << endl;
+  cout << "OUT: " << out << endl;
+  
+  assert(HammingDistance(data, out, 43) == 0);
+  assert(bitlen = 43 * 8);
+
+  delete [] data;
+  delete [] packet;
+  delete [] out;
+  // Test truncation and demo
+
 }
 
 void TestDataPipeline() {
@@ -187,6 +225,12 @@ int main() {
 
   cout << "Manchester Encoding Test Running...\n" << endl;
   TestManchester();
+
+  cout << "----------------------------------------";
+  cout << "----------------------------------------" << endl;
+
+  cout << "Packetization Test Running...\n" << endl;
+  TestPacketization();
   
   // TestDataPipeline();
 
