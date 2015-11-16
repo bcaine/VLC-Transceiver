@@ -32,15 +32,11 @@ ByteQueue::ByteQueue(uint32_t max_bytes) {
 
     // Set all values in this memory to 0
     memset(_data, 0, max_bytes);
-    
-
 }
-
 
 ByteQueue::~ByteQueue() {
   munmap(_done, _max_bytes + 5);
 }
-
 
 // Pops 1 encoded packet at a time
 // We pop 87 bytes, which is actually 86.25 bytes
