@@ -26,6 +26,7 @@ class ByteQueue {
 public:
 
   ByteQueue(uint32_t max_bytes);
+  ~ByteQueue();
 
   // Returns pointer to current location of queue and moves cursor
   // Assumes you want 87 bytes at a time
