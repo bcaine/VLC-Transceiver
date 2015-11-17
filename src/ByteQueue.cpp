@@ -1,8 +1,6 @@
 #include "ByteQueue.hpp"
 #include <iostream>
 
-using namespace std;
-
 ByteQueue::ByteQueue(uint32_t max_bytes) {
     assert(max_bytes % 88 == 0);
     // Size params
@@ -63,5 +61,4 @@ void ByteQueue::push(uint8_t* packet) {
   // TODO: Check where the PRU is before writing
   _internal_cursor += 88;
   _internal_cursor %= _max_bytes;
-  cout << "Push done" << endl;
 }

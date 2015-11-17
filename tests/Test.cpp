@@ -196,7 +196,7 @@ void TestDataPipeline() {
 
   // Encode
   ForwardErrorCorrection fec;
-  ByteQueue queue(88 * 23);
+  ByteQueue queue(88 * 24);
 
   int full_packets = data_length / 43;
   int last_packet_len = data_length % 43;
@@ -208,7 +208,7 @@ void TestDataPipeline() {
     if (full_packets > 0)
       bitlen = 43 * 8;
     else
-      bitlen = last_packet_len;
+      bitlen = last_packet_len * 8;
 
     // First packetize the data...
     packetize(data + i, packet, bitlen);
@@ -223,7 +223,28 @@ void TestDataPipeline() {
     num++;
   }
   cout << "Loaded " << num << " Packets into the ByteQueue" << endl;
+
+  cout << "----------------------------------------";
+  cout << "----------------------------------------" << endl;
+
+  num = 0;
+  int total_len = 0;
+  // Reverse this...
+  for(int i = 0; i < data_length; i+=43) {
+    // Pop 87 Bytes
+    queue.pop(encoded);
+
+    fec.Decode(encoded, packet, 87);
+
+    uint16_t len = depacketize(packet, decoded + i);
+    total_len += len;
+    num ++;
+  }
+
+  cout << "Decoded " << num << " Packets." << endl;
+  cout << "Decoded data is " << total_len << " Bytes" << endl;
   
+  assert(HammingDistance(data, decoded, 1000) == 0);
 }
 
 
