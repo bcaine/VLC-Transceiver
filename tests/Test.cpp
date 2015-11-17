@@ -187,7 +187,7 @@ void TestDataPipeline() {
   // Generate Data
 
   int data_length = 1000;
-  int num_errors = 100;
+  int errors_per_packet = 12;
   uint8_t* data = GenerateData(data_length);
   // Packets are all 45 bytes
   uint8_t* packet = new uint8_t[45];
@@ -216,6 +216,9 @@ void TestDataPipeline() {
     // Then encode it...
     fec.Encode(packet, encoded, 45);
 
+    // Corrupt it a bit.. For fun
+    CorruptData(encoded, errors_per_packet, 87);
+
     // Then we want to save it to ByteQueue
     queue.push(encoded);
 
@@ -237,14 +240,20 @@ void TestDataPipeline() {
     fec.Decode(encoded, packet, 87);
 
     uint16_t len = depacketize(packet, decoded + i);
+
     total_len += len;
     num ++;
   }
 
   cout << "Decoded " << num << " Packets." << endl;
   cout << "Decoded data is " << total_len << " Bytes" << endl;
-  
-  assert(HammingDistance(data, decoded, 1000) == 0);
+
+  int hamming_dist = HammingDistance(data, decoded, 1000);
+
+  cout << "Distance between send and received: " << hamming_dist;
+  cout << endl;
+
+  assert(hamming_dist == 0);
 }
 
 

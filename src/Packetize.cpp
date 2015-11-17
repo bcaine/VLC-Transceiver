@@ -1,4 +1,5 @@
 #include "Packetize.hpp"
+#include <iostream>
 
 const int MAX_BYTES = 43;
 const int MAX_BITS = 8 * MAX_BYTES;
@@ -22,7 +23,15 @@ void packetize(uint8_t* data_in, uint8_t* packet, uint16_t bitlen)
 uint16_t depacketize(uint8_t* packet, uint8_t* data_out)
 {
   uint16_t bitlen = *(uint16_t*)(packet);
-  assert(bitlen <= MAX_BITS);
+
+  // If bitlen > MAX_BITS, its probably an
+  // uncorrectable error farther up the pipeline...
+  // Unfortunately, the only thing we can do
+  // is set the length to the max bits and hope
+  // that it was a full packet.
+
+  bitlen = bitlen > MAX_BITS ? MAX_BITS : bitlen;
+  
   std::memcpy(data_out, (packet + 2), MAX_BYTES);
 
   return bitlen;
