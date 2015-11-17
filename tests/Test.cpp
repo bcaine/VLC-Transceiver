@@ -189,47 +189,41 @@ void TestDataPipeline() {
   int data_length = 1000;
   int num_errors = 100;
   uint8_t* data = GenerateData(data_length);
-  uint8_t* encoded = new uint8_t[2000];
+  // Packets are all 45 bytes
+  uint8_t* packet = new uint8_t[45];
+  uint8_t* encoded = new uint8_t[87];
+  uint8_t* decoded = new uint8_t[data_length];
 
   // Encode
   ForwardErrorCorrection fec;
-  fec.Encode(data, encoded, data_length);
+  ByteQueue queue(88 * 23);
 
-  // Errors
-  CorruptData(encoded, num_errors, data_length * 2);
+  int full_packets = data_length / 43;
+  int last_packet_len = data_length % 43;
+  int bitlen;
 
-  int encoded_bit_length = (data_length * 8 * 12) / 23;
-  encoded_bit_length += (data_length * 8 * 12) % 23;
-  
-  // Save
-  ByteQueue queue(2000);
-  cout << "Queue Created" << endl;
+  int num = 0;
+  // Loop through data
+  for(int i = 0; i < data_length; i+=43) {
+    if (full_packets > 0)
+      bitlen = 43 * 8;
+    else
+      bitlen = last_packet_len;
 
-  /*
-  int j = 0;
-  for (int i = encoded_bit_length; i > 0; i -= (92 * 8)) {
-    queue.push(&encoded[j * 92], 92 * 8);
-    j++;
+    // First packetize the data...
+    packetize(data + i, packet, bitlen);
+
+    // Then encode it...
+    fec.Encode(packet, encoded, 45);
+
+    // Then we want to save it to ByteQueue
+    queue.push(encoded);
+
+    full_packets -= 1;
+    num++;
   }
-  // Pop
-
-  uint8_t* data_pop = new uint8_t[92];
-  int len;
-  for(int i = j; i > 0; i--) {
-    
-    len = queue.pop(data_pop);
-    cout << "Length: " << len << endl;
-    cout << data_pop << endl;
-  }
+  cout << "Loaded " << num << " Packets into the ByteQueue" << endl;
   
-  // Decode
-  //  fec.Decode(encoded, decoded, data_length * 2);
-
-
-
-  // Data
-
-  */
 }
 
 
@@ -262,7 +256,11 @@ int main() {
   cout << "Advanced Packetization Test Running...\n" << endl;
   TestAdvPacketization();
 
-  // TestDataPipeline();
+  cout << "----------------------------------------";
+  cout << "----------------------------------------" << endl;
+
+  cout << "Data Pipeline Test Running...\n" << endl;
+  TestDataPipeline();
 
   return 0;
 };
