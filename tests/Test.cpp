@@ -26,13 +26,15 @@ unsigned char* GenerateData(int bytes) {
 }
 
 void CorruptData(unsigned char* data,
-		 int n_corruptions,
+		 double p,
 		 int bytes) {
 
-  for (int i = 0; i < n_corruptions; ++i) {
-    // Corrupt a single bit
-    int position = rand() % (bytes * 8);
-    setBit(data, position, getBit(data, position) ^ 1);
+  double q;
+  for (int i = 0; i < bytes * 8; i++) {
+    q = ((double) rand() / (RAND_MAX));
+    if (q < p)
+      setBit(data, i, getBit(data, i) ^ 1);
+
   }
 }
 
@@ -57,9 +59,9 @@ unsigned int HammingDistance(unsigned char* a,
 
 void TestFEC() {
   int data_length = 96;
-  int num_errors = 35;
+  double p_error = 0.06;
 
-  cout << "Testing FEC with " << num_errors << " errors" << endl;
+  cout << "Testing FEC with P(error) = " << p_error << endl;
 
   assert(data_length % 3 == 0);
 
@@ -74,7 +76,7 @@ void TestFEC() {
   
   fec.Encode(data, encoded, data_length);
 
-  CorruptData(encoded, num_errors, data_length);
+  CorruptData(encoded, p_error, data_length);
 
   fec.Decode(encoded, decoded, data_length * 2);
 
@@ -187,7 +189,7 @@ void TestDataPipeline() {
   // Generate Data
 
   int data_length = 1000;
-  int errors_per_packet = 12;
+  double p_error = 0.02;
   uint8_t* data = GenerateData(data_length);
   // Packets are all 45 bytes
   uint8_t* packet = new uint8_t[45];
@@ -217,7 +219,7 @@ void TestDataPipeline() {
     fec.Encode(packet, encoded, 45);
 
     // Corrupt it a bit.. For fun
-    CorruptData(encoded, errors_per_packet, 87);
+    CorruptData(encoded, p_error, 87);
 
     // Then we want to save it to ByteQueue
     queue.push(encoded);
