@@ -31,6 +31,10 @@ SocketConnection::SocketConnection(int port) {
 
   // Set to 0 so we can make sure Accept is called before send/receive
   _connfd = 0;
+
+  // Set it so we can reuse an addr
+  int yes = 1;
+  setsockopt(_sock, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
   
 }
 
