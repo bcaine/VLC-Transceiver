@@ -18,15 +18,12 @@ RealtimeControl::~RealtimeControl() {
   // Delete Buffer
 }
 
-void RealtimeControl::Write(char *data) {
-  // TODO
-}
-
-void RealtimeControl::Read(char *data) {
-  // TODO
-}
-
 bool RealtimeControl::InitPRU() {
   // TODO
   return true;
+}
+
+bool RealtimeControl::Done() {
+  // TODO CHANGE THIS TO ACTUALLY DO SOMETHING
+  return false;
 }

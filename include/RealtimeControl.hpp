@@ -18,8 +18,7 @@ public:
   RealtimeControl(int buffer_size);
   ~RealtimeControl();
 
-  void Write(char *data);
-  void Read(char *data);
+  bool Done();
 
 private:
   bool InitPRU();

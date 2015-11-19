@@ -14,24 +14,29 @@
 #include "ForwardErrorCorrection.hpp"
 #include "SocketConnection.hpp"
 #include "RealtimeControl.hpp"
+#include "ByteQueue.hpp"
+#include "Packetize.hpp"
+#include <iostream>
+
+using namespace std;
 
 
 class Transceiver {
 
 public:
-  Transceiver(const SocketConnection &sockconn,
-	      const ForwardErrorCorrection &fec,
-	      const RealtimeControl &pru);
+  Transceiver(SocketConnection &sockconn,
+	      ForwardErrorCorrection &fec,
+	      RealtimeControl &pru,
+	      ByteQueue &queue);
   
-  ~Transceiver();
-
   void Transmit();
   void Receive();
 
 private:
-  SocketConnection _sockconn;
+  SocketConnection _sock;
   ForwardErrorCorrection _fec;
   RealtimeControl _pru;
+  ByteQueue _queue;
 };
 
 #endif // TRANSCEIVER_HPP
