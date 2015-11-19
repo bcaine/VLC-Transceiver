@@ -57,7 +57,7 @@ int SocketConnection::Receive(uint8_t *buf, int len) {
   return recv(_connfd, buf, len, 0);
 }
 
-int SocketConnection::Send(uint8_t *buf, int bytes) {
+int SocketConnection::Send(uint8_t *buf, int len) {
 
   if (_connfd == 0)
     if (!Accept())

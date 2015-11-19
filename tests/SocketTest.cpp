@@ -16,7 +16,8 @@ unsigned char* GenerateData(int bytes) {
   return data;
 }
 
-void BasicReceiveSocket() {
+void BasicReceiveSocket()
+{
 
   // This corresponds with a simple python client
   // That sends 1000 bytes of data.
@@ -36,19 +37,29 @@ void BasicReceiveSocket() {
   sock.Close();
 }
 
-void BasicSendSocket() {
-  
+void BasicSendSocket()
+{
 
+  int data_len = 1000;
+  SocketConnection sock(9000);
+  uint8_t *buf = GenerateData(data_len);
+
+  sock.Send(buf, data_len);
+  sock.Close();
 }
 
-int main() {
-  cout << "Testing receive socket" << endl;
-  BasicReceiveSocket();
-  
-  cout << "----------------------------------------";
-  cout << "----------------------------------------" << endl;
+int main(int argc, char *argv[])
+{
+  if( argc == 2 ) {
+    printf("The argument supplied is %s\n", argv[1]);
+  }
 
-  cout << "Testing send socket" << endl;
-  BasicSendSocket();
+  if (strcmp(argv[1], "receive") == 0) {
+    cout << "Testing receive socket" << endl;
+    BasicReceiveSocket();
+  } else if (strcmp(argv[1], "send") == 0) {
+    cout << "Testing send socket" << endl;
+    BasicSendSocket();
+  }
 
 }
