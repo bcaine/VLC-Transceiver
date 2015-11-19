@@ -2,7 +2,9 @@
 #include <iostream>
 
 ByteQueue::ByteQueue(uint32_t max_bytes) {
+
     assert(max_bytes % 88 == 0);
+    
     // Size params
     _max_bytes = max_bytes;
 
@@ -10,13 +12,18 @@ ByteQueue::ByteQueue(uint32_t max_bytes) {
     _internal_cursor = 0;
 
     _mem_fd = open("/dev/mem", O_RDWR);
+    
     if (_mem_fd < 0) {
         printf("Failed to open /dev/mem (%s)\n", strerror(errno));
         return;
-    }	
+    }
     // Create data block
     _length = mmap(0, max_bytes + 8, PROT_WRITE | PROT_READ,
 		 MAP_SHARED, _mem_fd, 0);
+
+
+    if ((uint64_t)_length == 0xffffffffffffffff)
+      fprintf(stderr, "mmap failed: %s\n", strerror(errno));
 
     _pru_cursor = (uint8_t*)_length + 4;
     _data = (uint8_t*)_pru_cursor + 4;

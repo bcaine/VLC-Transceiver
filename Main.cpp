@@ -7,14 +7,27 @@
 
 using namespace std;
 
-void Transmit() {
+void Transceive(bool transmit) {
+  SocketConnection sockconn(9000);
+  ForwardErrorCorrection fec;
+  RealtimeControl pru;
 
+  // TODO: Uncomment this when we are on Beaglebone
+  // x86 Linux Kernel doesn't let you access > 1MB of /dev/mem
+  // with mmap unless I recompile the kernel with a flag disabled.
+  // Testing with a smaller queue, but not ideal.
+  // Create queue that is ~16 MB large
+  // ByteQueue queue(16777200);
 
-}
+  // Close to 512 kb. For testing. We want more.
+  ByteQueue queue(524216);
 
-void Receive() {
+  Transceiver transceiver(sockconn, fec, pru, queue);
 
-
+  if (transmit)
+    transceiver.Transmit();
+  else
+    transceiver.Receive();
 }
 
 int main(int argc, char *argv[]) {
@@ -23,9 +36,9 @@ int main(int argc, char *argv[]) {
     cout << "Please provide either 'transmit' or 'receive'" << endl;
 
   if (strcmp(argv[1], "transmit") == 0)
-    Transmit();
+    Transceive(true);
   else if (strcmp(argv[1], "receive") == 0)
-    Receive();
+    Transceive(false);
   else
     cout << "Please provide either 'transmit' or 'receive'" << endl;
 

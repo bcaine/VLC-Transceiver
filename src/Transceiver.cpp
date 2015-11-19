@@ -18,6 +18,8 @@ Transceiver::Transceiver(SocketConnection &sockconn,
 
 void Transceiver::Transmit()
 {
+  cout << "Starting Transmit" << endl;
+  
   uint8_t* buf = new uint8_t[43];
   uint8_t* packet = new uint8_t[45];
   uint8_t* encoded = new uint8_t[87];
