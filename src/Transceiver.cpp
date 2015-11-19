@@ -29,7 +29,7 @@ void Transceiver::Transmit()
     recvlen = _sock.Receive(buf, 43);
 
     if (recvlen == 0) {
-      cout << "Receive Length 0. Mark PRU to say its done" << endl;
+      cout << "Receive Length 0. Assume Transfer is done." << endl;
       break;
     }
 

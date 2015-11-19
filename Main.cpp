@@ -24,10 +24,15 @@ void Transceive(bool transmit) {
 
   Transceiver transceiver(sockconn, fec, pru, queue);
 
+  cout << "Starting Transceiver in ";
+  cout << (transmit ? "transmit mode." : "receive mode.") << endl;
+  
   if (transmit)
     transceiver.Transmit();
   else
     transceiver.Receive();
+
+  cout << "Shutting down..." << endl;
 }
 
 int main(int argc, char *argv[]) {
