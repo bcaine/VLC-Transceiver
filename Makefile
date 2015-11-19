@@ -54,7 +54,7 @@ test: clean $(test_o)
 sockettest: clean $(sockettest_o)
 	$(CCPP) $(LIBS) -o sockettest $(sockettest_o)
 
-all: test
+all: test sockettest
 
 clean:
 	git submodule update --init --recursive

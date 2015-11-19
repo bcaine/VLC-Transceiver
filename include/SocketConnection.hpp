@@ -27,11 +27,14 @@ public:
   SocketConnection(int port);
   ~SocketConnection();
 
+  bool Accept();
+  bool Close();
   int Receive(uint8_t *buf, int bytes);
   void Send(uint8_t *buf, int bytes);
   
 private:
   int _sock, _recv_result;
+  int _connfd;
   // We care about cliaddr if we want to explicitly
   // send a message to the client.
   struct sockaddr_in _servaddr, _cliaddr;

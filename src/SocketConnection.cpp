@@ -35,13 +35,19 @@ SocketConnection::~SocketConnection() {
   close(_sock);
 }
 
-int SocketConnection::Receive(uint8_t *buf, int len) {
+bool SocketConnection::Accept() {
   int sock_size = sizeof(_cliaddr);
-  int connfd = accept(_sock, (struct sockaddr*)&_cliaddr,
-		      (socklen_t*)&sock_size);
-  int bytes = recv(connfd, buf, len, 0);
+  _connfd = accept(_sock, (struct sockaddr*)&_cliaddr,
+		   (socklen_t*)&sock_size);
+  return _connfd != -1;
+}
 
-  return bytes;
+bool SocketConnection::Close() {
+  return close(_connfd) != -1;
+}
+
+int SocketConnection::Receive(uint8_t *buf, int len) {
+  return recv(_connfd, buf, len, 0);
 }
 
 void SocketConnection::Send(uint8_t *buf, int bytes) {
