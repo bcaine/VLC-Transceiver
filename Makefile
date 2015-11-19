@@ -13,6 +13,7 @@ realtime_o = RealtimeControl.o
 socket_o = SocketConnection.o
 transceiver_o = Transceiver.o $(fec_o) $(realtime_o) $(socket_o) $(queue_o) $(packet_o)
 test_o = Test.o $(transceiver_o)
+main_o = Main.o $(transceiver_o)
 sockettest_o = SocketTest.o $(transceiver_o)
 
 # -------------------------------
@@ -48,14 +49,20 @@ ByteQueue.o: src/ByteQueue.cpp
 Packetize.o: src/Packetize.cpp
 	$(CC) $(CFLAGS) -c src/Packetize.cpp
 
+Main.o: Main.cpp
+	$(CC) $(CFLAGS) -c Main.cpp
+
 test: clean $(test_o)
 	$(CCPP) $(LIBS) -o test $(test_o)
 
 sockettest: clean $(sockettest_o)
 	$(CCPP) $(LIBS) -o sockettest $(sockettest_o)
 
-all: test sockettest
+main: clean $(main_o)
+	$(CCPP) $(LIBS) -o main $(main_o)
+
+all: test sockettest main
 
 clean:
 	git submodule update --init --recursive
-	-rm *.o test sockettest
+	-rm *.o test sockettest main
