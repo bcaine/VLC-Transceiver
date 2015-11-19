@@ -6,12 +6,8 @@ ByteQueue::ByteQueue(uint32_t max_bytes) {
     // Size params
     _max_bytes = max_bytes;
 
-    // Set up cursors
-    // TODO: PRU Cursor is just first 4 bytes of buffer
-    // Make functions to access
-    
     // Initialize cursor values
-    _internal_cursor = 5;
+    _internal_cursor = 0;
 
     _mem_fd = open("/dev/mem", O_RDWR);
     if (_mem_fd < 0) {
@@ -19,13 +15,13 @@ ByteQueue::ByteQueue(uint32_t max_bytes) {
         return;
     }	
     // Create data block
-    _done = mmap(0, max_bytes + 5, PROT_WRITE | PROT_READ,
+    _length = mmap(0, max_bytes + 8, PROT_WRITE | PROT_READ,
 		 MAP_SHARED, _mem_fd, 0);
 
-    _pru_cursor = (uint8_t*)_done + 1;
+    _pru_cursor = (uint8_t*)_length + 4;
     _data = (uint8_t*)_pru_cursor + 4;
 
-    *((unsigned char*)_done) = 0;
+    *((unsigned char*)_length) = 0;
     *((uint32_t*)_pru_cursor) = 0;
 
     // Set all values in this memory to 0
@@ -33,7 +29,7 @@ ByteQueue::ByteQueue(uint32_t max_bytes) {
 }
 
 ByteQueue::~ByteQueue() {
-  munmap(_done, _max_bytes + 5);
+  munmap(_length, _max_bytes + 8);
 }
 
 // Pops 1 encoded packet at a time

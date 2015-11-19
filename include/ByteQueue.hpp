@@ -30,11 +30,9 @@ public:
 
   // Returns pointer to current location of queue and moves cursor
   // Assumes you want 87 bytes at a time
-  // NOTE: Pop is receiver specific
   void pop(uint8_t* packet);
   
   // Adds data to the queue
-  // NOTE: Push is transmitter specific
   void push(uint8_t* bytes);
 
   // Pru will have cursor be 5, 97, 189, 281 etc.
@@ -50,7 +48,7 @@ public:
   void* dataLocation() { return _data; }
 
   // Returns pointer to current location of queue
-  uint8_t* peek() { return (uint8_t*)_data + (_internal_cursor * 8); }
+  uint8_t* peek() { return (uint8_t*)_data + _internal_cursor; }
   
 private:
   uint32_t _max_bytes;
@@ -59,8 +57,8 @@ private:
   // or reading data coming from encoding or going towards
   // decoding.
   uint32_t _internal_cursor;
-  // One byte for done
-  void* _done;
+  // four bytes for done
+  void* _length;
   // Four bytes for PRU cursor
   void* _pru_cursor;
   // The rest is data
