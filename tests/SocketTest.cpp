@@ -25,8 +25,6 @@ void BasicReceiveSocket() {
   SocketConnection sock(9000);
   uint8_t *buf = new uint8_t[1000];
 
-  sock.Accept();
-
   int i = 0;
   while(i < 1000) {
     len = sock.Receive(buf + i, 43);
@@ -38,8 +36,19 @@ void BasicReceiveSocket() {
   sock.Close();
 }
 
+void BasicSendSocket() {
+  
+
+}
+
 int main() {
   cout << "Testing receive socket" << endl;
   BasicReceiveSocket();
+  
+  cout << "----------------------------------------";
+  cout << "----------------------------------------" << endl;
+
+  cout << "Testing send socket" << endl;
+  BasicSendSocket();
 
 }

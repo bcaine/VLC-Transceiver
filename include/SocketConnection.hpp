@@ -30,7 +30,7 @@ public:
   bool Accept();
   bool Close();
   int Receive(uint8_t *buf, int bytes);
-  void Send(uint8_t *buf, int bytes);
+  int Send(uint8_t *buf, int bytes);
   
 private:
   int _sock, _recv_result;

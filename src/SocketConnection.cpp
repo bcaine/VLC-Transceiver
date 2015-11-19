@@ -28,6 +28,9 @@ SocketConnection::SocketConnection(int port) {
     std::cout << "Could not listen to socket." << std::endl;
     fprintf(stderr, "socket() failed: %s\n", strerror(errno));
   }
+
+  // Set to 0 so we can make sure Accept is called before send/receive
+  _connfd = 0;
   
 }
 
@@ -47,10 +50,18 @@ bool SocketConnection::Close() {
 }
 
 int SocketConnection::Receive(uint8_t *buf, int len) {
+  if (_connfd == 0)
+    if (!Accept())
+      std::cout << "Accept failed... Receive won't work" << std::endl;
+  
   return recv(_connfd, buf, len, 0);
 }
 
-void SocketConnection::Send(uint8_t *buf, int bytes) {
-  // TODO:
-  // - Take data from buffer and push to
+int SocketConnection::Send(uint8_t *buf, int bytes) {
+
+  if (_connfd == 0)
+    if (!Accept())
+      std::cout << "Accept failed... Receive won't work" << std::endl;
+
+  return send(_connfd, buf, len, 0);
 }

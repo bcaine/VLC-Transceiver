@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import socket
 import sys
 
@@ -12,5 +14,11 @@ def send_data(port):
     print >>sys.stderr, 'sending "%s"' % message
     sock.sendall(message)
 
+def receive_data(port):
+    pass
+
 if __name__=="__main__":
-    send_data(9000)
+    if 'send' in sys.argv:
+        send_data(port=9000)
+    elif 'receive' in sys.argv:
+        receive_data(port=9000)
