@@ -1,5 +1,5 @@
 #include "ByteQueue.hpp"
-#include <iostream>
+
 
 ByteQueue::ByteQueue(uint32_t max_bytes) {
 
@@ -28,7 +28,7 @@ ByteQueue::ByteQueue(uint32_t max_bytes) {
     _pru_cursor = (uint8_t*)_length + 4;
     _data = (uint8_t*)_pru_cursor + 4;
 
-    *((unsigned char*)_length) = 0;
+    *((uint32_t*)_length) = 0;
     *((uint32_t*)_pru_cursor) = 0;
 
     // Set all values in this memory to 0

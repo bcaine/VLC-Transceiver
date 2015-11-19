@@ -28,6 +28,10 @@ void Transceiver::Transmit()
   while(1) {
     recvlen = _sock.Receive(buf, 43);
 
+    // Increment length so PRU knows there's more data
+    _queue.incrementLength(recvlen);
+    // cout << _queue.getLength() << endl;
+    
     if (recvlen == 0) {
       cout << "Receive Length 0. Assume Transfer is done." << endl;
       break;

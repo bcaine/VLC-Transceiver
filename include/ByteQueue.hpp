@@ -35,6 +35,9 @@ public:
   // Adds data to the queue
   void push(uint8_t* bytes);
 
+  void incrementLength(int n) { *((uint32_t*)_length) += n; }
+  uint32_t getLength() { return *((uint32_t*)_length); }				  
+
   // Pru will have cursor be 5, 97, 189, 281 etc.
   // We have a set addr for _data, so we
   // want to reference it by 0, 92, 184 etc.
