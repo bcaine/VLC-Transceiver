@@ -8,8 +8,12 @@ const int MAX_BITS = 8 * MAX_BYTES;
 void packetize(uint8_t* data_in, uint8_t* packet, uint16_t bitlen)
 {
   assert(bitlen <= MAX_BITS);
-  // Set length to be first two bytes
-  *(uint16_t*)(packet) = bitlen;
+  // If length is max, set it to all 1s
+  if (bitlen == MAX_BITS)
+    *(uint16_t*)(packet) = 0xFFFF;
+  else
+    // Set length to be first two bytes
+    *(uint16_t*)(packet) = bitlen;
 
   // Fill in packet with data + padding
   // For each bit less than 43 * 8, pack it with 1s
