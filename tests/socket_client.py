@@ -2,6 +2,7 @@
 
 import socket
 import sys
+import struct
 
 def get_socket(port):
     # Create a TCP/IP socket
@@ -14,7 +15,15 @@ def get_socket(port):
 def send_data(port):
     sock = get_socket(port)
     message = 'HelloWorld' * 100
-    print >>sys.stderr, 'sending "%s"' % message
+    # print >>sys.stderr, 'sending "%s"' % message
+    len_in_bytes = struct.pack("I", 1000)
+    print "Sending Length"
+    sock.sendall(len_in_bytes)
+
+    # Wait for ack
+    ack = sock.recv(1)
+
+    print "Sending Message"
     sock.sendall(message)
 
 def receive_data(port):

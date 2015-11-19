@@ -21,12 +21,12 @@ SocketConnection::SocketConnection(int port) {
   
   if (bind(_sock, (struct sockaddr*)&_servaddr, sizeof(_servaddr)) == -1) {
     std::cout << "Could not bind to socket." << std::endl;
-    fprintf(stderr, "socket() failed: %s\n", strerror(errno));
+    fprintf(stderr, "socket failed: %s\n", strerror(errno));
   }
 
-  if (listen(_sock, 100) == -1) {
+  if (listen(_sock, 500) == -1) {
     std::cout << "Could not listen to socket." << std::endl;
-    fprintf(stderr, "socket() failed: %s\n", strerror(errno));
+    fprintf(stderr, "socket failed: %s\n", strerror(errno));
   }
 
   // Set to 0 so we can make sure Accept is called before send/receive
@@ -57,7 +57,6 @@ int SocketConnection::Receive(uint8_t *buf, int len) {
   if (_connfd == 0)
     if (!Accept())
       std::cout << "Accept failed... Receive won't work" << std::endl;
-  
   return recv(_connfd, buf, len, 0);
 }
 
@@ -68,4 +67,10 @@ int SocketConnection::Send(uint8_t *buf, int len) {
       std::cout << "Accept failed... Receive won't work" << std::endl;
 
   return send(_connfd, buf, len, 0);
+}
+
+void SocketConnection::Ack() {
+  uint8_t* ack = new uint8_t[1];
+  ack[0] = 0xF;
+  Send(ack, 1);
 }
