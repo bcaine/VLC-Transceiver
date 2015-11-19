@@ -8,30 +8,43 @@
 
 #include "SocketConnection.hpp"
 
-SocketConnection::SocketConnection(int port, bool is_server) {
-  _is_server = is_server;
+SocketConnection::SocketConnection(int port) {
+
+  _sock = socket(AF_INET, SOCK_STREAM, 0);
+
+  memset(&_servaddr, '0', sizeof(_servaddr));
+  memset(&_cliaddr, '0', sizeof(_cliaddr));
+
+  _servaddr.sin_family = AF_INET;
+  _servaddr.sin_addr.s_addr = INADDR_ANY;
+  _servaddr.sin_port = htons(port);
   
-  // TODO:
-  // - Init Socket
-  // - Do things differently if server/client
+  if (bind(_sock, (struct sockaddr*)&_servaddr, sizeof(_servaddr)) == -1) {
+    std::cout << "Could not bind to socket." << std::endl;
+    fprintf(stderr, "socket() failed: %s\n", strerror(errno));
+  }
+
+  if (listen(_sock, 100) == -1) {
+    std::cout << "Could not listen to socket." << std::endl;
+    fprintf(stderr, "socket() failed: %s\n", strerror(errno));
+  }
+  
 }
 
 SocketConnection::~SocketConnection() {
-  // TODO:
-  // - Close Socket
+  close(_sock);
 }
 
-bool SocketConnection::Receive(char *buf) {
-  // TODO:
-  // - Behave differently if server/client
-  // - Transfer this data into the buffer that is
-  //   shared with encoding
-  return true;
+int SocketConnection::Receive(uint8_t *buf, int len) {
+  int sock_size = sizeof(_cliaddr);
+  int connfd = accept(_sock, (struct sockaddr*)&_cliaddr,
+		      (socklen_t*)&sock_size);
+  int bytes = recv(connfd, buf, len, 0);
+
+  return bytes;
 }
 
-bool SocketConnection::Send(char *buf) {
+void SocketConnection::Send(uint8_t *buf, int bytes) {
   // TODO:
-  // - Behave differently if server/client
   // - Take data from buffer and push to
-  return true;
 }

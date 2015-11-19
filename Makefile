@@ -13,6 +13,7 @@ realtime_o = RealtimeControl.o
 socket_o = SocketConnection.o
 transceiver_o = Transceiver.o $(fec_o) $(realtime_o) $(socket_o) $(queue_o) $(packet_o)
 test_o = Test.o $(transceiver_o)
+sockettest_o = SocketTest.o $(transceiver_o)
 
 # -------------------------------
 # Add release and debug modes with different flags
@@ -35,6 +36,9 @@ SocketConnection.o: src/SocketConnection.cpp
 Test.o: tests/Test.cpp
 	$(CCPP) $(CFLAGS) -c tests/Test.cpp
 
+SocketTest.o: tests/SocketTest.cpp
+	$(CCPP) $(CFLAGS) -c tests/SocketTest.cpp
+
 Golay.o: src/Golay.cpp
 	$(CC) $(CFLAGS) -c src/Golay.cpp
 
@@ -47,8 +51,11 @@ Packetize.o: src/Packetize.cpp
 test: clean $(test_o)
 	$(CCPP) $(LIBS) -o test $(test_o)
 
+sockettest: clean $(sockettest_o)
+	$(CCPP) $(LIBS) -o sockettest $(sockettest_o)
+
 all: test
 
 clean:
 	git submodule update --init --recursive
-	-rm *.o test
+	-rm *.o test sockettest

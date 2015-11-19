@@ -14,27 +14,27 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <stdint.h>
+#include <iostream>
+#include <cstring>
+#include <stdio.h>
+#include <errno.h>
 
 
 class SocketConnection {
 
 public:
-  SocketConnection(int port, bool is_server);
+  SocketConnection(int port);
   ~SocketConnection();
 
-  bool Receive(char *buf);
-  bool Send(char *buf);
+  int Receive(uint8_t *buf, int bytes);
+  void Send(uint8_t *buf, int bytes);
   
 private:
-  int _sock_m, _recv_result;
+  int _sock, _recv_result;
   // We care about cliaddr if we want to explicitly
   // send a message to the client.
   struct sockaddr_in _servaddr, _cliaddr;
-  // Decide whether this is the server or client.
-  // NOTE: This seems like a pretty poor idea. Introduces code smell
-  // Refactor this into an abstract class
-  bool _is_server;
-
 };
 
 #endif // SOCKET_HPP
