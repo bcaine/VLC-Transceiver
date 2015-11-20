@@ -2,7 +2,7 @@
 .entrypoint INIT
 
 #define PRU0_DELAY // number of cycles' delay needed to wait for PRU0
-#include 'tx.hp'
+#include "tx.hp"
 
 INIT:
 	// Enable OCP master port

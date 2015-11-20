@@ -1,6 +1,6 @@
 .origin 0
 .entrypoint INIT
-#include 'tx.hp'
+#include "tx.hp"
 
 INIT:
 	// Enable OCP master port
@@ -8703,152 +8703,152 @@ DEL_B59b8:
         ADD r0, r0, 1
         QBNE DEL_B59b8, r0, r1
 
-CLC_B28b1:
+CLC_B60b1:
         MOV r0, 0
         LSR r4, r22, 7
         AND r4, r4, 1
-        QBEQ SET_B28b1, r4, 1
+        QBEQ SET_B60b1, r4, 1
 
-CLR_B28b1:
+CLR_B60b1:
         CLR r30.t15
-        JMP DEL_B28b1
+        JMP DEL_B60b1
 
-SET_B28b1:
+SET_B60b1:
         SET r30.t15
-        JMP DEL_B28b1
+        JMP DEL_B60b1
 
-DEL_B28b1:
+DEL_B60b1:
         ADD r0, r0, 1
-        QBNE DEL_B28b1, r0, r1
+        QBNE DEL_B60b1, r0, r1
 
-CLC_B28b2:
+CLC_B60b2:
         MOV r0, 0
         LSR r4, r22, 6
         AND r4, r4, 1
-        QBEQ SET_B28b2, r4, 1
+        QBEQ SET_B60b2, r4, 1
 
-CLR_B28b2:
+CLR_B60b2:
         CLR r30.t15
-        JMP DEL_B28b2
+        JMP DEL_B60b2
 
-SET_B28b2:
+SET_B60b2:
         SET r30.t15
-        JMP DEL_B28b2
+        JMP DEL_B60b2
 
-DEL_B28b2:
+DEL_B60b2:
         ADD r0, r0, 1
-        QBNE DEL_B28b2, r0, r1
+        QBNE DEL_B60b2, r0, r1
 
-CLC_B28b3:
+CLC_B60b3:
         MOV r0, 0
         LSR r4, r22, 5
         AND r4, r4, 1
-        QBEQ SET_B28b3, r4, 1
+        QBEQ SET_B60b3, r4, 1
 
-CLR_B28b3:
+CLR_B60b3:
         CLR r30.t15
-        JMP DEL_B28b3
+        JMP DEL_B60b3
 
-SET_B28b3:
+SET_B60b3:
         SET r30.t15
-        JMP DEL_B28b3
+        JMP DEL_B60b3
 
-DEL_B28b3:
+DEL_B60b3:
         ADD r0, r0, 1
-        QBNE DEL_B28b3, r0, r1
+        QBNE DEL_B60b3, r0, r1
 
-CLC_B28b4:
+CLC_B60b4:
         MOV r0, 0
         LSR r4, r22, 4
         AND r4, r4, 1
-        QBEQ SET_B28b4, r4, 1
+        QBEQ SET_B60b4, r4, 1
 
-CLR_B28b4:
+CLR_B60b4:
         CLR r30.t15
-        JMP DEL_B28b4
+        JMP DEL_B60b4
 
-SET_B28b4:
+SET_B60b4:
         SET r30.t15
-        JMP DEL_B28b4
+        JMP DEL_B60b4
 
-DEL_B28b4:
+DEL_B60b4:
         ADD r0, r0, 1
-        QBNE DEL_B28b4, r0, r1
+        QBNE DEL_B60b4, r0, r1
 
-CLC_B28b5:
+CLC_B60b5:
         MOV r0, 0
         LSR r4, r22, 3
         AND r4, r4, 1
-        QBEQ SET_B28b5, r4, 1
+        QBEQ SET_B60b5, r4, 1
 
-CLR_B28b5:
+CLR_B60b5:
         CLR r30.t15
-        JMP DEL_B28b5
+        JMP DEL_B60b5
 
-SET_B28b5:
+SET_B60b5:
         SET r30.t15
-        JMP DEL_B28b5
+        JMP DEL_B60b5
 
-DEL_B28b5:
+DEL_B60b5:
         ADD r0, r0, 1
-        QBNE DEL_B28b5, r0, r1
+        QBNE DEL_B60b5, r0, r1
 
-CLC_B28b6:
+CLC_B60b6:
         MOV r0, 0
         LSR r4, r22, 2
         AND r4, r4, 1
-        QBEQ SET_B28b6, r4, 1
+        QBEQ SET_B60b6, r4, 1
 
-CLR_B28b6:
+CLR_B60b6:
         CLR r30.t15
-        JMP DEL_B28b6
+        JMP DEL_B60b6
 
-SET_B28b6:
+SET_B60b6:
         SET r30.t15
-        JMP DEL_B28b6
+        JMP DEL_B60b6
 
-DEL_B28b6:
+DEL_B60b6:
         ADD r0, r0, 1
-        QBNE DEL_B28b6, r0, r1
+        QBNE DEL_B60b6, r0, r1
 
-CLC_B28b7:
+CLC_B60b7:
         MOV r0, 0
         LSR r4, r22, 1
         AND r4, r4, 1
-        QBEQ SET_B28b7, r4, 1
+        QBEQ SET_B60b7, r4, 1
 
-CLR_B28b7:
+CLR_B60b7:
         CLR r30.t15
-        JMP DEL_B28b7
+        JMP DEL_B60b7
 
-SET_B28b7:
+SET_B60b7:
         SET r30.t15
-        JMP DEL_B28b7
+        JMP DEL_B60b7
 
-DEL_B28b7:
+DEL_B60b7:
         ADD r0, r0, 1
-        QBNE DEL_B28b7, r0, r1
+        QBNE DEL_B60b7, r0, r1
 
-CLC_B28b8:
+CLC_B60b8:
         MOV r0, 0
         LSR r4, r22, 0
         AND r4, r4, 1
-        QBEQ SET_B28b8, r4, 1
+        QBEQ SET_B60b8, r4, 1
 
-CLR_B28b8:
+CLR_B60b8:
         CLR r30.t15
-        JMP DEL_B28b8
+        JMP DEL_B60b8
 
-SET_B28b8:
+SET_B60b8:
         SET r30.t15
-        JMP DEL_B28b8
+        JMP DEL_B60b8
 
-BCK_B28b8:
+BCK_B60b8:
 		JMP BCK_B59b8
 
-DEL_B28b8:
+DEL_B60b8:
         ADD r0, r0, 1
-        QBNE DEL_B28b8, r0, r1
+        QBNE DEL_B60b8, r0, r1
 
 CLC_B61b1:
         MOV r0, 0
