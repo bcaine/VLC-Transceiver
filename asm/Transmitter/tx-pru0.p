@@ -17,10 +17,10 @@ INIT:
 	LBCO r3, CONST_DDR, 0, 4 // what's the offset?
 
 	MOV r1, 47 // loop delay forward
-	MOV r3, 34 // loop delay backward
+	MOV r2, 54 // loop delay backward
+	MOV r5, 0 // packet length counter
 
-// CYCLE COSTS - actual modulation - 140605 cycles for 88 bytes
-// CYCLE COSTS - backup loop - ~43 + 156 cycles
+// CYCLE COSTS - actual modulation - 140800 cycles per loop, constant 1mbit/s 
 
 MAIN_LOOP:
 	XIN 10, r8, 88 // load 100 bytes in from SP
@@ -12959,8 +12959,8 @@ DEL_B88b8:
         QBNE DEL_B88b8, r0, r2
 
 CHECK_DONE:
-		LBCO r1, CONST_PRUSHAREDRAM, 0, 1 // non-deterministic, ~40-100 cycles
-		QBNE BCK_B87b8, r1, DONE_CODE
+	    ADD r5, r5, 1
+		QBNE BCK_B87b8, r5, r3
 
 STOP:
 	SET r30.t15
