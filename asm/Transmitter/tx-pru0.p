@@ -17,15 +17,10 @@ INIT:
 	LBCO r3, CONST_DDR, 0, 4 // what's the offset?
 
 	MOV r1, 47 // loop delay forward
-	MOV r3, 45 // loop delay backward
+	MOV r3, 34 // loop delay backward
 
-// CYCLE COSTS:
-// as stands: 200 cycles/bit, 640,000 cycles per loop
-
-
-CHECK_DONE:
-	LBCO r1, CONST_PRUSHAREDRAM, 0, 1 // non-deterministic, ~40-100 cycles
-	QBEQ END_LOOP, r1, DONE_CODE
+// CYCLE COSTS - actual modulation - 140605 cycles for 88 bytes
+// CYCLE COSTS - backup loop - ~43 + 156 cycles
 
 MAIN_LOOP:
 	XIN 10, r8, 88 // load 100 bytes in from SP
@@ -171,7 +166,7 @@ SET_B1b8:
         JMP DEL_B1b8
 
 BCK_B1b8:
-		JMP CHECK_DONE
+		JMP MAIN_LOOP
 
 DEL_B1b8:
         ADD r0, r0, 1
@@ -12961,9 +12956,11 @@ SET_B88b8:
 
 DEL_B88b8:
         ADD r0, r0, 1
-        QBNE DEL_B88b8, r0, r1
+        QBNE DEL_B88b8, r0, r2
 
-JMP BCK_B87b8
+CHECK_DONE:
+		LBCO r1, CONST_PRUSHAREDRAM, 0, 1 // non-deterministic, ~40-100 cycles
+		QBNE BCK_B87b8, r1, DONE_CODE
 
 STOP:
 	SET r30.t15
