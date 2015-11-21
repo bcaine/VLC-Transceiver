@@ -22,7 +22,7 @@ ByteQueue::ByteQueue(uint32_t max_bytes) {
 		 MAP_SHARED, _mem_fd, 0);
 
 
-    if ((uint64_t)_length == 0xffffffffffffffff)
+    if (((uint64_t)_length == 0xffffffffffffffff) || _length == NULL)
       fprintf(stderr, "mmap failed: %s\n", strerror(errno));
 
     _pru_cursor = (uint8_t*)_length + 4;
