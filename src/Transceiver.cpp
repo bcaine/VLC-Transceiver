@@ -50,6 +50,8 @@ void Transceiver::Transmit()
     _fec.Encode(encoded, packet, 87);
     _queue.push(encoded);
   }
+
+  _pru.InitPRU();
 }
 
 void Transceiver::Receive() {
@@ -59,6 +61,7 @@ void Transceiver::Receive() {
   uint8_t* buf = new uint8_t[43];
   int packetlen;
 
+  /*
   while(!_pru.Done()) {
 
     // TODO: If we are waiting on the PRU, delay...
@@ -71,5 +74,5 @@ void Transceiver::Receive() {
 
     // May want to send all data at once? Not sure yet.
     _sock.Send(buf, packetlen);
-  }
+    }*/
 }

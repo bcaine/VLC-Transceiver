@@ -64,5 +64,4 @@ main: clean $(main_o)
 all: test sockettest main
 
 clean:
-	git submodule update --init --recursive
 	-rm *.o test sockettest main

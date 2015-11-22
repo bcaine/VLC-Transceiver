@@ -19,8 +19,8 @@ void Transceive(bool transmit) {
   // Create queue that is ~16 MB large
   // ByteQueue queue(16777200);
 
-  // Close to 512 kb. For testing. We want more.
-  ByteQueue queue(524216);
+  // Close to 8 kb. For testing. We want more.
+  ByteQueue queue(8184);
 
   Transceiver transceiver(sockconn, fec, pru, queue);
 

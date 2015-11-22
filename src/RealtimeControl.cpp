@@ -7,22 +7,54 @@
 
 #include "RealtimeControl.hpp"
 
-RealtimeControl::RealtimeControl() {
-  // TODO:
-  // - Init PRU information, call InitPRU?
-  // - Init buffer
+
+void RealtimeControl::InitPRU() {
+
+  unsigned int ret0, ret1;
+  tpruss_intc_initdata pruss_intc_initdata = PRUSS_INTC_INITDATA;
+    
+  printf("\nINFO: Starting %s example.\r\n", "Waves are for squares");
+  /* Initialize the PRU */
+  prussdrv_init ();		
+    
+  /* Open PRU Interrupt */
+  ret0 = prussdrv_open(PRU_EVTOUT_0);
+
+  if (ret0)
+    {
+      printf("prussdrv_open 0 failed\n");
+      return (ret0);
+    }
+  ret1 = prussdrv_open(PRU_EVTOUT_1);
+  
+  if (ret1)
+    {
+      printf("prussdrv_open 1 failed\n");
+      return (ret1);
+    }
+    
+  /* Get the interrupt initialized */
+  prussdrv_pruintc_init(&pruss_intc_initdata);
 }
 
-RealtimeControl::~RealtimeControl() {
-  // Delete Buffer
+void RealtimeControl::Run() {
+  prussdrv_exec_program (0, "./tx-pru0.bin");
+  prussdrv_exec_program (1, "./tx-pru1.bin");
+
+  // Blocks until done
+  Done();
 }
 
-bool RealtimeControl::InitPRU() {
-  // TODO
-  return true;
-}
 
-bool RealtimeControl::Done() {
-  // TODO CHANGE THIS TO ACTUALLY DO SOMETHING
-  return false;
+void RealtimeControl::Done() {
+
+  /* Wait until PRU0 has finished execution */
+  printf("\tINFO: Waiting for HALT1 command.\r\n");
+  prussdrv_pru_wait_event (PRU_EVTOUT_1);
+  printf("\tINFO: PRU1 completed execution.\r\n");
+  prussdrv_pru_clear_event (PRU1_ARM_INTERRUPT);
+  printf("\tINFO: Waiting for HALT0 command.\r\n");
+  prussdrv_pru_wait_event (PRU_EVTOUT_0);
+  printf("\tINFO: PRU0 completed execution.\r\n");
+  prussdrv_pru_clear_event (PRU0_ARM_INTERRUPT);
 }

@@ -10,18 +10,25 @@
 #ifndef REALTIME_HPP
 #define REALTIME_HPP
 
+#include "prussdrv.h"
+#include <pruss_intc_mapping.h>	 
+
+#include <stdio.h>
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <unistd.h>
+#include <string.h>
+
+#define DDR_BASEADDR     0x80000000
+#define OFFSET_DDR	 0x00001000
 
 class RealtimeControl {
 
 public:
-  // TODO: This will need location info, 
-  RealtimeControl();
-  ~RealtimeControl();
-
-  bool Done();
-
-private:
-  bool InitPRU();
+  void Done();
+  void InitPRU();
+  void Run();
 };
 
 #endif // REALTIME_HPP
