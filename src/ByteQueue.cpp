@@ -19,7 +19,7 @@ ByteQueue::ByteQueue(uint32_t max_bytes) {
     }
     // Create data block
     _length = mmap(0, max_bytes + 8, PROT_WRITE | PROT_READ,
-		 MAP_SHARED, _mem_fd, 0);
+		   MAP_SHARED, _mem_fd, 0x80001000);
 
 
     if (((uint64_t)_length == 0xffffffffffffffff) || _length == NULL)

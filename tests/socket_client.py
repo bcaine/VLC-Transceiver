@@ -4,10 +4,12 @@ import socket
 import sys
 import struct
 
+HOST="192.168.7.2"
+
 def get_socket(port):
     # Create a TCP/IP socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_address = ('localhost', port)
+    server_address = (HOST, port)
     print >>sys.stderr, 'connecting to %s port %s' % server_address
     sock.connect(server_address)
     return sock
