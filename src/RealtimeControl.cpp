@@ -42,8 +42,8 @@ bool RealtimeControl::InitPRU() {
 
 void RealtimeControl::Transmit() {
   printf("Executing the TX code on the PRUs\n");
-  prussdrv_exec_program (0, "./tx-pru0.bin");
-  prussdrv_exec_program (1, "./tx-pru1.bin");
+  prussdrv_exec_program (0, "./asm/Transmitter/tx-pru0.bin");
+  prussdrv_exec_program (1, "./asm/Transmitter/tx-pru1.bin");
 
   // Blocks until done
   Done();
