@@ -12,11 +12,11 @@ bool RealtimeControl::InitPRU() {
 
   unsigned int ret0, ret1;
   tpruss_intc_initdata pruss_intc_initdata = PRUSS_INTC_INITDATA;
-    
-  printf("\nINFO: Starting %s example.\r\n", "Waves are for squares");
+
+  printf("Initializing the PRU");
   /* Initialize the PRU */
-  prussdrv_init ();		
-    
+  prussdrv_init ();
+
   /* Open PRU Interrupt */
   ret0 = prussdrv_open(PRU_EVTOUT_0);
 
@@ -26,13 +26,13 @@ bool RealtimeControl::InitPRU() {
       return (ret0);
     }
   ret1 = prussdrv_open(PRU_EVTOUT_1);
-  
+
   if (ret1)
     {
       printf("prussdrv_open 1 failed\n");
       return (ret1);
     }
-    
+
   /* Get the interrupt initialized */
   prussdrv_pruintc_init(&pruss_intc_initdata);
 
@@ -40,7 +40,7 @@ bool RealtimeControl::InitPRU() {
   return true;
 }
 
-void RealtimeControl::Run() {
+void RealtimeControl::Transmit() {
   prussdrv_exec_program (0, "./tx-pru0.bin");
   prussdrv_exec_program (1, "./tx-pru1.bin");
 

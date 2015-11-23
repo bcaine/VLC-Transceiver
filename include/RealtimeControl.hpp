@@ -27,7 +27,7 @@ class RealtimeControl {
 public:
   void Done();
   bool InitPRU();
-  void Run();
+  void Transmit();
 };
 
 #endif // REALTIME_HPP
