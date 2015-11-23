@@ -64,8 +64,4 @@ main: clean $(main_o)
 all: test sockettest main
 
 clean:
-<<<<<<< HEAD
-=======
-#	git submodule update --init --recursive
->>>>>>> Added makefile/main.cpp
 	-rm *.o test sockettest main
