@@ -52,6 +52,7 @@ void Transceiver::Transmit()
   }
 
   _pru.InitPRU();
+  _pru.Transmit();
 }
 
 void Transceiver::Receive() {
