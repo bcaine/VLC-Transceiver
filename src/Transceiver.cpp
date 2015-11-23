@@ -7,6 +7,8 @@
 */
 
 #include "Transceiver.hpp"
+#include "Util.hpp"
+#include <fstream>
 
 
 Transceiver::Transceiver(SocketConnection &sockconn,
@@ -19,7 +21,7 @@ Transceiver::Transceiver(SocketConnection &sockconn,
 void Transceiver::Transmit()
 {
   cout << "Starting Transmit" << endl;
-  
+  ofstream f ( "output.txt" , ios::out);
   uint8_t* buf = new uint8_t[43];
   uint8_t* packet = new uint8_t[45];
   uint8_t* encoded = new uint8_t[87];
@@ -47,8 +49,16 @@ void Transceiver::Transmit()
     }
 
     packetize(buf, packet, recvlen * 8);
-    _fec.Encode(encoded, packet, 87);
+
+    _fec.Encode(packet, encoded, 87);
+
+    for (int i = 0; i < 87 * 8; i++) {
+      cout << getBit(encoded, i);
+    }
+
     _queue.push(encoded);
+
+    f << encoded;
   }
 
   _pru.InitPRU();

@@ -61,4 +61,9 @@ void RealtimeControl::Done() {
   prussdrv_pru_wait_event (PRU_EVTOUT_0);
   printf("\tINFO: PRU0 completed execution.\r\n");
   prussdrv_pru_clear_event (PRU0_ARM_INTERRUPT);
+
+  prussdrv_pru_disable(0);
+  prussdrv_pru_disable(1); 
+  prussdrv_exit ();
+
 }
