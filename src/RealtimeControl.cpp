@@ -8,7 +8,7 @@
 #include "RealtimeControl.hpp"
 
 
-void RealtimeControl::InitPRU() {
+bool RealtimeControl::InitPRU() {
 
   unsigned int ret0, ret1;
   tpruss_intc_initdata pruss_intc_initdata = PRUSS_INTC_INITDATA;
@@ -35,6 +35,9 @@ void RealtimeControl::InitPRU() {
     
   /* Get the interrupt initialized */
   prussdrv_pruintc_init(&pruss_intc_initdata);
+
+  // If we made it this far, return true
+  return true;
 }
 
 void RealtimeControl::Run() {

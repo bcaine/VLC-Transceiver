@@ -1,9 +1,9 @@
 # We want to add compiler settings for our different platforms
 CCPP = g++
 CC = gcc
-CFLAGS = -Wall -I ./include 
+CFLAGS = -Wall -I ./include -I /usr/include/ -L /usr/lib/
 CPFLAGS = $(CFLAGS)
-LIBS =
+LIBS = -lprussdrv -lpthread
 
 packet_o = Packetize.o
 queue_o = ByteQueue.o
@@ -29,7 +29,7 @@ ForwardErrorCorrection.o: src/ForwardErrorCorrection.cpp
 	$(CCPP) $(CFLAGS) -c src/ForwardErrorCorrection.cpp
 
 RealtimeControl.o: src/RealtimeControl.cpp
-	$(CCPP) $(CFLAGS) -c src/RealtimeControl.cpp
+	$(CCPP) $(CFLAGS) -I -lprussdrv -lpthread -c src/RealtimeControl.cpp
 
 SocketConnection.o: src/SocketConnection.cpp
 	$(CCPP) $(CFLAGS) -c src/SocketConnection.cpp
