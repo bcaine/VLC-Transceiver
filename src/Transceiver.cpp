@@ -48,7 +48,7 @@ void Transceiver::Transmit()
 
     packetize(buf, packet, recvlen * 8);
 
-    _fec.Encode(packet, encoded, 87);
+    _fec.Encode(packet, encoded, 45);
 
     for (int i = 0; i < 87 * 8; i++) {
       cout << getBit(encoded, i);
