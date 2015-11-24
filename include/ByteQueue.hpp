@@ -52,6 +52,13 @@ public:
 
   // Returns pointer to current location of queue
   uint8_t* peek() { return (uint8_t*)_data + _internal_cursor; }
+
+  // four bytes for done
+  void* _length;
+  // Four bytes for PRU cursor
+  void* _pru_cursor;
+  // The rest is data
+  void* _data;
   
 private:
   uint32_t _max_bytes;
@@ -60,12 +67,7 @@ private:
   // or reading data coming from encoding or going towards
   // decoding.
   uint32_t _internal_cursor;
-  // four bytes for done
-  void* _length;
-  // Four bytes for PRU cursor
-  void* _pru_cursor;
-  // The rest is data
-  void* _data;
+
   uint32_t _mem_fd;
 };
 

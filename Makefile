@@ -15,6 +15,7 @@ transceiver_o = Transceiver.o $(fec_o) $(realtime_o) $(socket_o) $(queue_o) $(pa
 test_o = Test.o $(transceiver_o)
 main_o = Main.o $(transceiver_o)
 sockettest_o = SocketTest.o $(transceiver_o)
+prutest_o = PruTest.o $(transceiver_o)
 
 # -------------------------------
 # Add release and debug modes with different flags
@@ -40,6 +41,12 @@ Test.o: tests/Test.cpp
 SocketTest.o: tests/SocketTest.cpp
 	$(CCPP) $(CFLAGS) -c tests/SocketTest.cpp
 
+PruTest.o: tests/PruTest.cpp
+	$(CCPP) $(CFLAGS) -c tests/PruTest.cpp
+
+PruTest.o: tests/PruTest.cpp
+	$(CCPP) $(CFLAGS) -c tests/PruTest.cpp
+
 Golay.o: src/Golay.cpp
 	$(CC) $(CFLAGS) -c src/Golay.cpp
 
@@ -58,10 +65,13 @@ test: clean $(test_o)
 sockettest: clean $(sockettest_o)
 	$(CCPP) $(LIBS) -o sockettest $(sockettest_o)
 
+prutest: clean $(prutest_o)
+	$(CCPP) $(LIBS) -o prutest $(prutest_o)
+
 main: clean $(main_o)
 	$(CCPP) $(LIBS) -o main $(main_o)
 
-all: test sockettest main
+all: test sockettest main prutest
 
 clean:
-	-rm *.o test sockettest main
+	-rm *.o test sockettest main prutest

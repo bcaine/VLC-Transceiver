@@ -6,10 +6,12 @@
 */
 
 #include "RealtimeControl.hpp"
-
+#include <iostream>
+using namespace std;
 
 bool RealtimeControl::InitPRU() {
 
+  // Initialize the PRU //
   unsigned int ret0, ret1;
   tpruss_intc_initdata pruss_intc_initdata = PRUSS_INTC_INITDATA;
 
@@ -40,30 +42,64 @@ bool RealtimeControl::InitPRU() {
   return true;
 }
 
+
 void RealtimeControl::Transmit() {
   printf("Executing the TX code on the PRUs\n");
-  prussdrv_exec_program (0, "./asm/tx/pru0.bin");
-  prussdrv_exec_program (1, "./asm/tx/pru1.bin");
+  //prussdrv_exec_program (0, "./asm/Transmitter/tx-pru0.bin");
+  // prussdrv_exec_program (1, "./asm/Transmitter/tx-pru1.bin");
+  prussdrv_exec_program (0, "./prutest.bin");
 
   // Blocks until done
-  Done();
+  DisablePRU();
 }
 
 
-void RealtimeControl::Done() {
+void RealtimeControl::DisablePRU() {
 
   /* Wait until PRU0 has finished execution */
+  /*
   printf("\tINFO: Waiting for HALT1 command.\r\n");
   prussdrv_pru_wait_event (PRU_EVTOUT_1);
   printf("\tINFO: PRU1 completed execution.\r\n");
   prussdrv_pru_clear_event (PRU1_ARM_INTERRUPT);
+  */
   printf("\tINFO: Waiting for HALT0 command.\r\n");
   prussdrv_pru_wait_event (PRU_EVTOUT_0);
   printf("\tINFO: PRU0 completed execution.\r\n");
   prussdrv_pru_clear_event (PRU0_ARM_INTERRUPT);
 
   prussdrv_pru_disable(0);
-  prussdrv_pru_disable(1); 
-  prussdrv_exit ();
+  // prussdrv_pru_disable(1);
+  prussdrv_exit();
+}
 
+
+bool RealtimeControl::OpenMem() {
+  // Start up Memory
+  mem_fd = open("/dev/mem", O_RDWR);
+
+  if (mem_fd < 0) {
+    printf("Failed to open /dev/mem (%s)\n", strerror(errno));
+    return false;
+  }
+  
+  /* map the DDR memory */
+  ddrMem = mmap(0, 0x0FFFFFFF, PROT_WRITE | PROT_READ, MAP_SHARED, 
+		mem_fd, DDR_BASEADDR);
+
+  if (ddrMem == NULL) {
+    printf("Failed to map the device (%s)\n", strerror(errno));
+    close(mem_fd);
+    return false;
+  }
+
+  data = ddrMem + OFFSET_DDR;
+
+  return true;
+}
+
+
+void RealtimeControl::CloseMem() {
+  close(mem_fd);
+  munmap(ddrMem, 0x0FFFFFFF);
 }

@@ -9,7 +9,7 @@
 #ifndef REALTIME_HPP
 #define REALTIME_HPP
 
-#include <prussdrv.h>
+#include "prussdrv.h"
 #include <pruss_intc_mapping.h>	 
 
 #include <stdio.h>
@@ -18,6 +18,10 @@
 #include <errno.h>
 #include <unistd.h>
 #include <string.h>
+#include <cstdlib>
+#include <cstring>
+#include <sys/mman.h>
+#include "Util.hpp"
 
 #define DDR_BASEADDR     0x80000000
 #define OFFSET_DDR	 0x00001000
@@ -25,9 +29,17 @@
 class RealtimeControl {
 
 public:
-  void Done();
+
   bool InitPRU();
+  void DisablePRU();
   void Transmit();
+  bool OpenMem();
+  void CloseMem();
+
+  int mem_fd;
+  void *ddrMem;
+
+  void *data;
 };
 
 #endif // REALTIME_HPP
