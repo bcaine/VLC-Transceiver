@@ -16,9 +16,9 @@ def get_socket(port):
 
 def send_data(port):
     sock = get_socket(port)
-    message = 'HelloWorld' * 800
+    message = 'Hello' * 800
     # print >>sys.stderr, 'sending "%s"' % message
-    len_in_bytes = struct.pack("I", 8000)
+    len_in_bytes = struct.pack("I", len(message))
     print "Sending Length"
     sock.sendall(len_in_bytes)
 

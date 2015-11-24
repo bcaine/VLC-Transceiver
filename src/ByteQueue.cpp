@@ -36,6 +36,7 @@ ByteQueue::ByteQueue(uint32_t max_bytes) {
 }
 
 ByteQueue::~ByteQueue() {
+  close(_mem_fd);
   munmap(_length, _max_bytes + 8);
 }
 
