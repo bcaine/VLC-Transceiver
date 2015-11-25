@@ -88,7 +88,8 @@ void RealtimeControl::DisablePRU() {
 bool RealtimeControl::OpenMem() {
   // Start up Memory
   mem_fd = open("/dev/mem", O_RDWR);
-  _max_bytes = 0x0000FFFF;
+  // Multiple of 88 closest to 16kb
+  _max_bytes = 16368;
 
   if (mem_fd < 0) {
     printf("Failed to open /dev/mem (%s)\n", strerror(errno));
@@ -96,8 +97,8 @@ bool RealtimeControl::OpenMem() {
   }
   
   /* map the DDR memory */
-  ddrMem = mmap(0, _max_bytes, PROT_WRITE | PROT_READ, MAP_SHARED, 
-		mem_fd, DDR_BASEADDR);
+  ddrMem = mmap(0, _max_bytes + OFFSET_DDR + 8, PROT_WRITE | PROT_READ, 
+		MAP_SHARED, mem_fd, DDR_BASEADDR);
 
   if (ddrMem == NULL) {
     printf("Failed to map the device (%s)\n", strerror(errno));
@@ -114,9 +115,6 @@ bool RealtimeControl::OpenMem() {
 
   _internal_cursor = 0;
 
-  // TODO: Will this be slow with the size of our buffer?
-  // Set all values in this memory to 0
-  // memset(_data, 0, _max_bytes);
   return true;
 }
 
@@ -135,6 +133,7 @@ void RealtimeControl::push(uint8_t* packet) {
 
   
   _internal_cursor += 88;
+  _internal_cursor = _internal_cursor % _max_bytes;
 }
 
 
@@ -149,6 +148,7 @@ void RealtimeControl::pop(uint8_t* packet) {
   memcpy(packet, (addr + 1), 87);
 
   _internal_cursor += 88;
+  _internal_cursor = _internal_cursor % _max_bytes;
 }
 
 
