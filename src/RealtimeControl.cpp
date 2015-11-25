@@ -77,6 +77,7 @@ void RealtimeControl::DisablePRU() {
 bool RealtimeControl::OpenMem() {
   // Start up Memory
   mem_fd = open("/dev/mem", O_RDWR);
+  _max_bytes = 0x0FFFFFFF;
 
   if (mem_fd < 0) {
     printf("Failed to open /dev/mem (%s)\n", strerror(errno));
@@ -84,7 +85,7 @@ bool RealtimeControl::OpenMem() {
   }
   
   /* map the DDR memory */
-  ddrMem = mmap(0, 0x0FFFFFFF, PROT_WRITE | PROT_READ, MAP_SHARED, 
+  ddrMem = mmap(0, _max_bytes, PROT_WRITE | PROT_READ, MAP_SHARED, 
 		mem_fd, DDR_BASEADDR);
 
   if (ddrMem == NULL) {
@@ -93,13 +94,52 @@ bool RealtimeControl::OpenMem() {
     return false;
   }
 
-  data = ddrMem + OFFSET_DDR;
+  _length = ddrMem + OFFSET_DDR;
+  _pru_cursor = _length + 4;
+  _data = _pru_cursor + 4;
 
+  *((uint32_t*)_length) = 0;
+  *((uint32_t*)_pru_cursor) = 0;
+
+  _internal_cursor = 0;
+
+  // TODO: Will this be slow with the size of our buffer?
+  // Set all values in this memory to 0
+  // memset(_data, 0, _max_bytes);
   return true;
 }
 
 
 void RealtimeControl::CloseMem() {
   close(mem_fd);
-  munmap(ddrMem, 0x0FFFFFFF);
+  munmap(ddrMem, _max_bytes);
 }
+
+
+// Always expect 87 Bytes (86.25 actual in packet)
+void RealtimeControl::push(uint8_t* packet) {
+
+  *peek() = 0xFF;
+  memcpy((peek() + 1), packet, 87);
+
+  
+  _internal_cursor += 88;
+  _internal_cursor %= _max_bytes;
+}
+
+
+// Pops 1 encoded packet at a time
+// We pop 87 bytes, which is actually 86.25 bytes
+// AKA 690 bits.
+void RealtimeControl::pop(uint8_t* packet) {
+  // Expect packet array length to be 92
+
+  uint8_t* addr = peek();
+  // Remove preamble 
+  memcpy(packet, (addr + 1), 87);
+
+  _internal_cursor += 88;
+  _internal_cursor %= _max_bytes;
+}
+
+

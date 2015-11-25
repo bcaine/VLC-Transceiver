@@ -21,9 +21,6 @@
 
 using namespace std;
 
-static int mem_fd;
-static void *ddrMem;
-
 void handler(int sig) {
   void *array[10];
   size_t size;
@@ -55,14 +52,14 @@ void StupidTest() {
 }
 
 void PacketTest() {
-  ByteQueue queue(200);
+  ByteQueue queue(88);
   
   // Generate all 'a's
-  uint8_t *data = new uint8_t[200];
-  uint8_t *out = new uint8_t[200];
+  uint8_t *data = new uint8_t[87];
+  uint8_t *out = new uint8_t[87];
 
-  for (int i = 0; i < 200; i++) {
-    data[i] = 'a';
+  for (int i = 0; i < 87; i++) {
+    data[i] = '\xbb';
   }
 
   queue.push(data);
@@ -76,10 +73,56 @@ void PacketTest() {
   pru.Transmit();
 
   queue.pop(out);
-  cout << "Output after PRU is: " << out << endl;
+  for(int i =0; i < 87; i++) {
+    cout << i << " ";
+    printf("C-side wrote: %x\n", out[i]);
+  }
 }
 
 void MemTest() {
+  signal(SIGSEGV, handler);   // install our handler
+
+  RealtimeControl pru;
+
+  if (!pru.OpenMem()) {
+    cout << "Failed to open Memory" << endl;
+  }
+
+
+  uint8_t *data = new uint8_t[87];
+  uint8_t *out = new uint8_t[87];
+
+  for (int i = 0; i < 87; i++) {
+    data[i] = '\xbb';
+  }
+
+  memcpy(pru.data(), data, 87);
+
+  pru.InitPRU();
+  pru.Transmit();
+  
+  cout << "About to try to print out data" << endl;
+  cout << pru.data() << endl;
+
+  /*
+  for(int i =0; i < 22; i++) {
+    printf("C-side wrote: %x\n", *((unsigned long*) pru.data + i));
+  }
+  */
+
+
+  memcpy(out, pru.data(), 87);
+
+  for(int i =0; i < 87; i++) {
+    printf("C-side wrote: %x\n", out[i]);
+  }
+
+  pru.CloseMem();
+  delete[] data;
+  delete[] out;
+}
+
+void QueueTest() {
   signal(SIGSEGV, handler);   // install our handler
 
   RealtimeControl pru;
@@ -92,42 +135,31 @@ void MemTest() {
   uint8_t *out = new uint8_t[87];
 
   for (int i = 0; i < 87; i++) {
-    data[i] = 'a';
+    data[i] = '\xbb';
   }
-
-  memcpy(data, pru.data, 87);
-
-  /*
-  for (int i = 0; i < 22; i++) {
-    *((unsigned long*) pru.data + i) = 0xff;
-    }*/
+  
+  pru.push(data);
 
   pru.InitPRU();
   pru.Transmit();
   
-  
   cout << "About to try to print out data" << endl;
-  cout << pru.data << endl;
+  cout << pru.data() << endl;
 
-  for(int i =0; i < 22; i++) {
-    printf("C-side wrote: %x\n", *((unsigned long*) pru.data + i));
-  }
+  pru.pop(out);
 
-  /*
-
-  memcpy(pru.data, out, 87);
   for(int i =0; i < 87; i++) {
     printf("C-side wrote: %x\n", out[i]);
   }
-  */
-
-  cout << out << endl;
 
   pru.CloseMem();
+  delete[] data;
+  delete[] out;
 }
 
 int main() {
-  MemTest();
-  // PacketTest();
+  //MemTest();
+  //PacketTest();
+  QueueTest();
   return 0;
 }

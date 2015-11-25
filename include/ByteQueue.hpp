@@ -53,7 +53,7 @@ public:
   // Returns pointer to current location of queue
   uint8_t* peek() { return (uint8_t*)_data + _internal_cursor; }
 
-  // four bytes for done
+  // four bytes for length
   void* _length;
   // Four bytes for PRU cursor
   void* _pru_cursor;

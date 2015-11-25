@@ -21,7 +21,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <sys/mman.h>
-#include "Util.hpp"
+#include <stdint.h>
 
 #define DDR_BASEADDR     0x80000000
 #define OFFSET_DDR	 0x00001000
@@ -33,13 +33,39 @@ public:
   bool InitPRU();
   void DisablePRU();
   void Transmit();
+  
+  
+  /* Memory Related Functionality */
   bool OpenMem();
   void CloseMem();
+  void pop(uint8_t* packet);
+  void push(uint8_t* bytes);
 
+  void setLength(int n) { *((uint32_t*)_length) = n; }
+  uint32_t getLength() { return *((uint32_t*)_length); }
+
+  // Returns pointer to current location of queue
+  uint8_t* peek() { return (uint8_t*)_data + _internal_cursor; }
+
+  uint8_t* data() { return (uint8_t*)_data; }
+
+private:
   int mem_fd;
   void *ddrMem;
 
-  void *data;
+  // four bytes for length
+  void* _length;
+  // Four bytes for PRU cursor
+  void* _pru_cursor;
+  // Rest is data
+  void *_data;
+
+  uint32_t _max_bytes;
+
+  // Internal cursor controls knowing where we are writing
+  // or reading data coming from encoding or going towards
+  // decoding.
+  uint32_t _internal_cursor;
 };
 
 #endif // REALTIME_HPP
