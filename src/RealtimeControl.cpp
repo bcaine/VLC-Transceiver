@@ -6,8 +6,7 @@
 */
 
 #include "RealtimeControl.hpp"
-#include <iostream>
-using namespace std;
+
 
 bool RealtimeControl::InitPRU() {
 
@@ -90,6 +89,7 @@ bool RealtimeControl::OpenMem() {
   mem_fd = open("/dev/mem", O_RDWR);
   // Multiple of 88 closest to 16kb
   _max_bytes = 16368;
+  _max_packets = _max_bytes / PACKET_SIZE;
 
   if (mem_fd < 0) {
     printf("Failed to open /dev/mem (%s)\n", strerror(errno));
@@ -121,7 +121,7 @@ bool RealtimeControl::OpenMem() {
 
 void RealtimeControl::CloseMem() {
   close(mem_fd);
-  munmap(ddrMem, _max_bytes);
+  munmap(ddrMem, _max_bytes + OFFSET_DDR + 8);
 }
 
 
@@ -129,11 +129,11 @@ void RealtimeControl::CloseMem() {
 void RealtimeControl::push(uint8_t* packet) {
 
   *peek() = 0xFF;
-  memcpy((peek() + 1), packet, 87);
+  memcpy((peek() + 1), packet, PACKET_SIZE - 1);
 
   
-  _internal_cursor += 88;
-  _internal_cursor = _internal_cursor % _max_bytes;
+  _internal_cursor += 1;
+  _internal_cursor = _internal_cursor % _max_packets;
 }
 
 
@@ -145,10 +145,10 @@ void RealtimeControl::pop(uint8_t* packet) {
 
   uint8_t* addr = peek();
   // Remove preamble 
-  memcpy(packet, (addr + 1), 87);
+  memcpy(packet, (addr + 1), PACKET_SIZE - 1);
 
-  _internal_cursor += 88;
-  _internal_cursor = _internal_cursor % _max_bytes;
+  _internal_cursor += 1;
+  _internal_cursor = _internal_cursor % _max_packets;
 }
 
 

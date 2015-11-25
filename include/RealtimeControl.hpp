@@ -22,9 +22,14 @@
 #include <cstring>
 #include <sys/mman.h>
 #include <stdint.h>
+#include <iostream>
 
 #define DDR_BASEADDR     0x80000000
 #define OFFSET_DDR	 0x00001000
+
+const int PACKET_SIZE = 88;
+
+using namespace std;
 
 class RealtimeControl {
 
@@ -46,12 +51,13 @@ public:
   uint32_t getLength() { return *((uint32_t*)_length); }
 
   // Returns pointer to current location of queue
-  uint8_t* peek() { return (uint8_t*)_data + _internal_cursor; }
+  uint8_t* peek() { return (uint8_t*)_data + (_internal_cursor * PACKET_SIZE); }
 
   uint8_t* data() { return (uint8_t*)_data; }
   void setCursor(uint32_t val) { _internal_cursor = val; }
 
-  uint32_t* pruCursor() { return (uint32_t*)_pru_cursor; }
+  // TODO: Change this to return int instead of ptr
+  uint32_t pruCursor() { return *((uint32_t*)_pru_cursor); }
 
 private:
   int mem_fd;
@@ -65,6 +71,7 @@ private:
   void *_data;
 
   uint32_t _max_bytes;
+  uint32_t _max_packets;
 
   // Internal cursor controls knowing where we are writing
   // or reading data coming from encoding or going towards

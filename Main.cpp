@@ -11,13 +11,6 @@ void Transceive(bool transmit) {
   ForwardErrorCorrection fec;
   RealtimeControl pru;
 
-  // TODO: Uncomment this when we are on Beaglebone
-  // x86 Linux Kernel doesn't let you access > 1MB of /dev/mem
-  // with mmap unless I recompile the kernel with a flag disabled.
-  // Testing with a smaller queue, but not ideal.
-  // Create queue that is ~16 MB large
-  // ByteQueue queue(16777200);
-
   Transceiver transceiver(sockconn, fec, pru);
 
   cout << "Starting Transceiver in ";

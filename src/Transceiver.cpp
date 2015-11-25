@@ -44,17 +44,6 @@ void Transceiver::Transmit()
   // Send an Ack to let them know we are ready for data
   _sock.Ack();
 
-  /*
-  cout << "Memsetting data to 0" << endl;
-  memset(_pru.data(), 0, totallen);
-  cout << "Just Memset data to 0" << endl;
-  */
-
-  /*
-  for (int i = 0; i < totallen; i++) {
-    cout << getBit(_pru.data(), i);
-   }
-  */
 
   uint32_t received = 0;
   int num = 0;
@@ -101,7 +90,7 @@ void Transceiver::Transmit()
    }
   */
 
-  cout << "PRU Cursor: " << *_pru.pruCursor() << endl;
+  cout << "PRU Cursor: " << _pru.pruCursor() << endl;
   _pru.CloseMem();
   cout << "Closed Memory" << endl;
 
