@@ -2,7 +2,6 @@
 #include "ForwardErrorCorrection.hpp"
 #include "RealtimeControl.hpp"
 #include "SocketConnection.hpp"
-#include "ByteQueue.hpp"
 #include <iostream>
 
 using namespace std;
@@ -19,10 +18,7 @@ void Transceive(bool transmit) {
   // Create queue that is ~16 MB large
   // ByteQueue queue(16777200);
 
-  // Close to 8 kb. For testing. We want more.
-  ByteQueue queue(8184);
-
-  Transceiver transceiver(sockconn, fec, pru, queue);
+  Transceiver transceiver(sockconn, fec, pru);
 
   cout << "Starting Transceiver in ";
   cout << (transmit ? "transmit mode." : "receive mode.") << endl;

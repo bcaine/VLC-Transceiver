@@ -3,7 +3,6 @@
 #include "RealtimeControl.hpp"
 #include "SocketConnection.hpp"
 #include "Golay.hpp"
-#include "ByteQueue.hpp"
 #include "Util.hpp"
 #include "Packetize.hpp"
 #include <iostream>
@@ -89,24 +88,24 @@ void TestFEC() {
 }
 
 void TestByteQueue() {
-  uint32_t* pru_cursor = new uint32_t;
-  *pru_cursor = 0;
+  RealtimeControl pru;
 
-  ByteQueue queue(88 * 2);
+  pru.OpenMem();
   cout << "Queue Created" << endl;
 
   uint8_t* in = GenerateData(87);
-  queue.push(in);
+  pru.push(in);
+
+  pru.setCursor(0);
 
   uint8_t* out = new uint8_t[87];
-  queue.pop(out);
+  pru.pop(out);
   cout << out << endl;
 
-  queue.pop(out);
-  cout << out << endl;
-
+  cout << "Distance: " << HammingDistance(in, out, 88) << endl;
   assert(HammingDistance(in, out, 88) == 0);
-
+  pru.CloseMem();
+  
   delete [] in;
   delete [] out;
 }
@@ -198,7 +197,12 @@ void TestDataPipeline() {
 
   // Encode
   ForwardErrorCorrection fec;
-  ByteQueue queue(88 * 24);
+  RealtimeControl pru;
+
+  pru.OpenMem();
+
+  cout << "Created objects" << endl;
+
 
   int full_packets = data_length / 43;
   int last_packet_len = data_length % 43;
@@ -222,7 +226,7 @@ void TestDataPipeline() {
     CorruptData(encoded, p_error, 87);
 
     // Then we want to save it to ByteQueue
-    queue.push(encoded);
+    pru.push(encoded);
 
     full_packets -= 1;
     num++;
@@ -231,13 +235,14 @@ void TestDataPipeline() {
 
   cout << "----------------------------------------";
   cout << "----------------------------------------" << endl;
+  pru.setCursor(0);
 
   num = 0;
   int total_len = 0;
   // Reverse this...
   for(int i = 0; i < data_length; i+=43) {
     // Pop 87 Bytes
-    queue.pop(encoded);
+    pru.pop(encoded);
 
     fec.Decode(encoded, packet, 87);
 
@@ -256,6 +261,8 @@ void TestDataPipeline() {
   cout << endl;
 
   assert(hamming_dist == 0);
+
+  pru.CloseMem();
 }
 
 

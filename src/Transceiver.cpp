@@ -12,9 +12,8 @@
 
 Transceiver::Transceiver(SocketConnection &sockconn,
 			 ForwardErrorCorrection &fec,
-			 RealtimeControl &pru,
-			 ByteQueue &queue):
-  _sock(sockconn), _fec(fec), _pru(pru), _queue(queue) {}
+			 RealtimeControl &pru):
+  _sock(sockconn), _fec(fec), _pru(pru) {}
 
 
 void Transceiver::Transmit()
@@ -29,7 +28,7 @@ void Transceiver::Transmit()
   // Get totallen by receiving it first
   recvlen = _sock.Receive(buf, 43);
   totallen = buf[0] | (buf[1] << 8) | (buf[2] << 16) | (buf[3] << 24);
-  _queue.setLength(totallen);
+  _pru.setLength(totallen);
   cout << "Incoming data length: " << totallen << endl;
 
   // Send an Ack to let them know we are ready for data
@@ -54,7 +53,7 @@ void Transceiver::Transmit()
       cout << getBit(encoded, i);
     }
 
-    _queue.push(encoded);
+    _pru.push(encoded);
   }
 
   _pru.InitPRU();
@@ -74,7 +73,7 @@ void Transceiver::Receive() {
     // TODO: If we are waiting on the PRU, delay...
     // This is super important
     
-    _queue.pop(encoded);
+    _pru.pop(encoded);
     _fec.Decode(encoded, packet, 87);
     
     packetlen = depacketize(packet, buf);

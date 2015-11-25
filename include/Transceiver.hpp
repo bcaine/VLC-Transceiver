@@ -14,7 +14,6 @@
 #include "ForwardErrorCorrection.hpp"
 #include "SocketConnection.hpp"
 #include "RealtimeControl.hpp"
-#include "ByteQueue.hpp"
 #include "Packetize.hpp"
 #include <iostream>
 
@@ -26,8 +25,7 @@ class Transceiver {
 public:
   Transceiver(SocketConnection &sockconn,
 	      ForwardErrorCorrection &fec,
-	      RealtimeControl &pru,
-	      ByteQueue &queue);
+	      RealtimeControl &pru);
   
   void Transmit();
   void Receive();
@@ -36,7 +34,6 @@ private:
   SocketConnection _sock;
   ForwardErrorCorrection _fec;
   RealtimeControl _pru;
-  ByteQueue _queue;
 };
 
 #endif // TRANSCEIVER_HPP

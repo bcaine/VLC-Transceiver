@@ -1,5 +1,4 @@
 #include "RealtimeControl.hpp"
-#include "ByteQueue.hpp"
 #include "Util.hpp"
 #include <cstdlib>
 #include <iostream>
@@ -32,51 +31,6 @@ void handler(int sig) {
   fprintf(stderr, "Error: signal %d:\n", sig);
   backtrace_symbols_fd(array, size, 2);
   exit(1);
-}
-
-void StupidTest() {
-  ByteQueue queue(4);
-
-
-  cout << "Data is: " << queue._data << endl;
-  *(unsigned long*)queue._data = 0xabcd;
-
-  RealtimeControl pru;
-
-  pru.InitPRU();
-  pru.Transmit();
-
-
-  cout << "Out: " << hex << (*(unsigned long*)queue._data);
-  cout << endl;
-}
-
-void PacketTest() {
-  ByteQueue queue(88);
-  
-  // Generate all 'a's
-  uint8_t *data = new uint8_t[87];
-  uint8_t *out = new uint8_t[87];
-
-  for (int i = 0; i < 87; i++) {
-    data[i] = '\xbb';
-  }
-
-  queue.push(data);
-
-  queue.pop(out);
-  cout << "Data in queue: " << out << endl;
-
-  RealtimeControl pru;
-
-  pru.InitPRU();
-  pru.Transmit();
-
-  queue.pop(out);
-  for(int i =0; i < 87; i++) {
-    cout << i << " ";
-    printf("C-side wrote: %x\n", out[i]);
-  }
 }
 
 void MemTest() {
@@ -159,7 +113,6 @@ void QueueTest() {
 
 int main() {
   //MemTest();
-  //PacketTest();
   QueueTest();
   return 0;
 }

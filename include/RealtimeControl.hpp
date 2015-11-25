@@ -48,6 +48,7 @@ public:
   uint8_t* peek() { return (uint8_t*)_data + _internal_cursor; }
 
   uint8_t* data() { return (uint8_t*)_data; }
+  void setCursor(uint32_t val) { _internal_cursor = val; }
 
 private:
   int mem_fd;
