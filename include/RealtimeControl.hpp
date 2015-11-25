@@ -33,6 +33,7 @@ public:
   bool InitPRU();
   void DisablePRU();
   void Transmit();
+  void Test();
   
   
   /* Memory Related Functionality */
@@ -49,6 +50,8 @@ public:
 
   uint8_t* data() { return (uint8_t*)_data; }
   void setCursor(uint32_t val) { _internal_cursor = val; }
+
+  uint32_t* pruCursor() { return (uint32_t*)_pru_cursor; }
 
 private:
   int mem_fd;

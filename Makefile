@@ -43,9 +43,6 @@ SocketTest.o: tests/SocketTest.cpp
 PruTest.o: tests/PruTest.cpp
 	$(CCPP) $(CFLAGS) -c tests/PruTest.cpp
 
-PruTest.o: tests/PruTest.cpp
-	$(CCPP) $(CFLAGS) -c tests/PruTest.cpp
-
 Golay.o: src/Golay.cpp
 	$(CC) $(CFLAGS) -c src/Golay.cpp
 

@@ -45,31 +45,42 @@ bool RealtimeControl::InitPRU() {
 
 void RealtimeControl::Transmit() {
   printf("Executing the TX code on the PRUs\n");
-  //prussdrv_exec_program (0, "./asm/Transmitter/tx-pru0.bin");
-  // prussdrv_exec_program (1, "./asm/Transmitter/tx-pru1.bin");
-  prussdrv_exec_program (0, "./prutest.bin");
+  prussdrv_exec_program (0, "./asm/tx/pru0.bin");
+  prussdrv_exec_program (1, "./asm/tx/pru1.bin");
 
   // Blocks until done
   DisablePRU();
 }
 
 
-void RealtimeControl::DisablePRU() {
+void RealtimeControl::Test() {
+  printf("Executing the PruTest\n");
+  prussdrv_exec_program(0, "./tests/interface/prutest.bin");
 
-  /* Wait until PRU0 has finished execution */
-  /*
-  printf("\tINFO: Waiting for HALT1 command.\r\n");
-  prussdrv_pru_wait_event (PRU_EVTOUT_1);
-  printf("\tINFO: PRU1 completed execution.\r\n");
-  prussdrv_pru_clear_event (PRU1_ARM_INTERRUPT);
-  */
   printf("\tINFO: Waiting for HALT0 command.\r\n");
   prussdrv_pru_wait_event (PRU_EVTOUT_0);
   printf("\tINFO: PRU0 completed execution.\r\n");
   prussdrv_pru_clear_event (PRU0_ARM_INTERRUPT);
 
   prussdrv_pru_disable(0);
-  // prussdrv_pru_disable(1);
+  prussdrv_exit();
+}
+
+
+void RealtimeControl::DisablePRU() {
+
+  /* Wait until PRU0 has finished execution */
+  printf("\tINFO: Waiting for HALT1 command.\r\n");
+  prussdrv_pru_wait_event (PRU_EVTOUT_1);
+  printf("\tINFO: PRU1 completed execution.\r\n");
+  prussdrv_pru_clear_event (PRU1_ARM_INTERRUPT);
+  printf("\tINFO: Waiting for HALT0 command.\r\n");
+  prussdrv_pru_wait_event (PRU_EVTOUT_0);
+  printf("\tINFO: PRU0 completed execution.\r\n");
+  prussdrv_pru_clear_event (PRU0_ARM_INTERRUPT);
+
+  prussdrv_pru_disable(0);
+  prussdrv_pru_disable(1);
   prussdrv_exit();
 }
 
@@ -77,7 +88,7 @@ void RealtimeControl::DisablePRU() {
 bool RealtimeControl::OpenMem() {
   // Start up Memory
   mem_fd = open("/dev/mem", O_RDWR);
-  _max_bytes = 0x0FFFFFFF;
+  _max_bytes = 0x0000FFFF;
 
   if (mem_fd < 0) {
     printf("Failed to open /dev/mem (%s)\n", strerror(errno));
@@ -124,7 +135,6 @@ void RealtimeControl::push(uint8_t* packet) {
 
   
   _internal_cursor += 88;
-  _internal_cursor %= _max_bytes;
 }
 
 
@@ -139,7 +149,6 @@ void RealtimeControl::pop(uint8_t* packet) {
   memcpy(packet, (addr + 1), 87);
 
   _internal_cursor += 88;
-  _internal_cursor %= _max_bytes;
 }
 
 

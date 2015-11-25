@@ -42,7 +42,6 @@ void MemTest() {
     cout << "Failed to open Memory" << endl;
   }
 
-
   uint8_t *data = new uint8_t[87];
   uint8_t *out = new uint8_t[87];
 
@@ -52,8 +51,9 @@ void MemTest() {
 
   memcpy(pru.data(), data, 87);
 
+  cout << "Initing the PRU" << endl;
   pru.InitPRU();
-  pru.Transmit();
+  pru.Test();
   
   cout << "About to try to print out data" << endl;
   cout << pru.data() << endl;
@@ -81,6 +81,8 @@ void QueueTest() {
 
   RealtimeControl pru;
 
+  cout << "Opening Mem" << endl;
+
   if (!pru.OpenMem()) {
     cout << "Failed to open Memory" << endl;
   }
@@ -89,16 +91,18 @@ void QueueTest() {
   uint8_t *out = new uint8_t[87];
 
   for (int i = 0; i < 87; i++) {
-    data[i] = '\xbb';
+    data[i] = 'b';
   }
   
   pru.push(data);
 
   pru.InitPRU();
-  pru.Transmit();
+  pru.Test();
   
   cout << "About to try to print out data" << endl;
   cout << pru.data() << endl;
+  
+  pru.setCursor(0);
 
   pru.pop(out);
 
@@ -112,7 +116,7 @@ void QueueTest() {
 }
 
 int main() {
-  //MemTest();
+  // MemTest();
   QueueTest();
   return 0;
 }

@@ -18,6 +18,10 @@ Transceiver::Transceiver(SocketConnection &sockconn,
 
 void Transceiver::Transmit()
 {
+
+  // Initializing pru memory
+  _pru.OpenMem();
+  
   cout << "Starting Transmit" << endl;
   uint8_t* buf = new uint8_t[43];
   uint8_t* packet = new uint8_t[45];
@@ -26,38 +30,81 @@ void Transceiver::Transmit()
   uint32_t totallen;
 
   // Get totallen by receiving it first
-  recvlen = _sock.Receive(buf, 43);
+  recvlen = _sock.Receive(buf, 4);
   totallen = buf[0] | (buf[1] << 8) | (buf[2] << 16) | (buf[3] << 24);
-  _pru.setLength(totallen);
+  // Length is number of packets...
+  int packet_num = totallen / 43;
+  if (totallen % 43 != 0)
+    packet_num += 1;
+
+  _pru.setLength(packet_num);
   cout << "Incoming data length: " << totallen << endl;
+  cout << "Packet count: " << packet_num << endl;
 
   // Send an Ack to let them know we are ready for data
   _sock.Ack();
 
+  /*
+  cout << "Memsetting data to 0" << endl;
+  memset(_pru.data(), 0, totallen);
+  cout << "Just Memset data to 0" << endl;
+  */
+
+  /*
+  for (int i = 0; i < totallen; i++) {
+    cout << getBit(_pru.data(), i);
+   }
+  */
 
   uint32_t received = 0;
+  int num = 0;
   while(1) {
     recvlen = _sock.Receive(buf, 43);
     received += recvlen;
+
+    cout << "Packet: " << num << endl;
+    num ++;
 
     if (recvlen == 0 && (received == totallen)) {
       cout << "Assume Transfer is done." << endl;
       break;
     }
 
-    packetize(buf, packet, recvlen * 8);
 
+    packetize(buf + 43, packet, recvlen * 8);
+    
     _fec.Encode(packet, encoded, 45);
-
+      
+    int pos = 0;
     for (int i = 0; i < 87 * 8; i++) {
-      cout << getBit(encoded, i);
+      if (pos < 4)
+	setBit(encoded, i, 0);
+      else
+	setBit(encoded, i, 1);
+      
+      pos += 1;
+      pos %= 8;
     }
-
+    
     _pru.push(encoded);
   }
+  cout << endl;
 
+  cout << "Initializing the PRU" << endl;
   _pru.InitPRU();
+  cout << "Starting Transmit" << endl;
   _pru.Transmit();
+
+  /*
+  for (int i = 0; i < totallen; i++) {
+    cout << getBit(_pru.data(), i);
+   }
+  */
+
+  cout << "PRU Cursor: " << *_pru.pruCursor() << endl;
+  _pru.CloseMem();
+  cout << "Closed Memory" << endl;
+
 }
 
 void Transceiver::Receive() {

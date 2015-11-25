@@ -14,9 +14,11 @@ def get_socket(port):
     sock.connect(server_address)
     return sock
 
-def send_data(port):
+def send_data(port, n):
     sock = get_socket(port)
-    message = 'Hello' * 800
+    # 5 Bytes * whatever
+    # message = 'Hello' * n
+    message = 'a' * n
     # print >>sys.stderr, 'sending "%s"' % message
     len_in_bytes = struct.pack("I", len(message))
     print "Sending Length"
@@ -37,7 +39,8 @@ def receive_data(port):
     print data
 
 if __name__=="__main__":
+    num = int(sys.argv[2])
     if 'send' in sys.argv:
-        send_data(port=9000)
+        send_data(9000, num)
     elif 'receive' in sys.argv:
         receive_data(port=9000)
