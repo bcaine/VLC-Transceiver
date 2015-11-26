@@ -2,13 +2,12 @@
 This software package is intended to perform the transmitting and receiving functionality needed to transmit data via Visible Light Communication using a [Beaglebone Black](http://beagleboard.org/black). This project is for our Senior Capstone at Northeastern University in Boston.
 
 
-* [Basic Overview](#Overview)
-	* [Transmitter](#Transmitter)
-	* [Receiver](#Receiver)
-* [Structure](#Structure)
-* [Limitations](#Limitations-and-Issues) 
-* [Use](#Use)
-* [Testing](#Testing)
+## Table of Contents
+- [Basic Overview](#overview)
+- [Structure](#structure)
+- [Limitations](#limitations-and-issues) 
+- [Use](#use)
+- [Testing](#testing)
 
 ## Overview
 
@@ -23,7 +22,17 @@ The Linux portion of the Beaglebone (the C++ code) does data encoding and decodi
 
 Data is passed from and to the host computer over USB using sockets. The Beaglebone sets itself up as a networked device when attached to a computer, and allows standard network internet protocols.
 
+#### Basics
+
+Data is sent in 88 byte packets, with the first byte being a preamble (currently 11111111) followed by 87 bytes of encoded data.
+
+The receiver has to continuously search for the preamble when not reading in data. The preamble helps prevent clock drift, align our sampling, and prevent us from trying to receive data that's not really data.
+
+Each bit should have a width of 1μs.
+
 #### Transmitter
+
+(Excluding descriptions of what the PRUs are doing)
 
 1. Initialize the memory (mmap "/dev/mem"... which is less than ideal)
 2. Get the size of the incoming data from the Host via USB (Sockets)
@@ -37,6 +46,8 @@ Data is passed from and to the host computer over USB using sockets. The Beagleb
 
 
 #### Receiver
+
+(Excluding descriptions of what the PRUs are doing)
 
 1. Initialize the memory (mmap "/dev/mem" again...)
 2. Initialize the PRUs
@@ -63,7 +74,52 @@ The main sections of our codebase are as follows:
 
 ## Use
 
+#### Compiling
+The C++ code can be built using the Makefile
+	
+	$ make all
+
+You then still need to build the Assembly using pasm (the PRU assembler). You will need to install the assembler in the assembler/ directory (see documentation for that). Assembling the Transmitter and Receiver Assembly code should be done from the appropriate directory (asm/tx/ or asm/rx/). We should encorporate this into the Makefile, but for now it has to be done manually.
+
+	$ cd asm/tx/
+	$ pasm -b pru0.p
+	$ pasm -b pru1.p
+
+	$ cd ../rx/
+	$ pasm -b pru0.p
+	$ pasm -b pru1.p
+
+Usage is straightforward, with two options.
+	
+	
+    $ ./main 
+	Options:
+		transmit    - Transmit data (receive from socket, send as light).
+		receive     - Receive data (read from photodiode circuit, send via socket).
+		
+	$ ./main transmit
+	Starting Transceiver in transmit mode.
+	Starting Transmit
+
+For a quick demo, you can use the hacked together python script in tests/socket_client.py to test the functionality of either unit. Edit this file to point towards the correct IP address and port. To test the Transmitter, you can start up the transmitter on the beaglebone (see above) and then run the python script:
+
+	python tests/socket_client.py send 10k
+	
+This will send 'a' 10,000 times, giving us 10kb of data. The Transmitter should load this data into memory and modulate the GPIO. If hooked up to an oscilloscope, you should see the data as a waveform. If hooked up to an LED, expect it to dim for a short period of time. 
 
 ## Testing
+
+Other than the above functional test using the python script, there are a handful of tests for both the C++ and Assembly side.
+
+#### C++ Tests
+
+* Test.cpp ("test" when compiled) - Should test basic functionality like data encoding and decoding, packetization, data queue and memory usage, etc.
+* SocketTest.cpp ("sockettest" when compiled) - Tests Socket Library. Currently not functional with current communication scheme. 
+* PruTest.cpp ("prutest" when compiled) - Tests writing data to Memory, and having the PRU write back different data (all 'a's). May need to compile Assembly file tests/interface/prutest.p from its directory using pasm -b prutest.p
+
+#### Assembly Tests
+
+To be documented...
+
 
 
