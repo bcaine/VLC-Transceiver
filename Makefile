@@ -5,6 +5,8 @@ CFLAGS = -Wall -I ./include -I /usr/include/ -L /usr/lib/
 CPFLAGS = $(CFLAGS)
 LIBS = -lprussdrv -lpthread
 
+# -----------------------------------------------
+
 packet_o = Packetize.o
 golay_o = Golay.o
 fec_o = ForwardErrorCorrection.o $(golay_o)
@@ -16,11 +18,7 @@ main_o = Main.o $(transceiver_o)
 sockettest_o = SocketTest.o $(transceiver_o)
 prutest_o = PruTest.o $(transceiver_o)
 
-# -------------------------------
-# Add release and debug modes with different flags
-
-
-# -------------------------------
+# -----------------------------------------------
 
 Transceiver.o: src/Transceiver.cpp
 	$(CCPP) $(CFLAGS) -c src/Transceiver.cpp
@@ -52,6 +50,10 @@ Packetize.o: src/Packetize.cpp
 Main.o: Main.cpp
 	$(CC) $(CFLAGS) -c Main.cpp
 
+
+# -----------------------------------------------
+
+
 test: clean $(test_o)
 	$(CCPP) $(LIBS) -o test $(test_o)
 
@@ -64,7 +66,10 @@ prutest: clean $(prutest_o)
 main: clean $(main_o)
 	$(CCPP) $(LIBS) -o main $(main_o)
 
+
+# -----------------------------------------------
+
+
 all: test sockettest main prutest
 
-clean:
-	-rm *.o test sockettest main prutest
+clean: -rm *.o test sockettest main prutest
