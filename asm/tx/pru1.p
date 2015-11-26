@@ -26,10 +26,11 @@ INIT:
 	MOV r0, 8 // counter -- read offset
 	MOV r1, 0 // counter --loop delay
 	MOV r2, PRU0_DELAY // limit --loop delay
-	LBCO r3, CONST_DDR, 4, 4 // limit --num packets
+	LBCO r3, CONST_DDR, 0, 4 // limit --num packets
 	SBCO r0, CONST_SSR, 4, 4 // write --initial cursor
 	MOV r4, 0 // counter --num packets
 	MOV r5, OFFSET_LIM // limit --read offset
+	MOV r6, 0 // counter --num overflows
 
 START:
 	LBCO r8, CONST_DDR, r0, 88 // load 88 bytes
@@ -45,6 +46,8 @@ MAIN_LOOP:
 
 	QBNE LOAD_DATA, r0, r5
 	MOV r0, 8
+	ADD r6, r6, 1 // increment counter
+	SBCO CONST_DDR, 0, 4 // write number of overflows
 
 LOAD_DATA:
 	LBCO r8, CONST_DDR, r0, 88 // read 88 bytes
