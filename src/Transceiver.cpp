@@ -23,7 +23,7 @@ void Transceiver::Transmit()
   _pru.OpenMem();
   
   cout << "Starting Transmit" << endl;
-  uint8_t* buf = new uint8_t[43];
+  uint8_t* buf = new uint8_t[1032];
   uint8_t* packet = new uint8_t[45];
   uint8_t* encoded = new uint8_t[87];
   int recvlen;
@@ -46,54 +46,63 @@ void Transceiver::Transmit()
 
 
   uint32_t received = 0;
-  int num = 0;
+  int n = 0;
+  int i = 0, j = 0;
+  int packetlen;
+
+  // Read in all data from socket and write to mem or backlog
   while(1) {
-    recvlen = _sock.Receive(buf, 43);
+    recvlen = _sock.Receive(buf, 1032);
     received += recvlen;
 
-    cout << "Packet: " << num << endl;
-    num ++;
+    for (i = 0; i < recvlen; i+= 43) {
+      packetlen = ((recvlen - i) >= 43) ? 43 : recvlen - i;
+      
+      packetize(buf + i, packet, packetlen * 8);
+      _fec.Encode(packet, encoded, 45);
+      
+      // If its our first n packets, write to mem
+      if (n < _pru.max_packets)
+	_pru.push(encoded);
+      else
+	for(j = 0; j < 87; j++)
+	  _backlog.push(encoded[j]);
+      n++;
+    }
 
-    if (recvlen == 0 && (received == totallen)) {
-      cout << "Assume Transfer is done." << endl;
+    if (received == totallen) {
+      cout << "Socket Transfer is done." << endl;
       break;
     }
-
-
-    packetize(buf + 43, packet, recvlen * 8);
-    
-    _fec.Encode(packet, encoded, 45);
-      
-    int pos = 0;
-    for (int i = 0; i < 87 * 8; i++) {
-      if (pos < 4)
-	setBit(encoded, i, 0);
-      else
-	setBit(encoded, i, 1);
-      
-      pos += 1;
-      pos %= 8;
-    }
-    
-    _pru.push(encoded);
   }
-  cout << endl;
 
-  cout << "Initializing the PRU" << endl;
+  cout << "Initializing the PRU and starting transmit" << endl;
   _pru.InitPRU();
-  cout << "Starting Transmit" << endl;
   _pru.Transmit();
 
-  /*
-  for (int i = 0; i < totallen; i++) {
-    cout << getBit(_pru.data(), i);
-   }
-  */
+  // Work our way through backlog pushing data into mem when we can
+  while(!_backlog.empty()) {
+    /*
+    cout << "Queue has a size of: " << _backlog.size() << endl;
+    cout << "PRU Cursor: " << _pru.pruCursor() << endl;
+    cout << "Internal: " << _pru.internalCursor() << endl;
+    */
 
-  cout << "PRU Cursor: " << _pru.pruCursor() << endl;
+    // If we cant fit the next packet
+    if (_pru.pruCursor() <= _pru.internalCursor() + 88)
+      continue;
+    
+    for(i = 0; i < 87; i++) {
+      encoded[i] = _backlog.front();
+      _backlog.pop();
+    }
+
+    _pru.push(encoded);
+  }
+
+  _pru.DisablePRU();
   _pru.CloseMem();
-  cout << "Closed Memory" << endl;
-
+  cout << "Transmit Finished" << endl;
 }
 
 void Transceiver::Receive() {

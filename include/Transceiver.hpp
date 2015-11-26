@@ -16,6 +16,7 @@
 #include "RealtimeControl.hpp"
 #include "Packetize.hpp"
 #include <iostream>
+#include <queue>
 
 using namespace std;
 
@@ -34,6 +35,8 @@ private:
   SocketConnection _sock;
   ForwardErrorCorrection _fec;
   RealtimeControl _pru;
+
+  queue<uint8_t> _backlog;
 };
 
 #endif // TRANSCEIVER_HPP
