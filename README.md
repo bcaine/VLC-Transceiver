@@ -2,11 +2,13 @@
 This software package is intended to perform the transmitting and receiving functionality needed to transmit data via Visible Light Communication using a [Beaglebone Black](http://beagleboard.org/black). This project is for our Senior Capstone at Northeastern University in Boston.
 
 
-1. [Basic Overview](#Overview)
-	- [Transmitter](#Transmitter)
-	- [Receiver](#Receiver)
-2. [Structure](#Structure)
-3. [Limitations](#Limitations-and-Issues) 
+* [Basic Overview](#Overview)
+	* [Transmitter](#Transmitter)
+	* [Receiver](#Receiver)
+* [Structure](#Structure)
+* [Limitations](#Limitations-and-Issues) 
+* [Use](#Use)
+* [Testing](#Testing)
 
 ## Overview
 
@@ -22,14 +24,25 @@ The Linux portion of the Beaglebone (the C++ code) does data encoding and decodi
 Data is passed from and to the host computer over USB using sockets. The Beaglebone sets itself up as a networked device when attached to a computer, and allows standard network internet protocols.
 
 #### Transmitter
+
 1. Initialize the memory (mmap "/dev/mem"... which is less than ideal)
 2. Get the size of the incoming data from the Host via USB (Sockets)
 3. Receive Data from Host via USB (Sockets)
 4. Packetize data (45 byte packets: 2 byte length, 43 bytes data)
 5. Encode data using the [perfect binary Golay Code](https://en.wikipedia.org/wiki/Binary_Golay_code) which transforms 12 bits into 23 encoded bits. This allows us to fix 3 bit errors per 23 bit block when decoding.
-6. Adding to memory
+6. Add encoded data to memory up until the limit (16kb), and then put the rest in a queue.
+7. Start the PRUs
+8. Watch the PRU, and backfill data from the queue behind it to make sure it churns through all the data and doesn't just spit out random data from RAM.
+9. Clean up: Shut down PRU, Close Memory, Close Socket etc.
+
 
 #### Receiver
+
+1. Initialize the memory (mmap "/dev/mem" again...)
+2. Initialize the PRUs
+3. Watch their cursor, when new packets are available, put decode them, depacketize them, and put them in a buffer.
+4. When this buffer reaches a certain size, send this via USB to the Host computer (via Sockets).
+5. Clean up: Shut down PRU, Close Memory, Close Socket ect.
 
 
 ## Structure
@@ -47,6 +60,10 @@ The main sections of our codebase are as follows:
 ## Limitations and Issues
 
 1. We are unable to mmap more than 16kb of /dev/mem for use communicating between the PRU and Linux Partition. MMapping /dev/mem in general seems non-ideal and dangerous, but this seems to be the standard doing this in the Beaglebone community. We are unsure of another way to do DMA without doing this. This limit makes transmitting more data require special care, like our overflow queue. 
-2. 
+
+## Use
+
+
+## Testing
 
 
