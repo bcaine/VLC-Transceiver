@@ -119,7 +119,14 @@ Other than the above functional test using the python script, there are a handfu
 
 #### Assembly Tests
 
-To be documented...
+* GPIO/sqWave ("testSqWave" when compiled) - Tests PRU GPO by modulating a 1MHz square wave.
+* GPIO/dataOut ("testDataOut" when compiled) - Tests PRU GPO by modulating a given bit pattern at 1MHz.
+* Memory/ddr ("testDDR_PRU0" and "testDDR_PRU1" when compiled) - Test PRU external memory access, read and write.
+* Memory/pram ("testPRAM_Write0_Read1" and "testPRAM_Write1_Read0" when compiled) - Test PRU shared memory access, the former writing from PRU0 and reading with PRU1 and the latter testing the opposite.
+* XFR/xfrDDR ("testxfrDDR" when compiled) - Test XFR data transfer between PRUs, checking the bytes received vs. the bytes sent.
+* XFR/xfrGPIO4 ("testxfrGPIO4" when compiled) - Test timing of XFR data transfer with size of 4 bytes. Requires GPO examination with scope to determine cycle cost of XFR.
+* XFR/xfrGPIO88 ("testxfrGPIO88" when compiled) - Test timing of XFR data transfer with full size of 88 bytes (1 packet). Requires GPO examination with scope to determine cycle cost of XFR.
+
 
 
 
