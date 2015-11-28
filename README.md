@@ -77,7 +77,7 @@ We are using mmap to map /dev/mem to share data between the Linux size and the P
 	80008000-80801253 : Kernel code
 	80844000-80945bbf : Kernel data
   	
-You can see that if you map 0x80000000, and use more than 8kb of data, you quickly end up corrupting your kernel... Don't do that.
+You can see that if you map 0x80000000, and you hit address 0x8008000 which is shortly after, you quickly end up corrupting your kernel... Don't do that.
 
 We are doing a bad thing and picking an area of System RAM that appears available. In our code, we just choose 0x90000000, and map about 16mb of room. We can hide this from the OS using the memmap linux kernel parameter. If this was ever to be used in any kind of production environment or real usage, the "correct solution" would be to write or use a kernel driver that allocates a continuous block of physical memory that is reserved from the OS specifically for Direct Memory Access between the PRUs and the Linux partition. [CMEM from Texas Instruments](http://processors.wiki.ti.com/index.php/CMEM_Overview) seems like a pretty good way to do this. If you need a stable system or this is for anything more than a hobbyist project, going the Kernel Driver route is really the only way to go.
 
