@@ -60,8 +60,9 @@ void Transceiver::Transmit()
       
       packetize(buf + i, packet, packetlen * 8);
       _fec.Encode(packet, encoded, 45);
-      
-      // If its our first n packets, write to mem
+
+      // If its our first n packets, write to mem. 
+      // Otherwise to the backlog
       if (n < _pru.max_packets)
 	_pru.push(encoded);
       else

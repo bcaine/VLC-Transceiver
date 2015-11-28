@@ -12,7 +12,7 @@
 .entrypoint INIT
 #include "tx.hp"
 
-
+#define READ_ADDRESS 0x90000000
 
 //  _____________________
 //  Register  |  Purpose
@@ -37,17 +37,13 @@ INIT:
     CLR       r0, r0, 4         // Clear SYSCFG[STANDBY_INIT] to enable OCP master port
     SBCO      r0, C4, 4, 4
 		
-    // make C31 (CONST_DDR) point to DDR base address
-    MOV r0, 0x100000
-    MOV r1, PRU0CTPPR_1
-    SBBO r0, r1, 0, 4
-
+    MOV r7, READ_ADDRESS
     MOV r1.b0, 0 // init delay counter to 0
     MOV r1.b1, 97 // store forward delay value
     MOV r1.b2, 91 // store backward delay value
     MOV r1.b3, 0 // init register counter to 0
     MOV r2, 0 // init packet counter to 0
-    LBCO r3, CONST_DDR, 0, 4 // load transfer length from RAM
+    LBBO r3, r7, 0, 4 // load transfer length from RAM
 
     XIN 10, r8, 88 // pull a packet from the scratchpad
     JMP CLC_B1b1 // jump to modulation (start loop)

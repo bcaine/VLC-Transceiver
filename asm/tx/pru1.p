@@ -10,9 +10,9 @@
 
 .origin 0
 .entrypoint INIT
-
+#define READ_ADDRESS 0x90000000
 #define PRU0_DELAY 70365 // delay needed to wait for PRU0
-#define OFFSET_LIM 16376 // maximum byte offset
+#define OFFSET_LIM 16777208 //10485208//16376 // maximum byte offset
 #include "tx.hp"
 
 // NOTE: Delay assumes 140799 cycles between PRU0 XINs
@@ -40,25 +40,21 @@ INIT:
     	CLR       r0, r0, 4         // Clear SYSCFG[STANDBY_INIT] to enable
     	SBCO      r0, C4, 4, 4
 
-	// make C31 (CONST_DDR) point to DDR base address
-	MOV r0, 0x100000
-	MOV r1, PRU1CTPPR_1
-	SBBO r0, r1, 0, 4
+	MOV r7, READ_ADDRESS
 
 	MOV r0, 8 // init offset to ninth byte
 	MOV r1, OFFSET_LIM // store end of buffer location
 	MOV r2, PRU0_DELAY // store PRU delay value
-	LBCO r3, CONST_DDR, 0, 4 // read number of packets from RAM
-	SBCO r0, CONST_DDR, 4, 4 // write initial read offset to RAM 
+	LBBO r3, r7, 0, 4 // read number of packets from RAM
+	SBBO r0, r7, 4, 4 // write initial read offset to RAM 
 	MOV r4, 0 // init number of packets sent to 0
 	MOV r5, 0 // init delay counter to 0
 	MOV r6, 0 // init overflow counter to 0
-	SBCO r6, CONST_DDR, 0, 4 // write initial overflow counter to RAM
-
+	SBBO r6, r7, 0, 4 // write initial overflow counter to RAM
 START:
-	LBCO r8, CONST_DDR, r0, 88 // load 88 bytes
+	LBBO r8, r7, r0, 88 // load 88 bytes
 	ADD r0, r0, 88 // increment read offset
-	SBCO r0, CONST_DDR, 4, 4 // store read cursor
+	SBBO r0, r7, 4, 4 // store read cursor
 	ADD r4, r4, 1 // increment packet counter
 
 MAIN_LOOP:
@@ -75,12 +71,12 @@ MAIN_LOOP:
 	// else
 	MOV r0, 8 // reset offset to start of buffer
 	ADD r6, r6, 100 // increment overflow counter
-	SBCO r6, CONST_DDR, 0, 4 // write number of overflows
+	SBBO r6, r7, 0, 4 // write number of overflows
 
 LOAD_DATA:
-	LBCO r8, CONST_DDR, r0, 88 // load a packet (88B) from RAM
+	LBBO r8, r7, r0, 88 // load a packet (88B) from RAM
 	ADD r0, r0, 88 // increment offset
-	SBCO r0, CONST_DDR, 4, 4 // store current offset to RAM
+	SBBO r0, r7, 4, 4 // store current offset to RAM
 
 	MOV r5, 0 // reset delay counter
 

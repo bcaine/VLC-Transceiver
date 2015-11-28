@@ -50,9 +50,9 @@ void *length;
 void *cursor;
 void *data;
 
-unsigned long transferLength = BUFFER_LENGTH/2;
+unsigned long transferLength = 24000;
 
-unsigned long memLength =  16376;
+unsigned long memLength =  2112000;
 unsigned long dataCode = 0xaaaa;
 
 /******************************************************************************
@@ -160,14 +160,12 @@ static int LOCAL_exampleInit (  )
     }
 
     /* Setup required PRU vars in RAM */
-    DDR_regaddr = ddrMem + OFFSET_DDR;
-
-    length = DDR_regaddr;
+    length = ddrMem;
     cursor = length + 4;
     data = cursor + 4;
 
     *((unsigned long*) length) = transferLength;
-
+	
     printf("Attempting memset to (%x) with size of (%li)\n", dataCode, memLength);
     memset(data, dataCode, memLength);
     printf("\t memset passed \n");
