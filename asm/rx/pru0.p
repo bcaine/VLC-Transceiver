@@ -41,7 +41,7 @@ PRE_P1b1: // restarting preamble - 200c
 	MOV r0.b1, 0 // reset verified
 START_PRE: // coming from valid data - 199c
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_P1b1, r4, 1
 
@@ -62,7 +62,7 @@ DEL_P1b1:
 PRE_P1b2: // 200c
 	MOV r1.b0, 0
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_P1b2, r4, 1
 
@@ -83,7 +83,7 @@ DEL_P1b2:
 PRE_P1b3: //200c
 	MOV r1.b0, 0
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_P1b3, r4, 1
 
@@ -104,7 +104,7 @@ DEL_P1b3:
 PRE_P1b4: // 200c
 	MOV r1.b0, 0
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_P1b4, r4, 1
 
@@ -125,7 +125,7 @@ DEL_P1b4:
 PRE_P1b5: // 200c
 	MOV r1.b0, 0
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_P1b5, r4, 1
 
@@ -146,7 +146,7 @@ DEL_P1b5:
 PRE_P1b6: // 200c
 	MOV r1.b0, 0
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_P1b6, r4, 1
 
@@ -167,7 +167,7 @@ DEL_P1b6:
 PRE_P1b7: // 200c 
 	MOV r1.b0, 0
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_P1b7, r4, 1
 
@@ -188,7 +188,7 @@ DEL_P1b7:
 PRE_P1b8: // 200c (pre) - 201c (data)
 	MOV r1.b0, 0
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_P1b8, r4, 1
 
@@ -220,7 +220,7 @@ DEL_CPY:
 
 SMP_B1b1:
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B1b1, r4, 1
 
@@ -238,7 +238,7 @@ DEL_B1b1:
 
 SMP_B1b2:
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B1b2, r4, 1
 
@@ -256,7 +256,7 @@ DEL_B1b2:
 
 SMP_B1b3:
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B1b3, r4, 1
 
@@ -274,7 +274,7 @@ DEL_B1b3:
 
 SMP_B1b4:
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B1b4, r4, 1
 
@@ -292,7 +292,7 @@ DEL_B1b4:
 
 SMP_B1b5:
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B1b5, r4, 1
 
@@ -310,7 +310,7 @@ DEL_B1b5:
 
 SMP_B1b6:
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B1b6, r4, 1
 
@@ -328,7 +328,7 @@ DEL_B1b6:
 
 SMP_B1b7:
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B1b7, r4, 1
 
@@ -346,7 +346,7 @@ DEL_B1b7:
 
 SMP_B1b8:
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B1b8, r4, 1
 
@@ -370,7 +370,7 @@ DEL_B1b8:
 
 SMP_B2b1:
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B2b1, r4, 1
 
@@ -388,7 +388,7 @@ DEL_B2b1:
 
 SMP_B2b2:
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B2b2, r4, 1
 
@@ -406,7 +406,7 @@ DEL_B2b2:
 
 SMP_B2b3:
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B2b3, r4, 1
 
@@ -424,7 +424,7 @@ DEL_B2b3:
 
 SMP_B2b4:
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B2b4, r4, 1
 
@@ -442,7 +442,7 @@ DEL_B2b4:
 
 SMP_B2b5:
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B2b5, r4, 1
 
@@ -460,7 +460,7 @@ DEL_B2b5:
 
 SMP_B2b6:
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B2b6, r4, 1
 
@@ -478,7 +478,7 @@ DEL_B2b6:
 
 SMP_B2b7:
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B2b7, r4, 1
 
@@ -496,7 +496,7 @@ DEL_B2b7:
 
 SMP_B2b8:
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B2b8, r4, 1
 
@@ -520,7 +520,7 @@ DEL_B2b8:
 
 SMP_B3b1:
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B3b1, r4, 1
 
@@ -538,7 +538,7 @@ DEL_B3b1:
 
 SMP_B3b2:
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B3b2, r4, 1
 
@@ -556,7 +556,7 @@ DEL_B3b2:
 
 SMP_B3b3:
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B3b3, r4, 1
 
@@ -574,7 +574,7 @@ DEL_B3b3:
 
 SMP_B3b4:
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B3b4, r4, 1
 
@@ -592,7 +592,7 @@ DEL_B3b4:
 
 SMP_B3b5:
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B3b5, r4, 1
 
@@ -610,7 +610,7 @@ DEL_B3b5:
 
 SMP_B3b6:
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B3b6, r4, 1
 
@@ -628,7 +628,7 @@ DEL_B3b6:
 
 SMP_B3b7:
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B3b7, r4, 1
 
@@ -646,7 +646,7 @@ DEL_B3b7:
 
 SMP_B3b8:
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B3b8, r4, 1
 
@@ -670,7 +670,7 @@ DEL_B3b8:
 
 SMP_B4b1:
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B4b1, r4, 1
 
@@ -688,7 +688,7 @@ DEL_B4b1:
 
 SMP_B4b2:
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B4b2, r4, 1
 
@@ -706,7 +706,7 @@ DEL_B4b2:
 
 SMP_B4b3:
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B4b3, r4, 1
 
@@ -724,7 +724,7 @@ DEL_B4b3:
 
 SMP_B4b4:
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B4b4, r4, 1
 
@@ -742,7 +742,7 @@ DEL_B4b4:
 
 SMP_B4b5:
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B4b5, r4, 1
 
@@ -760,7 +760,7 @@ DEL_B4b5:
 
 SMP_B4b6:
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B4b6, r4, 1
 
@@ -778,7 +778,7 @@ DEL_B4b6:
 
 SMP_B4b7:
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B4b7, r4, 1
 
@@ -796,7 +796,7 @@ DEL_B4b7:
 
 SMP_B4b8:
 	MOV r1.b0, 0
-	LSR r31, r4, 15
+	LSR r4, r31, 15
 	AND r4, r4, 1
 	QBEQ SET_B4b8, r4, 1
 
