@@ -1,0 +1,58 @@
+Steps to configure a recently flashed BBB:
+
+1. Enable PRU by editing device tree overlay.
+	- cd /boot/dtbs/3.8.13-bone70
+	- cp am335x-boneblack.dtb am335x-boneblack.dtb_orig
+	- dtc -I dtb -O dts am335x-boneblack.dtb > am335x-boneblack.dts_orig
+	- cp am335x-boneblack.dts_orig am335x-boneblack.dts
+	 
+	- Open am335x-boneblack.dts, find the pruss@4a300000 block 
+	  and edit line 581: 'status = "disabled";' to say 'status = "okay";'
+	
+	- dtc -I dts -O dtb am335x-boneblack.dts > am335x-boneblack.dtb
+	
+	- Reboot required before this will take effect
+
+2. Enable Internet on BBB:
+	- Enable network sharing from laptop
+	- /sbin/route add default gw 192.168.7.1
+	
+	- Open /etc/resolv.conf, remove default nameserver, add 'nameserver 8.8.8.8'
+
+	- Test with 'ping google.com' (takes a second)
+
+3. Clone git repo:
+	- cd /usr/lib/
+	- git clone https://github.com/bcaine/VLC-Transceiver
+	- cd VLC-Transceiver
+
+4. Compile / build the assembler and gcc
+	- cd assembler/am335x_pru_package-master/pru_sw/app_loader/interface/
+	- gcc -I. -Wall -I../include   -c -fPIC -O3 -mtune=cortex-a8 -march=armv7-a -shared -o prussdrv.o prussdrv.c
+	- gcc -shared -o libprussdrv.so prussdrv.o
+	- cp libprussdrv.so /usr/lib/
+	- cp ../include/*.h /usr/include/
+	- cd ../../utils/pasm_source
+	- ./linuxbuild
+	- cp ../pasm /usr/bin/
+
+5. Enable GPIO by editing device tree overlays.
+
+INPUT:
+	- cp SETUP/bspm_P8_15_20-00A0.dts /lib/firmware/bspm_P8_15_20-00A0.dts
+	- cd /lib/firmware
+	- dtc -O dtb -o bspm_P8_15_20-00A0.dtbo -b 0 -@ bspm_P8_15_20-00A0.dts
+
+OUTPUT:
+	- cp SETUP/bspm_P8_11_6-00A0.dts /lib/firmware/bspm_P8_11_6-00A0.dts
+	- cd /lib/firmware
+	- dtc -O dtb -o bspm_P8_11_6-00A0.dtbo -b 0 -@ bspm_P8_11_6-00A0.dts
+
+FINAL STEP - BOTH:
+	- cp SETUP/rc.local /etc/rc.local
+
+
+6. Test by running assembly tests in /VLC-Transceiver/tests/asm/*
+
+
+Steps may vary for BBG: ??
