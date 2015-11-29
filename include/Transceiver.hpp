@@ -23,7 +23,10 @@
 using namespace std;
 
 const int TIMEOUT = 5000;
-const int SLEEP_US = 100;
+// Number of microseconds to sleep in TX and RX.
+// 800 because its only updated once every packet (88 * 8 bits)
+// and we want a bit of a buffer
+const int SLEEP_US = 800;
 
 class Transceiver {
 

@@ -149,8 +149,10 @@ void Transceiver::Receive() {
     packetlen = packetlen_bits / 8;
 
     // If the packetlen isnt a multiple of 8 we have to return an extra byte
-    if (packetlen_bits % 8 != 0)
+    if (packetlen_bits % 8 != 0) {
       packetlen += 1;
+      break;
+    }
 
     sendsize += packetlen;
 
