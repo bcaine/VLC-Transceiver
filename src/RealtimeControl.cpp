@@ -132,7 +132,7 @@ void RealtimeControl::CloseMem() {
 // Always expect 87 Bytes (86.25 actual in packet)
 void RealtimeControl::push(uint8_t* packet) {
 
-  *peek() = 0xFF;
+  *peek() = 0b00111100;
   memcpy((peek() + 1), packet, PACKET_SIZE - 1);
 
   _internal_cursor += 88;
