@@ -15,8 +15,6 @@
 #include "prussdrv.h"
 #include <pruss_intc_mapping.h>	 
 
-#define DDR_BASEADDR     0x80000000
-#define OFFSET_DDR	 0x00001000 
 
 using namespace std;
 

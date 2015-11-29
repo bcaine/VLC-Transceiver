@@ -45,7 +45,7 @@ void Transceiver::Transmit()
 
 
   uint32_t received = 0;
-  int n = 0;
+  unsigned int n = 0;
   int i = 0, j = 0;
   int packetlen;
 
@@ -117,7 +117,7 @@ void Transceiver::Receive() {
   uint8_t* buf = new uint8_t[1100];
 
   // We flush (send via sockets) every 1032 bytes
-  int flushsize = 1032;
+  const int flushsize = 1032;
   
   int packetlen_bits = 0;
   int packetlen = 0;
@@ -128,10 +128,11 @@ void Transceiver::Receive() {
   _pru.InitPRU();
   _pru.Receive();
 
-  time_t start = time();
+  time_t start = time(NULL);
+
   while(true) {
     // Check timeout
-    if (time() > start + TIMEOUT)
+    if (time(NULL) > start + TIMEOUT)
       break;
 
     // Loop while we wait for cursor to increment
@@ -142,7 +143,7 @@ void Transceiver::Receive() {
     }
 
     _pru.pop(encoded);
-    fec.Decode(encoded, packet, 87);
+    _fec.Decode(encoded, packet, 87);
 
     // This gives us number of bits in packet that are real data
     packetlen_bits = depacketize(packet, buf + sendsize);
@@ -156,7 +157,7 @@ void Transceiver::Receive() {
 
     sendsize += packetlen;
 
-    if (sendsize >= 1032) {
+    if (sendsize >= flushsize) {
       _sock.Send(buf, sendsize);
     }
   }
