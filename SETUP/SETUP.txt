@@ -38,7 +38,10 @@ Steps to configure a recently flashed BBB:
 
 5. Enable GPIO by editing device tree overlays.
 
+BOTH:   - cp SETUP/rc.local /etc/rc.local
+
 INPUT:
+	- cd /usr/lib/VLC-Transceiver/
 	- cp SETUP/bspm_P8_15_20-00A0.dts /lib/firmware/bspm_P8_15_20-00A0.dts
 	- cd /lib/firmware
 	- dtc -O dtb -o bspm_P8_15_20-00A0.dtbo -b 0 -@ bspm_P8_15_20-00A0.dts
@@ -48,9 +51,8 @@ OUTPUT:
 	- cd /lib/firmware
 	- dtc -O dtb -o bspm_P8_11_6-00A0.dtbo -b 0 -@ bspm_P8_11_6-00A0.dts
 
-FINAL STEP - BOTH:
-	- cp SETUP/rc.local /etc/rc.local
-
+	
+	- Reboot required before GPIO takes effect
 
 6. Test by running assembly tests in /VLC-Transceiver/tests/asm/*
 
