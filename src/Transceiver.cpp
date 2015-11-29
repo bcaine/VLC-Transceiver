@@ -7,7 +7,6 @@
 */
 
 #include "Transceiver.hpp"
-#include "Util.hpp"
 
 
 Transceiver::Transceiver(SocketConnection &sockconn,
@@ -83,14 +82,11 @@ void Transceiver::Transmit()
 
   // Work our way through backlog pushing data into mem when we can
   while(!_backlog.empty()) {
-    /*
-    cout << "Queue has a size of: " << _backlog.size() << endl;
-    cout << "PRU Cursor: " << _pru.pruCursor() << endl;
-    cout << "Internal: " << _pru.internalCursor() << endl;
-    */
 
     // If we cant fit the next packet
+    // TODO: Maybe change this to wait for an event? (increase in prucursor?)    
     if (_pru.pruCursor() <= _pru.internalCursor() + 88)
+      usleep(SLEEP_US);
       continue;
     
     for(i = 0; i < 87; i++) {
@@ -103,6 +99,12 @@ void Transceiver::Transmit()
 
   _pru.DisablePRU();
   _pru.CloseMem();
+
+  // Clean up
+  delete[] buf;
+  delete[] packet;
+  delete[] encoded;
+
   cout << "Transmit Finished" << endl;
 }
 
@@ -110,21 +112,67 @@ void Transceiver::Receive() {
 
   uint8_t* encoded = new uint8_t[87];
   uint8_t* packet = new uint8_t[45];
-  uint8_t* buf = new uint8_t[43];
-  int packetlen;
+  uint8_t* data = new uint8_t[43];
+  // Only should use 1032
+  uint8_t* buf = new uint8_t[1100];
 
-  /*
-  while(!_pru.Done()) {
+  // We flush (send via sockets) every 1032 bytes
+  int flushsize = 1032;
+  
+  int packetlen_bits = 0;
+  int packetlen = 0;
+  int sendsize = 0;
+  
 
-    // TODO: If we are waiting on the PRU, delay...
-    // This is super important
-    
+  _pru.OpenMem();
+  _pru.InitPRU();
+  _pru.Receive();
+
+  time_t start = time();
+  while(true) {
+    // Check timeout
+    if (time() > start + TIMEOUT)
+      break;
+
+    // Loop while we wait for cursor to increment
+    // TODO: Maybe change this to wait for an event? (increase in prucursor?)
+    if (_pru.internalCursor() + 88 <= _pru.pruCursor()) {
+      usleep(SLEEP_US);
+      continue;
+    }
+
     _pru.pop(encoded);
-    _fec.Decode(encoded, packet, 87);
-    
-    packetlen = depacketize(packet, buf);
+    fec.Decode(encoded, packet, 87);
 
-    // May want to send all data at once? Not sure yet.
-    _sock.Send(buf, packetlen);
-    }*/
+    // This gives us number of bits in packet that are real data
+    packetlen_bits = depacketize(packet, buf + sendsize);
+    packetlen = packetlen_bits / 8;
+
+    // If the packetlen isnt a multiple of 8 we have to return an extra byte
+    if (packetlen_bits % 8 != 0)
+      packetlen += 1;
+
+    sendsize += packetlen;
+
+    if (sendsize >= 1032) {
+      _sock.Send(buf, sendsize);
+    }
+  }
+
+  // Send the rest via sockets.
+  if (sendsize >= 0) {
+    _sock.Send(buf, sendsize);
+  }
+  
+  _pru.DisablePRU();
+  _pru.CloseMem();
+
+
+  // Clean up
+  delete[] encoded;
+  delete[] packet;
+  delete[] data;
+  delete[] buf;
+
+  cout << "Receive Finished" << endl;
 }

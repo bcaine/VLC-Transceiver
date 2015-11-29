@@ -37,6 +37,7 @@ public:
   bool InitPRU();
   void DisablePRU();
   void Transmit();
+  void Receive();
   void Test();
   
   
