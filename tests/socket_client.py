@@ -37,7 +37,6 @@ def receive_data(port):
 
     while(True):
         received = sock.recv(100)
-        print received
 
         if (len(received) == 4) and received == "DONE":
             break
