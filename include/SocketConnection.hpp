@@ -32,6 +32,8 @@ public:
   int Receive(uint8_t *buf, int bytes);
   int Send(uint8_t *buf, int bytes);
   void Ack();
+  void WaitForClient();
+  void SendDone();
   
 private:
   int _sock, _recv_result;
