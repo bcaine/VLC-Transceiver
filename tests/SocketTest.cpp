@@ -36,7 +36,7 @@ void BasicReceiveSocket()
   sock.Ack();
 
   int i = 0;
-  while(i < 1000) {
+  while(i < totallen) {
     len = sock.Receive(buf, 1000);
     cout << "Length: " << len << endl;
     i += len;
