@@ -26,8 +26,10 @@ void Transceive(bool transmit) {
 
 int main(int argc, char *argv[]) {
 
-  if ( argc == 1)
+  if ( argc == 1) {
     cout << "Please provide either 'transmit' or 'receive'" << endl;
+    return 0;
+  }
 
   if (strcmp(argv[1], "transmit") == 0)
     Transceive(true);
