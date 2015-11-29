@@ -60,6 +60,7 @@ void Transceiver::Transmit()
       packetize(buf + i, packet, packetlen * 8);
       _fec.Encode(packet, encoded, 45);
 
+
       // If its our first n packets, write to mem. 
       // Otherwise to the backlog
       if (n < _pru.max_packets)
@@ -84,7 +85,6 @@ void Transceiver::Transmit()
   while(!_backlog.empty()) {
 
     // If we cant fit the next packet
-    // TODO: Maybe change this to wait for an event? (increase in prucursor?)    
     if (_pru.pruCursor() <= _pru.internalCursor() + 88)
       usleep(SLEEP_US);
       continue;
@@ -99,6 +99,7 @@ void Transceiver::Transmit()
 
   _pru.DisablePRU();
   _pru.CloseMem();
+  _sock.Close();
 
   // Clean up
   delete[] buf;
@@ -123,20 +124,25 @@ void Transceiver::Receive() {
   int packetlen = 0;
   int sendsize = 0;
   
-
   _pru.OpenMem();
+  
+  // Wait for client to connect.
+  _sock.WaitForClient();
+  
+  // Set up PRUs
   _pru.InitPRU();
   _pru.Receive();
 
-  time_t start = time(NULL);
-
+  time_t last_send = time(NULL);
+  bool first_packet = true;
+  
   while(true) {
-    // Check timeout
-    if (time(NULL) > start + TIMEOUT)
-      break;
+    // If timeout, and not the first packet (which may take
+    // an indeterminate amount of time), we exit
+    if ((!first_packet) && (time(NULL) > last_send + TIMEOUT))
+	break;
 
     // Loop while we wait for cursor to increment
-    // TODO: Maybe change this to wait for an event? (increase in prucursor?)
     if (_pru.internalCursor() + 88 <= _pru.pruCursor()) {
       usleep(SLEEP_US);
       continue;
@@ -146,30 +152,42 @@ void Transceiver::Receive() {
     _fec.Decode(encoded, packet, 87);
 
     // This gives us number of bits in packet that are real data
-    packetlen_bits = depacketize(packet, buf + sendsize);
+    packetlen_bits = depacketize(packet, data);
     packetlen = packetlen_bits / 8;
 
-    // If the packetlen isnt a multiple of 8 we have to return an extra byte
-    if (packetlen_bits % 8 != 0) {
+    // If we have data, this isn't the first packet anymore
+    if (packetlen > 0)
+      first_packet = false;
+
+    // If not a multiple of 8, just return an extra byte
+    if (packetlen_bits % 8 != 0)
       packetlen += 1;
-      break;
-    }
+
+    // Copy data into buffer
+    memcpy(buf + sendsize, data, packetlen);
 
     sendsize += packetlen;
 
+    // If the packetlen isnt a multiple of 8
+    // its the last packet so we can break
+    if (packetlen_bits % 8 != 0)
+      break;
+
     if (sendsize >= flushsize) {
       _sock.Send(buf, sendsize);
+      sendsize = 0;
     }
   }
 
   // Send the rest via sockets.
-  if (sendsize >= 0) {
+  if (sendsize > 0)
     _sock.Send(buf, sendsize);
-  }
+
   
+  _sock.SendDone();
   _pru.DisablePRU();
   _pru.CloseMem();
-
+  _sock.Close();
 
   // Clean up
   delete[] encoded;
