@@ -49,13 +49,13 @@ def receive_data(port):
 
 
 def convert(n):
-    num = int(n[:-1])
+
     if n[-1:] == 'k':
-        return num * 10**3
+        return int(n[:-1]) * 10**3
     elif n[-1:] == 'm':
-        return num * 10**6
+        return int(n[:-1]) * 10**6
     else:
-        return num
+        return int(n)
 
 if __name__=="__main__":
     if len(sys.argv) == 3:
