@@ -70,7 +70,7 @@ void SocketConnection::Ack() {
 }
 
 void SocketConnection::WaitForClient() {
-  uint8_t junk[] = {0};
+  uint8_t junk[1];
   Receive(junk, 1);
 }
 
