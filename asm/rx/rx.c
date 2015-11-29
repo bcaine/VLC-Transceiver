@@ -21,7 +21,7 @@
 /******************************************************************************
 * Local Macro Declarations                                                    *
 ******************************************************************************/
-#define LENGTH 		 1500
+#define LENGTH 		 500
 #define PRU_NUM 	 0
 #define BUFFER_LENGTH    186
 #define BUFF_BASEADDR    0x90000000
@@ -113,14 +113,7 @@ int main (void)
     //printf("\tINFO: PRU0 completed execution.\r\n");
     prussdrv_pru_clear_event (PRU0_ARM_INTERRUPT);
     /* Check if example passed */
-    if ( LOCAL_examplePassed(PRU_NUM) )
-    {
-        printf("Example executed succesfully.\r\n");
-    }
-    else
-    {
-        printf("Example failed.\r\n");
-    }
+    LOCAL_examplePassed(PRU_NUM);
     
     /* Disable PRU and close memory mapping*/
     prussdrv_pru_disable(0);
@@ -170,22 +163,23 @@ static unsigned short LOCAL_examplePassed ( unsigned short pruNum )
    printf("\n\tAfter PRU Completion:\n");
    printf("Length: (%li)\n", (*(unsigned long*) length));
    printf("Offset: (%li)\n", (*(unsigned long*) cursor));
+
    printf("Data: \n\n");
    int i = 0;
    long received[22];
-   for(i; i < 10; i=i+1){
+   for(i; i < 25; i=i+1){
 	int j = 0;
 	while (j < 22){
 	    received[j] = (*(unsigned long*) data);
-	    data = data + 4;
+	    data = data+4;
 	    j=j+1;
 	}
 
-   	printf("\nPacket (%li): ", i);
 	int k = 0;
 	for(k; k < 22; k=k+1){
-	    printf("%x\t", received[k]);
+	    printf("%x ", received[k]);
 	}
+	printf("\n");
    }
 
    // return(*(unsigned long*) DDR_regaddr == 0xdcba);

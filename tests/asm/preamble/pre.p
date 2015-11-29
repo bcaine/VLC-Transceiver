@@ -22,7 +22,8 @@ INIT:
 	CLR r2.b0.t0
 PRE:
 	XOR r1.b1, r2.b0, r3.b0 // get bitwise differences b/w preamble and current
-        SBBO r1.b1, r5, 1, 1
+        CLR r1.t0
+	SBBO r1.b1, r5, 1, 1
 	NOT r1.b1, r1.b1 // NOT - get bitwise similarities
 	SBBO r1.b1, r5, 2, 1
 
