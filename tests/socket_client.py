@@ -4,7 +4,7 @@ import socket
 import sys
 import struct
 
-HOST="192.168.8.2"
+HOST="192.168.7.2"
 
 def get_socket(port):
     # Create a TCP/IP socket
