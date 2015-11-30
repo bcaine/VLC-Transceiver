@@ -18,9 +18,3 @@ echo bspm_P8_15_20 > /sys/devices/bone_capemgr.9/slots // configure input pin
 exit 0
 
 
-
-
-
-
-
-
