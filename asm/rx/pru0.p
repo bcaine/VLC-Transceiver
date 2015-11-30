@@ -12,9 +12,13 @@
 .entrypoint INIT
 #include "../../include/asm.hp"
 
-#define PACKETCOUNT 1000
 #define PREAMBLE 0b00111100
 #define REQBITS 7
+
+#define READY_CODE 0xaa
+#define DONE_CODE 0xff
+#define PRAM_ADDRESS 0x0004
+#define DDR_ADDRESS 0x90000000
 
 //  _____________________
 //  Register  |  Purpose
@@ -23,129 +27,137 @@
 //    r0.b1   |  Const   - delays to perform (normal op)
 //    r0.b2   |  Const   - delays to perform (after reg copy)
 //    r0.b3   |  Const   - delays to perform (preamble loop)
+//			  |
 //    r1.b0   |  Counter - registers filled
 //    r1.b1   |  Holder  - XOR result (preamble)
+//			  |
 //      r2    |  Holder  - recent input bits (preamble)
+//			  |
 //    r3.b0   |  Holder  - hold preamble for comparison
 //    r3.b1   |  Holder  - hold desired number of bitmatches for preamble comparison
 //    r3.b2   |  Counter - number of input stream bits matching the preamble
 //    r3.b3   |  Holder  - hold LSR/AND result (preamble)
+//			  |
 //      r4    |  Holder  - bit sampled
+//      r5    |  Holder  - PRAM address
+//      r6    |  Holder  - DDR address
+//			  |
+//     r7.b0  |  Holder  - DDR done code
+//     r7.b1  |  Holder  - PRAM packet ready code
+//			  |
 //    r8-r29  |  Holder  - hold sampled bytes
 //      r30   |  I/O     - holds GPI pin register (.t15)
-//
-//    r5, r6  | - Free registers
-//      r7    |
+
+
 
 INIT:
-        // Enable OCP master port
-        LBCO      r0, C4, 4, 4
-        CLR       r0, r0, 4         // Clear SYSCFG[STANDBY_INIT] to enable OCP master port
-        SBCO      r0, C4, 4, 4
+    
+	// Enable OCP master port
+    LBCO      r0, C4, 4, 4
+    CLR       r0, r0, 4         // Clear SYSCFG[STANDBY_INIT] to enable OCP master port
+    SBCO      r0, C4, 4, 4
 
-        MOV r0.b0, 0 // init delay counter to 0
-        MOV r0.b1, 97 // store forward delay value for comparison
-        MOV r0.b2, 92 // store backward delay value for comparison
-        MOV r0.b3, 82 // store preamble delay value for comparison
+    MOV r0.b0, 0 // init delay counter to 0
+    MOV r0.b1, 97 // store forward delay value for comparison
+    MOV r0.b2, 92 // store backward delay value for comparison
+    MOV r0.b3, 82 // store preamble delay value for comparison
 
 	MOV r1.b0, 0 // init reg number to 0
 	MOV r1.b1, 0 // hold XOR result
 
-        MOV r2.b0, 0 // recent bits holder
+    MOV r2.b0, 0 // recent bits holder
         
 	MOV r3.b0, PREAMBLE // hold actual preamble for comparison
-        MOV r3.b1, REQBITS // hold desired bit matches for comparison
+    MOV r3.b1, REQBITS // hold desired bit matches for comparison
 	MOV r3.b2, 0 // init bit matches counter to 0
 	MOV r3.b3, 0 // hold LSR/AND result
 
-        MOV r6, PACKETCOUNT
-	MOV r7, 0
+	MOV r5, PRAM_ADDRESS
+	MOV r6, DDR_ADDRESS
+	MOV r7.b0, 0
+	MOV r7.b1, READY_CODE
 
-        JMP PRE_LP
+    JMP PRE_LP
 
 NEW_PACKET:
-        XOUT 10, r8, 88
+    XOUT 10, r8, 88
 
-DEL_NEW:
-        ADD r0.b0, r0.b0, 1
-        QBNE DEL_NEW, r0.b0, r0.b2
-
-        MOV r2.b0, 0 // reset bit holder
-        MOV r3.b2, 0 // reset matching bits counter
+    MOV r2.b0, 0 // reset bit holder
+    MOV r3.b2, 0 // reset matching bits counter
 
 PRE_LP:
-        MOV r0.b0, 0 // reset delay
-        LSL r2.b0, r2.b0, 1 // shift preamble holder to prepare for new bit
-        LSR r4, r31, 15 // sample GPI reg, shift sample value to 0th index
-        AND r4, r4, 1 // and to zero out all other bits
-        QBEQ PRE_SET, r4, 1 // if bit set, jump to set
+    MOV r0.b0, 0 // reset delay
+    LSL r2.b0, r2.b0, 1 // shift preamble holder to prepare for new bit
+    LSR r4, r31, 15 // sample GPI reg, shift sample value to 0th index
+    AND r4, r4, 1 // and to zero out all other bits
+    QBEQ PRE_SET, r4, 1 // if bit set, jump to set
 
 PRE_CLR:
-        CLR r2.b0.t0 // clear new bit
-        MOV r3.b2, 0 // NOP
-        JMP PRE_DEL
+    CLR r2.b0.t0 // clear new bit
+    MOV r3.b2, 0 // NOP
+    JMP PRE_DEL
 
 PRE_SET:
-        SET r2.b0.t0 // set new bit
-        MOV r3.b2, 0 // NOP
-        JMP PRE_DEL
+    SET r2.b0.t0 // set new bit
+    MOV r3.b2, 0 // NOP
+    JMP PRE_DEL
 
 PRE_DEL: 
-        ADD r0.b0, r0.b0, 1
-        QBNE PRE_DEL, r0.b0, r0.b3
+    ADD r0.b0, r0.b0, 1
+    QBNE PRE_DEL, r0.b0, r0.b3
 
 PRE_CHK:
-        XOR r1.b1, r2.b0, r3.b0 // get bitwise differences b/w preamble and current
-        NOT r1.b1, r1.b1 // NOT - get bitwise similarities
+    XOR r1.b1, r2.b0, r3.b0 // get bitwise differences b/w preamble and current
+    NOT r1.b1, r1.b1 // NOT - get bitwise similarities
 
-        LSR r3.b3, r1.b1, 0 // shift to bit of interest
-        AND r3.b3, r3.b3, 1 // isolate that bit
-        ADD r3.b2, r3.b2, r3.b3 // add it to the counter
+    LSR r3.b3, r1.b1, 0 // shift to bit of interest
+    AND r3.b3, r3.b3, 1 // isolate that bit
+    ADD r3.b2, r3.b2, r3.b3 // add it to the counter
 
-        LSR r3.b3, r1.b1, 1 // repeat for each bit
-        AND r3.b3, r3.b3, 1
-        ADD r3.b2, r3.b2, r3.b3
+    LSR r3.b3, r1.b1, 1 // repeat for each bit
+    AND r3.b3, r3.b3, 1
+    ADD r3.b2, r3.b2, r3.b3
 
-        LSR r3.b3, r1.b1, 2
-        AND r3.b3, r3.b3, 1
-        ADD r3.b2, r3.b2, r3.b3
+    LSR r3.b3, r1.b1, 2
+    AND r3.b3, r3.b3, 1
+    ADD r3.b2, r3.b2, r3.b3
 
 	LSR r3.b3, r1.b1, 3
-        AND r3.b3, r3.b3, 1
-        ADD r3.b2, r3.b2, r3.b3
+    AND r3.b3, r3.b3, 1
+    ADD r3.b2, r3.b2, r3.b3
 
 	LSR r3.b3, r1.b1, 4
-        AND r3.b3, r3.b3, 1
-        ADD r3.b2, r3.b2, r3.b3
+    AND r3.b3, r3.b3, 1
+    ADD r3.b2, r3.b2, r3.b3
 
 	LSR r3.b3, r1.b1, 5
-        AND r3.b3, r3.b3, 1
-        ADD r3.b2, r3.b2, r3.b3
+    AND r3.b3, r3.b3, 1
+    ADD r3.b2, r3.b2, r3.b3
 
 	LSR r3.b3, r1.b1, 6
-        AND r3.b3, r3.b3, 1
-        ADD r3.b2, r3.b2, r3.b3
+    AND r3.b3, r3.b3, 1
+    ADD r3.b2, r3.b2, r3.b3
 
 	LSR r3.b3, r1.b1, 7
-        AND r3.b3, r3.b3, 1
-        ADD r3.b2, r3.b2, r3.b3
+    AND r3.b3, r3.b3, 1
+    ADD r3.b2, r3.b2, r3.b3
 
-        QBGT CPY_P1b1, r3.b1, r3.b2 // if enough bits match, jump out of preamble
-        JMP PRE_LP
+    QBGT CPY_P1b1, r3.b1, r3.b2 // if enough bits match, jump out of preamble
+    JMP PRE_LP
 
 CPY_P1b1:
-        MOV r29.b3, r2.b0 // store preamble
-        JMP SMP_B2b1
+    MOV r29.b3, r2.b0 // store preamble
+    JMP SMP_B2b1
 
 DEL_CPY:
-        ADD r0.b0, r0.b0, 1
-        QBNE DEL_CPY, r0.b0, r0.b2
+    ADD r0.b0, r0.b0, 1
+    QBNE DEL_CPY, r0.b0, r0.b2
 
 SMP_B1b1:
-        MOV r0.b0, 0
-        LSR r4, r31, 15
-        AND r4, r4, 1
-        QBEQ SET_B1b1, r4, 1
+    MOV r0.b0, 0
+    LSR r4, r31, 15
+    AND r4, r4, 1
+    QBEQ SET_B1b1, r4, 1
 
 CLR_B1b1:
 	CLR r29.t31
@@ -758,12 +770,12 @@ UPD_R29:
 	QBEQ CPY_R26, r1.b0, 19
 	QBEQ CPY_R27, r1.b0, 20
 	QBEQ CPY_R28, r1.b0, 21
+	SBBO r4, r7.b1, 0, 1 // write packet ready code to PRU RAM
 	MOV r1.b0, 0
 
 CHECK_DONE:
-	ADD r7, r7, 1
-	SUB r0.b2, r0.b2, 3
-	QBNE BCK_P4b8, r6, r7
+	LBBO r5, r7.b0, 0, 1 // load done code from main RAM
+	QBNE BCK_P4b8, r7.b0, DONE_CODE
 	XOUT 10, r8, 88
 	JMP STOP
 
