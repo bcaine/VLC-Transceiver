@@ -34,8 +34,9 @@ class RealtimeControl {
 
 public:
 
-  bool InitPRU();
-  void DisablePRU();
+  bool InitPru();
+  void MarkPruDone();
+  void DisablePru();
   void Transmit();
   void Receive();
   void Test();

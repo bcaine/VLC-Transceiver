@@ -78,7 +78,7 @@ void Transceiver::Transmit()
   }
 
   cout << "Initializing the PRU and starting transmit" << endl;
-  _pru.InitPRU();
+  _pru.InitPru();
   _pru.Transmit();
 
   // Work our way through backlog pushing data into mem when we can
@@ -97,7 +97,7 @@ void Transceiver::Transmit()
     _pru.push(encoded);
   }
 
-  _pru.DisablePRU();
+  _pru.DisablePru();
   _pru.CloseMem();
   _sock.Close();
 
@@ -130,7 +130,7 @@ void Transceiver::Receive() {
   _sock.WaitForClient();
 
   cout << "Setting up the PRUs to receive..."<< endl;
-  _pru.InitPRU();
+  _pru.InitPru();
   _pru.Receive();
 
   time_t last_send = time(NULL);
@@ -186,9 +186,13 @@ void Transceiver::Receive() {
   if (sendsize > 0)
     _sock.Send(buf, sendsize);
 
-  
+  // Mark the PRU done and send Done via sockets
+  _pru.MarkPruDone();
   _sock.SendDone();
-  _pru.DisablePRU();
+
+  // Then wait for the PRU to exit
+  _pru.DisablePru();
+  // Close the memory and socket fds
   _pru.CloseMem();
   _sock.Close();
 

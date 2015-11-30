@@ -8,7 +8,7 @@
 #include "RealtimeControl.hpp"
 
 
-bool RealtimeControl::InitPRU() {
+bool RealtimeControl::InitPru() {
 
   // Initialize the PRU //
   unsigned int ret0, ret1;
@@ -70,7 +70,14 @@ void RealtimeControl::Test() {
 }
 
 
-void RealtimeControl::DisablePRU() {
+// Just used when receiving. Once we decide we are done
+// receiving data, we set the first byte to be 0xFF
+void RealtimeControl::MarkPruDone() {
+  *((uint8_t*)ddrMem) = 0xFF;
+}
+
+
+void RealtimeControl::DisablePru() {
 
   /* Wait until PRU0 has finished execution */
   printf("\tINFO: Waiting for HALT1 command.\r\n");
