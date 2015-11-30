@@ -52,7 +52,6 @@ void BasicSendSocket()
 {
 
   int data_len = 1032 * 2;
-  int data_len = 1032 * 10;
   SocketConnection sock(9000);
   uint8_t *buf = GenerateData(data_len);
 
