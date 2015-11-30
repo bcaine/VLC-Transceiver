@@ -50,7 +50,7 @@ void MemTest() {
   memcpy(pru.data(), data, 87);
 
   cout << "Initing the PRU" << endl;
-  pru.InitPRU();
+  pru.InitPru();
   pru.Test();
   
   cout << "About to try to print out data" << endl;
@@ -94,7 +94,7 @@ void QueueTest() {
   
   pru.push(data);
 
-  pru.InitPRU();
+  pru.InitPru();
   pru.Test();
   
   cout << "About to try to print out data" << endl;
