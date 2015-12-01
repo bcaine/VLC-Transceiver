@@ -58,7 +58,7 @@ void RealtimeControl::Receive() {
 
 void RealtimeControl::Test() {
   printf("Executing the PruTest\n");
-  prussdrv_exec_program(0, "./tests/interface/prutest.bin");
+  prussdrv_exec_program(0, "./tests/prutest.bin");
 
   printf("\tINFO: Waiting for HALT0 command.\r\n");
   prussdrv_pru_wait_event (PRU_EVTOUT_0);
@@ -138,6 +138,7 @@ void RealtimeControl::CloseMem() {
 
 // Always expect 87 Bytes (86.25 actual in packet)
 void RealtimeControl::push(uint8_t* packet) {
+  memset(peek(), 0, 88);
 
   *peek() = 0b00111100;
   memcpy((peek() + 1), packet, PACKET_SIZE - 1);

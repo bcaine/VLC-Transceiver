@@ -267,6 +267,35 @@ void TestDataPipeline() {
 }
 
 
+void TestDataStorage() {
+
+  RealtimeControl pru;
+  
+  pru.OpenMem();
+  
+  unsigned int num_packets = 40;
+  uint8_t data[87];
+  
+  for(unsigned int n = 0; n < num_packets; n++) {
+    for (int i = 0; i < 87; i++) {
+      data[i] = n;
+    }
+    pru.push(data);
+  }
+
+  pru.setCursor(0);
+
+  memset(data, 0, 87);
+
+  for(unsigned int n = 0; n < num_packets; n++) {
+    pru.pop(data);
+    for (int i = 0; i < 87; i++)
+      assert(n == data[i]);
+  }
+  cout << "Data Storage Test Passed" << endl;
+}
+
+
 int main() {
 
   cout << "Forward Error Correction Test Running...\n" << endl;
@@ -301,6 +330,12 @@ int main() {
 
   cout << "Data Pipeline Test Running...\n" << endl;
   TestDataPipeline();
+
+  cout << "----------------------------------------";
+  cout << "----------------------------------------" << endl;
+
+  cout << "Data Storage Test Running...\n" << endl;
+  TestDataStorage();
 
   return 0;
 };
