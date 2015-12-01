@@ -22,9 +22,9 @@ void Transceiver::Transmit()
   _pru.OpenMem();
   
   cout << "Starting Transmit" << endl;
-  uint8_t* buf = new uint8_t[1032];
-  uint8_t* packet = new uint8_t[45];
-  uint8_t* encoded = new uint8_t[87];
+  uint8_t* buf = new uint8_t[FLUSH_SIZE];
+  uint8_t* packet = new uint8_t[DECODED_PACKET_SIZE];
+  uint8_t* encoded = new uint8_t[ENCODED_DATA_SIZE];
   int recvlen;
   uint32_t totallen;
 
@@ -32,8 +32,8 @@ void Transceiver::Transmit()
   recvlen = _sock.Receive(buf, 4);
   totallen = buf[0] | (buf[1] << 8) | (buf[2] << 16) | (buf[3] << 24);
   // Length is number of packets...
-  int packet_num = totallen / 43;
-  if (totallen % 43 != 0)
+  int packet_num = totallen / DECODED_DATA_SIZE;
+  if (totallen % DECODED_DATA_SIZE != 0)
     packet_num += 1;
 
   _pru.setLength(packet_num);
@@ -51,14 +51,14 @@ void Transceiver::Transmit()
 
   // Read in all data from socket and write to mem or backlog
   while(1) {
-    recvlen = _sock.Receive(buf, 1032);
+    recvlen = _sock.Receive(buf, FLUSH_SIZE);
     received += recvlen;
 
-    for (i = 0; i < recvlen; i+= 43) {
-      packetlen = ((recvlen - i) >= 43) ? 43 : recvlen - i;
+    for (i = 0; i < recvlen; i+= DECODED_DATA_SIZE) {
+      packetlen = ((recvlen - i) >= DECODED_DATA_SIZE) ? DECODED_DATA_SIZE : recvlen - i;
       
       packetize(buf + i, packet, packetlen * 8);
-      _fec.Encode(packet, encoded, 45);
+      _fec.Encode(packet, encoded, DECODED_PACKET_SIZE);
 
 
       // If its our first n packets, write to mem. 
@@ -66,7 +66,7 @@ void Transceiver::Transmit()
       if (n < _pru.max_packets)
 	_pru.push(encoded);
       else
-	for(j = 0; j < 87; j++)
+	for(j = 0; j < ENCODED_DATA_SIZE; j++)
 	  _backlog.push(encoded[j]);
       n++;
     }
@@ -85,11 +85,11 @@ void Transceiver::Transmit()
   while(!_backlog.empty()) {
 
     // If we cant fit the next packet
-    if (_pru.pruCursor() <= _pru.internalCursor() + 88)
+    if (_pru.pruCursor() <= _pru.internalCursor() + ENCODED_PACKET_SIZE)
       usleep(SLEEP_US);
       continue;
     
-    for(i = 0; i < 87; i++) {
+    for(i = 0; i < ENCODED_DATA_SIZE; i++) {
       encoded[i] = _backlog.front();
       _backlog.pop();
     }
@@ -111,15 +111,11 @@ void Transceiver::Transmit()
 
 void Transceiver::Receive() {
 
-  uint8_t* encoded = new uint8_t[87];
-  uint8_t* packet = new uint8_t[45];
-  uint8_t* data = new uint8_t[43];
-  // Only should use 1032
-  uint8_t* buf = new uint8_t[1100];
+  uint8_t* encoded = new uint8_t[ENCODED_DATA_SIZE];
+  uint8_t* packet = new uint8_t[DECODED_PACKET_SIZE];
+  uint8_t* data = new uint8_t[DECODED_DATA_SIZE];
+  uint8_t* buf = new uint8_t[FLUSH_SIZE];
 
-  // We flush (send via sockets) every 1032 bytes
-  const int flushsize = 1032;
-  
   int packetlen_bits = 0;
   int packetlen = 0;
   int sendsize = 0;
@@ -143,7 +139,7 @@ void Transceiver::Receive() {
 	break;
 
     // Loop while we wait for cursor to increment
-    if (_pru.internalCursor() + 88 <= _pru.pruCursor()) {
+    if (_pru.internalCursor() + ENCODED_PACKET_SIZE <= _pru.pruCursor()) {
       cout << "Pru Cursor: " << _pru.pruCursor() << endl;
       cout << "Internal Cursor: " << _pru.internalCursor() << endl;
       usleep(SLEEP_US);
@@ -151,7 +147,7 @@ void Transceiver::Receive() {
     }
 
     _pru.pop(encoded);
-    _fec.Decode(encoded, packet, 87);
+    _fec.Decode(encoded, packet, ENCODED_DATA_SIZE);
 
     // This gives us number of bits in packet that are real data
     packetlen_bits = depacketize(packet, data);
@@ -175,7 +171,7 @@ void Transceiver::Receive() {
     if (packetlen_bits % 8 != 0)
       break;
 
-    if (sendsize >= flushsize) {
+    if (sendsize >= FLUSH_SIZE) {
       _sock.Send(buf, sendsize);
       sendsize = 0;
       last_send = time(NULL);
