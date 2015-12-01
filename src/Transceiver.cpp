@@ -71,7 +71,7 @@ void Transceiver::Transmit()
       n++;
     }
 
-    if (received == totallen) {
+    if (received >= totallen) {
       cout << "Socket Transfer is done." << endl;
       break;
     }
