@@ -89,7 +89,7 @@ PRE_LP:
     QBEQ PRE_SET, r4, 1 // if bit set, jump to set
 
 PRE_CLR:
-    CLR r1.b0.t0 // clear new bit
+    CLR_BIT r1.b0.t0 // clear new bit
     MOV r1.b2, 0 // reset matching bits counter
     JMP PRE_DEL
 
@@ -155,7 +155,7 @@ SMP_B1b1:
     QBEQ SET_B1b1, r4, 1
 
 CLR_B1b1:
-	CLR r29.t31
+	CLR_BIT r29.t31
 	JMP DEL_B1b1
 
 SET_B1b1:
@@ -172,7 +172,7 @@ SMP_B1b2:
 	QBEQ SET_B1b2, r4, 1
 
 CLR_B1b2:
-	CLR r29.t30
+	CLR_BIT r29.t30
 	JMP DEL_B1b2
 
 SET_B1b2:
@@ -189,7 +189,7 @@ SMP_B1b3:
 	QBEQ SET_B1b3, r4, 1
 
 CLR_B1b3:
-	CLR r29.t29
+	CLR_BIT r29.t29
 	JMP DEL_B1b3
 
 SET_B1b3:
@@ -206,7 +206,7 @@ SMP_B1b4:
 	QBEQ SET_B1b4, r4, 1
 
 CLR_B1b4:
-	CLR r29.t28
+	CLR_BIT r29.t28
 	JMP DEL_B1b4
 
 SET_B1b4:
@@ -223,7 +223,7 @@ SMP_B1b5:
 	QBEQ SET_B1b5, r4, 1
 
 CLR_B1b5:
-	CLR r29.t27
+	CLR_BIT r29.t27
 	JMP DEL_B1b5
 
 SET_B1b5:
@@ -240,7 +240,7 @@ SMP_B1b6:
 	QBEQ SET_B1b6, r4, 1
 
 CLR_B1b6:
-	CLR r29.t26
+	CLR_BIT r29.t26
 	JMP DEL_B1b6
 
 SET_B1b6:
@@ -257,7 +257,7 @@ SMP_B1b7:
 	QBEQ SET_B1b7, r4, 1
 
 CLR_B1b7:
-	CLR r29.t25
+	CLR_BIT r29.t25
 	JMP DEL_B1b7
 
 SET_B1b7:
@@ -274,7 +274,7 @@ SMP_B1b8:
 	QBEQ SET_B1b8, r4, 1
 
 CLR_B1b8:
-	CLR r29.t24
+	CLR_BIT r29.t24
 	JMP DEL_B1b8
 
 SET_B1b8:
@@ -297,7 +297,7 @@ SMP_B2b1:
 	QBEQ SET_B2b1, r4, 1
 
 CLR_B2b1:
-	CLR r29.t23
+	CLR_BIT r29.t23
 	JMP DEL_B2b1
 
 SET_B2b1:
@@ -314,7 +314,7 @@ SMP_B2b2:
 	QBEQ SET_B2b2, r4, 1
 
 CLR_B2b2:
-	CLR r29.t22
+	CLR_BIT r29.t22
 	JMP DEL_B2b2
 
 SET_B2b2:
@@ -331,7 +331,7 @@ SMP_B2b3:
 	QBEQ SET_B2b3, r4, 1
 
 CLR_B2b3:
-	CLR r29.t21
+	CLR_BIT r29.t21
 	JMP DEL_B2b3
 
 SET_B2b3:
@@ -348,7 +348,7 @@ SMP_B2b4:
 	QBEQ SET_B2b4, r4, 1
 
 CLR_B2b4:
-	CLR r29.t20
+	CLR_BIT r29.t20
 	JMP DEL_B2b4
 
 SET_B2b4:
@@ -365,7 +365,7 @@ SMP_B2b5:
 	QBEQ SET_B2b5, r4, 1
 
 CLR_B2b5:
-	CLR r29.t19
+	CLR_BIT r29.t19
 	JMP DEL_B2b5
 
 SET_B2b5:
@@ -382,7 +382,7 @@ SMP_B2b6:
 	QBEQ SET_B2b6, r4, 1
 
 CLR_B2b6:
-	CLR r29.t18
+	CLR_BIT r29.t18
 	JMP DEL_B2b6
 
 SET_B2b6:
@@ -399,7 +399,7 @@ SMP_B2b7:
 	QBEQ SET_B2b7, r4, 1
 
 CLR_B2b7:
-	CLR r29.t17
+	CLR_BIT r29.t17
 	JMP DEL_B2b7
 
 SET_B2b7:
@@ -416,7 +416,7 @@ SMP_B2b8:
 	QBEQ SET_B2b8, r4, 1
 
 CLR_B2b8:
-	CLR r29.t16
+	CLR_BIT r29.t16
 	JMP DEL_B2b8
 
 SET_B2b8:
@@ -439,7 +439,7 @@ SMP_B3b1:
 	QBEQ SET_B3b1, r4, 1
 
 CLR_B3b1:
-	CLR r29.t15
+	CLR_BIT r29.t15
 	JMP DEL_B3b1
 
 SET_B3b1:
@@ -456,7 +456,7 @@ SMP_B3b2:
 	QBEQ SET_B3b2, r4, 1
 
 CLR_B3b2:
-	CLR r29.t14
+	CLR_BIT r29.t14
 	JMP DEL_B3b2
 
 SET_B3b2:
@@ -473,7 +473,7 @@ SMP_B3b3:
 	QBEQ SET_B3b3, r4, 1
 
 CLR_B3b3:
-	CLR r29.t13
+	CLR_BIT r29.t13
 	JMP DEL_B3b3
 
 SET_B3b3:
@@ -490,7 +490,7 @@ SMP_B3b4:
 	QBEQ SET_B3b4, r4, 1
 
 CLR_B3b4:
-	CLR r29.t12
+	CLR_BIT r29.t12
 	JMP DEL_B3b4
 
 SET_B3b4:
@@ -507,7 +507,7 @@ SMP_B3b5:
 	QBEQ SET_B3b5, r4, 1
 
 CLR_B3b5:
-	CLR r29.t11
+	CLR_BIT r29.t11
 	JMP DEL_B3b5
 
 SET_B3b5:
@@ -524,7 +524,7 @@ SMP_B3b6:
 	QBEQ SET_B3b6, r4, 1
 
 CLR_B3b6:
-	CLR r29.t10
+	CLR_BIT r29.t10
 	JMP DEL_B3b6
 
 SET_B3b6:
@@ -541,7 +541,7 @@ SMP_B3b7:
 	QBEQ SET_B3b7, r4, 1
 
 CLR_B3b7:
-	CLR r29.t9
+	CLR_BIT r29.t9
 	JMP DEL_B3b7
 		
 SET_B3b7:
@@ -558,7 +558,7 @@ SMP_B3b8:
 	QBEQ SET_B3b8, r4, 1
 
 CLR_B3b8:
-	CLR r29.t8
+	CLR_BIT r29.t8
 	JMP DEL_B3b8
 
 SET_B3b8:
@@ -581,7 +581,7 @@ SMP_B4b1:
 	QBEQ SET_B4b1, r4, 1
 
 CLR_B4b1:
-	CLR r29.t7
+	CLR_BIT r29.t7
 	JMP DEL_B4b1
 
 SET_B4b1:
@@ -598,7 +598,7 @@ SMP_B4b2:
 	QBEQ SET_B4b2, r4, 1
 
 CLR_B4b2:
-	CLR r29.t6
+	CLR_BIT r29.t6
 	JMP DEL_B4b2
 
 SET_B4b2:
@@ -615,7 +615,7 @@ SMP_B4b3:
 	QBEQ SET_B4b3, r4, 1
 
 CLR_B4b3:
-	CLR r29.t5
+	CLR_BIT r29.t5
 	JMP DEL_B4b3
 
 SET_B4b3:
@@ -632,7 +632,7 @@ SMP_B4b4:
 	QBEQ SET_B4b4, r4, 1
 
 CLR_B4b4:
-	CLR r29.t4
+	CLR_BIT r29.t4
 	JMP DEL_B4b4
 
 SET_B4b4:
@@ -649,7 +649,7 @@ SMP_B4b5:
 	QBEQ SET_B4b5, r4, 1
 
 CLR_B4b5:
-	CLR r29.t3
+	CLR_BIT r29.t3
 	JMP DEL_B4b5
 
 SET_B4b5:
@@ -666,7 +666,7 @@ SMP_B4b6:
 	QBEQ SET_B4b6, r4, 1
 
 CLR_B4b6:
-	CLR r29.t2
+	CLR_BIT r29.t2
 	JMP DEL_B4b6
 
 SET_B4b6:
@@ -683,7 +683,7 @@ SMP_B4b7:
 	QBEQ SET_B4b7, r4, 1
 
 CLR_B4b7:
-	CLR r29.t1
+	CLR_BIT r29.t1
 	JMP DEL_B4b7
 
 SET_B4b7:
@@ -700,7 +700,7 @@ SMP_B4b8:
 	QBEQ SET_B4b8, r4, 1
 
 CLR_B4b8:
-	CLR r29.t0
+	CLR_BIT r29.t0
 	JMP UPD_R29
 
 SET_B4b8:
