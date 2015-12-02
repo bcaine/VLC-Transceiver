@@ -93,17 +93,17 @@ void TestByteQueue() {
   pru.OpenMem();
   cout << "Queue Created" << endl;
 
-  uint8_t* in = GenerateData(87);
+  uint8_t* in = GenerateData(81);
   pru.push(in);
 
   pru.setCursor(0);
 
-  uint8_t* out = new uint8_t[87];
+  uint8_t* out = new uint8_t[81];
   pru.pop(out);
   cout << out << endl;
 
-  cout << "Distance: " << HammingDistance(in, out, 88) << endl;
-  assert(HammingDistance(in, out, 88) == 0);
+  cout << "Distance: " << HammingDistance(in, out, 81) << endl;
+  assert(HammingDistance(in, out, 81) == 0);
   pru.CloseMem();
   
   delete [] in;
@@ -140,19 +140,19 @@ void TestManchester() {
 void TestBasicPacketization() {
 
   // Basic test of a normal packet size
-  uint8_t *data = GenerateData(43);
-  uint8_t *packet = new uint8_t[45];
-  uint8_t *out = new uint8_t[43];
+  uint8_t *data = GenerateData(40);
+  uint8_t *packet = new uint8_t[42];
+  uint8_t *out = new uint8_t[40];
 
-  packetize(data, packet, 43 * 8);
+  packetize(data, packet, 40 * 8);
 
   uint16_t bitlen = depacketize(packet, out);
 
   cout << "IN:  " << data << endl;
   cout << "OUT: " << out << endl;
   
-  assert(HammingDistance(data, out, 43) == 0);
-  assert(bitlen = 43 * 8);
+  assert(HammingDistance(data, out, 40) == 0);
+  assert(bitlen = 40 * 8);
 
   delete [] data;
   delete [] packet;
@@ -163,8 +163,8 @@ void TestAdvPacketization() {
 
   // Test truncated packetization with padding
   uint8_t *data = GenerateData(30);
-  uint8_t *packet = new uint8_t[45];
-  uint8_t *out = new uint8_t[43];
+  uint8_t *packet = new uint8_t[42];
+  uint8_t *out = new uint8_t[40];
 
   packetize(data, packet, 30 * 8);
 
@@ -190,9 +190,9 @@ void TestDataPipeline() {
   int data_length = 1000;
   double p_error = 0.02;
   uint8_t* data = GenerateData(data_length);
-  // Packets are all 45 bytes
-  uint8_t* packet = new uint8_t[45];
-  uint8_t* encoded = new uint8_t[87];
+  // Packets are all 42 bytes
+  uint8_t* packet = new uint8_t[42];
+  uint8_t* encoded = new uint8_t[81];
   uint8_t* decoded = new uint8_t[data_length];
 
   // Encode
@@ -204,15 +204,15 @@ void TestDataPipeline() {
   cout << "Created objects" << endl;
 
 
-  int full_packets = data_length / 43;
-  int last_packet_len = data_length % 43;
+  int full_packets = data_length / 40;
+  int last_packet_len = data_length % 40;
   int bitlen;
 
   int num = 0;
   // Loop through data
-  for(int i = 0; i < data_length; i+=43) {
+  for(int i = 0; i < data_length; i+=40) {
     if (full_packets > 0)
-      bitlen = 43 * 8;
+      bitlen = 40 * 8;
     else
       bitlen = last_packet_len * 8;
 
@@ -220,10 +220,10 @@ void TestDataPipeline() {
     packetize(data + i, packet, bitlen);
 
     // Then encode it...
-    fec.Encode(packet, encoded, 45);
+    fec.Encode(packet, encoded, 42);
 
     // Corrupt it a bit.. For fun
-    CorruptData(encoded, p_error, 87);
+    CorruptData(encoded, p_error, 81);
 
     // Then we want to save it to ByteQueue
     pru.push(encoded);
@@ -241,11 +241,11 @@ void TestDataPipeline() {
   num = 0;
   int total_len = 0;
   // Reverse this...
-  for(int i = 0; i < data_length; i+=43) {
-    // Pop 87 Bytes
+  for(int i = 0; i < data_length; i+=40) {
+    // Pop 81 Bytes
     pru.pop(encoded);
 
-    fec.Decode(encoded, packet, 87);
+    fec.Decode(encoded, packet, 81);
 
     uint16_t len = depacketize(packet, decoded + i);
 
@@ -274,10 +274,10 @@ void TestDataStorage() {
   pru.OpenMem();
   
   unsigned int num_packets = 40;
-  uint8_t data[87];
+  uint8_t data[81];
   
   for(unsigned int n = 0; n < num_packets; n++) {
-    for (int i = 0; i < 87; i++) {
+    for (int i = 0; i < 81; i++) {
       data[i] = n;
     }
     pru.push(data);
@@ -285,11 +285,11 @@ void TestDataStorage() {
 
   pru.setCursor(0);
 
-  memset(data, 0, 87);
+  memset(data, 0, 81);
 
   for(unsigned int n = 0; n < num_packets; n++) {
     pru.pop(data);
-    for (int i = 0; i < 87; i++)
+    for (int i = 0; i < 81; i++)
       assert(n == data[i]);
   }
   cout << "Data Storage Test Passed" << endl;
