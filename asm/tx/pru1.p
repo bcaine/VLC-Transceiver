@@ -45,15 +45,12 @@ INIT:
 	MOV r0, 8 // init offset to ninth byte
 	MOV r1, OFFSET_LIM // store end of buffer location
 	MOV r2, PRU0_DELAY // store PRU delay value
-
 	LBBO r3, r7, 0, 4 // read number of packets from RAM
 	SBBO r0, r7, 4, 4 // write initial read offset to RAM 
-
 	MOV r4, 0 // init number of packets sent to 0
 	MOV r5, 0 // init delay counter to 0
 	MOV r6, 0 // init overflow counter to 0
 
-	SBBO r6, r7, 0, 4 // write initial overflow counter to RAM
 
 START:
 	LBBO r8, r7, r0, 88 // load 88 bytes
@@ -67,7 +64,7 @@ MAIN_LOOP:
 
 	// if packet counter reaches total length
 	QBEQ STOP, r4, r3 // jump to STOP and halt operation 
-
+	
 	// else
 	ADD r4, r4, 1 // increment packet count
 
@@ -76,8 +73,6 @@ MAIN_LOOP:
  
 	// else
 	MOV r0, 8 // reset offset to start of buffer
-	ADD r6, r6, 100 // increment overflow counter
-	SBBO r6, r7, 0, 4 // write number of overflows
 
 LOAD_DATA:
 	LBBO r8, r7, r0, 88 // load a packet (88B) from RAM
@@ -91,7 +86,7 @@ WAIT:
 	ADD r5, r5, 1 // increment delay
 	
 	// if sufficient delay for PRU0 not reached
-	QBLT WAIT, r5, r2 // continue delay
+	QBNE WAIT, r5, r2 // continue delay
 
 	// else
 	JMP MAIN_LOOP // return to main loop

@@ -21,7 +21,7 @@
 /******************************************************************************
 * Local Macro Declarations                                                    *
 ******************************************************************************/
-#define LENGTH 		 100
+#define LENGTH 		 1000
 #define PRU_NUM 	 0
 #define BUFFER_LENGTH    186
 #define BUFF_BASEADDR    0x90000000
@@ -30,11 +30,6 @@
 #define ALT_CODE 	 0xaaaa
 #define LOW_CODE	 0x0000
 
-// do not change:
-#define DDR_BASEADDR     0x80000000
-#define OFFSET_DDR	 0x00001000 
-#define OFFSET_SHAREDRAM 2048		//equivalent with 0x00002000
-#define PRUSS0_SHARED_DATARAM    4
 
 /******************************************************************************
 * Local Typedef Declarations                                                  *
@@ -44,6 +39,7 @@
 /******************************************************************************
 * Local Function Declarations                                                 *
 ******************************************************************************/
+unsigned long numBytes = LENGTH * 88;
 
 static int LOCAL_exampleInit ( );
 static unsigned short LOCAL_examplePassed ( unsigned short pruNum );
@@ -130,7 +126,7 @@ int main (void)
     prussdrv_pru_disable(0);
     prussdrv_pru_disable(1); 
     prussdrv_exit ();
-    munmap(ddrMem, 0x0FFFFFFF);
+    munmap(ddrMem, numBytes);
     close(mem_fd);
 
     return(0);
@@ -142,9 +138,8 @@ int main (void)
 
 static int LOCAL_exampleInit (  )
 {
-    unsigned long numBytes = LENGTH * 88;
     /* open the device */
-    mem_fd = open("/dev/mem", O_RDWR);
+    mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
     if (mem_fd < 0) {
         printf("Failed to open /dev/mem (%s)\n", strerror(errno));
         return -1;
@@ -164,9 +159,18 @@ static int LOCAL_exampleInit (  )
     data = cursor + 4;
 
     *((unsigned long*) length) = LENGTH;
+    int i = 0;
+    int j = 0;
+    void *storeData = data;
+    for(i=0; i < LENGTH/88; i++){
+    	(*(unsigned char*) (storeData+88*i)) = 0b00111100;
+	for(j=1; j < 88; j++){
+	    (*(unsigned char*) (storeData+88*i+j)) = i;
+	}
+    }
 	
-    printf("Attempting memset to (%x) with size of (%li)\n", LOW_CODE, numBytes);
-    memset(data, LOW_CODE, numBytes);
+   // printf("Attempting memset to (%x) with size of (%li)\n", LOW_CODE, numBytes);
+   //memset(data, LOW_CODE, numBytes);
 
     printf("\t memset passed \n");
     return(0);
@@ -176,6 +180,17 @@ static unsigned short LOCAL_examplePassed ( unsigned short pruNum )
    printf("\n\tAfter PRU Completion:\n");
    printf("Length: (%li)\n", (*(unsigned long*) length));
    printf("Offset: (%li)\n", (*(unsigned long*) cursor));
+   printf("Data:\n");
+
+   int i = 0, j = 0;
+   for(i=0; i < LENGTH/88; i++){
+       printf("Preamble: (%x)\t", (*(unsigned char*) (data+88*i)));
+	for(j=1; j < 88; j++){
+	    printf("%x ", (*(unsigned char*) (data+88*i+j)));
+	}
+	printf("\n");
+    }
+   
    // return(*(unsigned long*) DDR_regaddr == 0xdcba);
     return(1);
 }

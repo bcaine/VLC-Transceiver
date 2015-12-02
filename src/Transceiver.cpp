@@ -22,9 +22,9 @@ void Transceiver::Transmit()
   _pru.OpenMem();
   
   cout << "Starting Transmit" << endl;
-  uint8_t* buf = new uint8_t[FLUSH_SIZE];
-  uint8_t* packet = new uint8_t[DECODED_PACKET_SIZE];
-  uint8_t* encoded = new uint8_t[ENCODED_DATA_SIZE];
+  uint8_t buf[FLUSH_SIZE];
+  uint8_t packet[DECODED_PACKET_SIZE];
+  uint8_t encoded[ENCODED_DATA_SIZE];
   int recvlen;
   uint32_t totallen;
 
@@ -59,7 +59,13 @@ void Transceiver::Transmit()
       
       packetize(buf + i, packet, packetlen * 8);
       _fec.Encode(packet, encoded, DECODED_PACKET_SIZE);
+      
+      for(int i = 0; i < 87; i++) {
+	encoded[i] = 97 + n;
+      }
 
+      // Increase packet number
+      n++;
 
       // If its our first n packets, write to mem. 
       // Otherwise to the backlog
@@ -68,7 +74,6 @@ void Transceiver::Transmit()
       else
 	for(j = 0; j < ENCODED_DATA_SIZE; j++)
 	  _backlog.push(encoded[j]);
-      n++;
     }
 
     if (received >= totallen) {
@@ -100,11 +105,6 @@ void Transceiver::Transmit()
   _pru.DisablePru();
   _pru.CloseMem();
   _sock.Close();
-
-  // Clean up
-  delete[] buf;
-  delete[] packet;
-  delete[] encoded;
 
   cout << "Transmit Finished" << endl;
 }

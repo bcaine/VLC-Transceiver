@@ -30,7 +30,7 @@
 const int ENCODED_PACKET_SIZE = 88;
 const int PREAMBLE_LEN = 1;
 // Data length without preamble we push or pull from memory
-const int ENCODED_DATA_SIZE = PACKET_SIZE - PREAMBLE_LEN;
+const int ENCODED_DATA_SIZE = ENCODED_PACKET_SIZE - PREAMBLE_LEN;
 // Packet size before/after encoding
 const int DECODED_PACKET_SIZE = 45;
 // Decoded data len = packet size - 2 bytes for length
@@ -55,19 +55,19 @@ public:
   /* Memory Related Functionality */
   bool OpenMem();
   void CloseMem();
-  void pop(uint8_t* packet);
-  void push(uint8_t* bytes);
+  void pop(uint8_t packet[]);  
+  void push(uint8_t bytes[]);
 
-  void setLength(int n) { *((uint32_t*)_length) = n; }
-  uint32_t getLength() { return *((uint32_t*)_length); }
+  void setLength(int n) { *(_length) = n; }
+  uint32_t getLength() { return *_length; }
 
   // Returns pointer to current location of queue
-  uint8_t* peek() { return (uint8_t*)_data + (_internal_cursor); }
+  uint8_t* peek() { return (uint8_t*)_data + _internal_cursor; }
 
   uint8_t* data() { return (uint8_t*)_data; }
   void setCursor(uint32_t val) { _internal_cursor = val; }
-
-  volatile uint32_t pruCursor() { return *((volatile uint32_t*)_pru_cursor) - 8; }
+  
+  uint32_t pruCursor() { return *_pru_cursor - 8; }
   uint32_t internalCursor() { return _internal_cursor; }
 
   uint32_t max_bytes;
@@ -78,12 +78,12 @@ private:
   void *ddrMem;
 
   // four bytes for length
-  void* _length;
+  uint32_t* _length;
   // Four bytes for PRU cursor
   // VALUE IN BYTES
-  volatile void* _pru_cursor;
+  uint32_t* _pru_cursor;
   // Rest is data
-  void *_data;
+  void* _data;
 
 
   // Internal cursor controls knowing where we are writing
