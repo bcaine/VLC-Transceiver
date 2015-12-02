@@ -1,16 +1,6 @@
 .origin 0
 .entrypoint INIT
 
-#define OFFSET_LIM 16777208//16376 // maximum byte offset
-#define DDR_ADDRESS 0x90000000
-#define READY_CODE 0xaa
-#define DONE_CODE 0xff
-
-#define PACKETS_2_RCV 15
-
-#define INIT_OFFSET 8
-#define PACK_LEN   88
-
 #include "../../include/asm.hp"
 
 //  _____________________

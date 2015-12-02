@@ -2,11 +2,61 @@
 #define _PRAMTEST_HP_
 
 
-#define AM33XX
+// ***************************************
+// *     Ryan's Macro Definitions        *
+// ***************************************
+
+// Testing
+#define PACKETS_2_RCV 15
+#define GPIO_DEBUG     1
+
+// Implementation Constants:
+#define PACK_LEN 88
+#define PIN_OFFSET_BIT 15
+
+// Preamble:
+#define PREAMBLE 0b00111100
+#define REQ_BITS 7
+#define INIT_PRE 0x0000
+
+// Memory Access:
+#define DDR_ADDRESS 0x90000000
+#define READY_CODE 0xaa
+#define DONE_CODE 0xff
+#define ERROR_CODES 0x00
+#define OFFSET_LIM 16777208 // maximum byte offset
+#define INIT_OFFSET 8
+
+
+// Macros:
+.macro READ_DATA
+    LSR r4, r31, PIN_OFFSET_BIT // sample GPI reg, shift sample value to 0th index
+    AND r4, r4, 1 // and to zero out all other bits
+.endm
+
+.macro SET_BIT
+.mparam dst
+    SET dst
+#ifdef GPIO_DEBUG
+    SET r30.t15
+    MOV r0, r0
+#endif
+.endm
+
+.macro CLR_BIT
+.mparam dst
+    CLR dst
+#ifdef GPIO_DEBUG
+    CLR r30.t15
+    MOV r0, r0
+#endif
+.endm
+
 
 // ***************************************
 // *      Global Macro definitions       *
 // ***************************************
+#define AM33XX
 
 #ifdef AM33XX
 
