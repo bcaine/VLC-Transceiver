@@ -111,10 +111,10 @@ void Transceiver::Transmit()
 
 void Transceiver::Receive() {
 
-  uint8_t* encoded = new uint8_t[ENCODED_DATA_SIZE];
-  uint8_t* packet = new uint8_t[DECODED_PACKET_SIZE];
-  uint8_t* data = new uint8_t[DECODED_DATA_SIZE];
-  uint8_t* buf = new uint8_t[FLUSH_SIZE];
+  uint8_t encoded[ENCODED_DATA_SIZE];
+  uint8_t packet[DECODED_PACKET_SIZE];
+  uint8_t data[DECODED_DATA_SIZE];
+  uint8_t buf[FLUSH_SIZE];
 
   int packetlen_bits = 0;
   int packetlen = 0;
@@ -191,12 +191,6 @@ void Transceiver::Receive() {
   // Close the memory and socket fds
   _pru.CloseMem();
   _sock.Close();
-
-  // Clean up
-  delete[] encoded;
-  delete[] packet;
-  delete[] data;
-  delete[] buf;
 
   cout << "Receive Finished" << endl;
 }
