@@ -114,7 +114,7 @@ void Transceiver::Receive() {
   uint8_t encoded[ENCODED_DATA_SIZE];
   uint8_t packet[DECODED_PACKET_SIZE];
   uint8_t data[DECODED_DATA_SIZE];
-  uint8_t buf[FLUSH_SIZE];
+  uint8_t buf[FLUSH_SIZE + 100];
 
   int packetlen_bits = 0;
   int packetlen = 0;
@@ -128,66 +128,60 @@ void Transceiver::Receive() {
   cout << "Setting up the PRUs to receive..."<< endl;
   _pru.InitPru();
   _pru.Receive();
+  // Wait for it to finish
+  _pru.DisablePru();
 
-  time_t last_send = time(NULL);
-  bool first_packet = true;
-  
-  while(true) {
-    // If timeout, and not the first packet (which may take
-    // an indeterminate amount of time), we exit
-    if ((!first_packet) && (time(NULL) > last_send + TIMEOUT))
-	break;
+  int num_packets = 15;
 
-    // Loop while we wait for cursor to increment
-    if (_pru.internalCursor() + ENCODED_PACKET_SIZE <= _pru.pruCursor()) {
-      cout << "Pru Cursor: " << _pru.pruCursor() << endl;
-      cout << "Internal Cursor: " << _pru.internalCursor() << endl;
-      usleep(SLEEP_US);
-      continue;
-    }
-
+  for (int i = 0; i < 4; i++)
     _pru.pop(encoded);
+  
+  for (int n = 4; n < num_packets + 4; n++) {
+    _pru.pop(encoded);
+
+    cout << encoded << endl;
+
+    /*
     _fec.Decode(encoded, packet, ENCODED_DATA_SIZE);
 
     // This gives us number of bits in packet that are real data
     packetlen_bits = depacketize(packet, data);
     packetlen = packetlen_bits / 8;
 
-    // If we have data, this isn't the first packet anymore
-    if (packetlen > 0)
-      first_packet = false;
-
     // If not a multiple of 8, just return an extra byte
     if (packetlen_bits % 8 != 0)
       packetlen += 1;
-
+    */
     // Copy data into buffer
-    memcpy(buf + sendsize, data, packetlen);
+    memcpy(buf + sendsize, encoded, 87);
+    //memcpy(buf + sendsize, data, packetlen);
 
-    sendsize += packetlen;
-
-    // If the packetlen isnt a multiple of 8
-    // its the last packet so we can break
+    //sendsize += packetlen;
+    sendsize += 87;
+    /*
     if (packetlen_bits % 8 != 0)
       break;
+    */
 
     if (sendsize >= FLUSH_SIZE) {
+      cout << "Sending: " << sendsize << " Bytes"<< endl;
       _sock.Send(buf, sendsize);
       sendsize = 0;
-      last_send = time(NULL);
     }
   }
 
   // Send the rest via sockets.
-  if (sendsize > 0)
+  if (sendsize > 0) {
+    cout << "Sent " << sendsize << " bytes" << endl;
     _sock.Send(buf, sendsize);
-
+  }
+  
   // Mark the PRU done and send Done via sockets
   _pru.MarkPruDone();
   _sock.SendDone();
 
   // Then wait for the PRU to exit
-  _pru.DisablePru();
+  //_pru.DisablePru();
   // Close the memory and socket fds
   _pru.CloseMem();
   _sock.Close();
