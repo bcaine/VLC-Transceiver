@@ -21,7 +21,7 @@
 
 using namespace std;
 
-const int FLUSH_SIZE = DECODED_DATA_SIZE * 24;
+const int FLUSH_SIZE = DATA_SIZE * 24;
 
 class Transceiver {
 

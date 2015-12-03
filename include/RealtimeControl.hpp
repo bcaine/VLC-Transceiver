@@ -27,16 +27,12 @@
 #define DDR_BASEADDR     0x90000000
 
 // Encoded Packet = Preamble + Encoded Packet Data
-const int ENCODED_PACKET_SIZE = 83;
+const int TOTAL_SIZE = 83;
 const int PREAMBLE_LEN = 2;
 // Data length without preamble we push or pull from memory
-const int ENCODED_DATA_SIZE = ENCODED_PACKET_SIZE - PREAMBLE_LEN;
-// Packet size before/after encoding
-const int DECODED_PACKET_SIZE = 42;
-// Decoded data len = packet size - 2 bytes for length
-const int DECODED_DATA_SIZE = DECODED_PACKET_SIZE - 2;
-
-
+const int PACKET_SIZE = TOTAL_SIZE - PREAMBLE_LEN;
+// Packet size - 2 for length
+const int DATA_SIZE = PACKET_SIZE - 2;
 
 using namespace std;
 

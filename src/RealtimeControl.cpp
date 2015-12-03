@@ -100,7 +100,7 @@ bool RealtimeControl::OpenMem() {
   mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
   // Use about 16MB (multiple of ENCODED_PACKET_SIZE)
   max_bytes = 16777200;
-  max_packets = max_bytes / ENCODED_PACKET_SIZE;
+  max_packets = max_bytes / TOTAL_SIZE;
 
   if (mem_fd < 0) {
     printf("Failed to open /dev/mem (%s)\n", strerror(errno));
@@ -137,27 +137,27 @@ void RealtimeControl::CloseMem() {
 
 
 void RealtimeControl::push(uint8_t packet[]) {
-  memset(peek(), 0, ENCODED_PACKET_SIZE);
+  memset(peek(), 0, DATA_SIZE);
 
   // Set preamble PREAMBLE_LEN times
   for (int i = 0; i < PREAMBLE_LEN; i++)
     peek()[i] = 0b00111100;
 
-  for (int i = PREAMBLE_LEN; i < ENCODED_PACKET_SIZE; i++) {
+  for (int i = PREAMBLE_LEN; i < PACKET_SIZE; i++) {
     peek()[i] = packet[i - PREAMBLE_LEN];
   }
 
-  _internal_cursor += ENCODED_PACKET_SIZE;
+  _internal_cursor += TOTAL_SIZE;
 }
 
 
 // Pops 1 encoded packet at a time
 void RealtimeControl::pop(uint8_t packet[]) {
 
-  for (int i = PREAMBLE_LEN; i < ENCODED_PACKET_SIZE; i++)
+  for (int i = PREAMBLE_LEN; i < TOTAL_SIZE; i++)
     packet[i - PREAMBLE_LEN] = peek()[i];
 
-  _internal_cursor += ENCODED_PACKET_SIZE;
+  _internal_cursor += TOTAL_SIZE;
 }
 
 

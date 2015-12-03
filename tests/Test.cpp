@@ -91,8 +91,6 @@ void TestFEC() {
 
 void TestByteQueue() {
   RealtimeControl pru;
-  cout << "Encoded data size: " << ENCODED_DATA_SIZE << endl;
-  cout << "Encoded packet size: " << ENCODED_PACKET_SIZE << endl;
 
   pru.OpenMem();
 

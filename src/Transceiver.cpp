@@ -24,8 +24,7 @@ void Transceiver::Transmit()
   
   cout << "Starting Transmit" << endl;
   uint8_t buf[FLUSH_SIZE];
-  uint8_t packet[DECODED_PACKET_SIZE];
-  uint8_t encoded[ENCODED_DATA_SIZE];
+  uint8_t packet[PACKET_SIZE];
   int recvlen;
   uint32_t totallen;
 
@@ -33,8 +32,8 @@ void Transceiver::Transmit()
   recvlen = _sock.Receive(buf, 4);
   totallen = buf[0] | (buf[1] << 8) | (buf[2] << 16) | (buf[3] << 24);
   // Length is number of packets...
-  int packet_num = totallen / DECODED_DATA_SIZE;
-  if (totallen % DECODED_DATA_SIZE != 0)
+  int packet_num = totallen / DATA_SIZE;
+  if (totallen % DATA_SIZE != 0)
     packet_num += 1;
 
   _pru.setLength(PACKET_COUNT);
@@ -60,34 +59,31 @@ void Transceiver::Transmit()
     // with old data. Sending first 5 packets twice...
     // Assuming all first 5 packets are full...
     if (first) {
-      for (i = 0; i < DECODED_DATA_SIZE * 5; i+= DECODED_DATA_SIZE) {
-	packetlen = DECODED_DATA_SIZE;
+      for (i = 0; i < DATA_SIZE * 5; i+= DATA_SIZE) {
+	packetlen = DATA_SIZE;
       
 	packetize(buf + i, packet, packetlen * 8);
 
-	_fec.Encode(packet, encoded, DECODED_PACKET_SIZE);
+	for (int k = 0; k < PACKET_SIZE; k++)
+	  packet[k] = 0xee;
 
-	for (int k = 0; k < ENCODED_DATA_SIZE; k++)
-	  encoded[k] = 0xee;
-
-	_pru.push(encoded);
+	_pru.push(packet);
 	
       }
       first = false;
     }
 
-    for (i = 0; i < recvlen; i+= DECODED_DATA_SIZE) {
+    for (i = 0; i < recvlen; i+= DATA_SIZE) {
       
-      if ((recvlen - i) >= DECODED_DATA_SIZE)
-	packetlen = DECODED_DATA_SIZE;
+      if ((recvlen - i) >= DATA_SIZE)
+	packetlen = DATA_SIZE;
       else
 	packetlen = recvlen - i;
 
       packetize(buf + i, packet, packetlen * 8);
-      _fec.Encode(packet, encoded, DECODED_PACKET_SIZE);
 
-      for(int i = 0; i < ENCODED_DATA_SIZE; i++) {
-	encoded[i] = n;
+      for(int i = 0; i < PACKET_SIZE; i++) {
+	packet[i] = n;
       }
 
 
@@ -97,7 +93,7 @@ void Transceiver::Transmit()
       // If its our first n packets, write to mem. 
       // Otherwise to the backlog
       if (n < _pru.max_packets)
-	_pru.push(encoded);
+	_pru.push(packet);
     }
 
     if (received >= totallen) {
@@ -107,10 +103,10 @@ void Transceiver::Transmit()
   }
 
   // Set all high for the rest of packets
-  memset(encoded, 0xFF, DECODED_PACKET_SIZE);
+  memset(packet, 0xFF, PACKET_SIZE);
 
   for (i = n; i < PACKET_COUNT; i++) {
-    _pru.push(encoded);
+    _pru.push(packet);
   }
 
   cout << "Transmitted " << n << " Packets" << endl;
@@ -128,9 +124,8 @@ void Transceiver::Transmit()
 
 void Transceiver::Receive() {
 
-  uint8_t encoded[ENCODED_DATA_SIZE];
-  uint8_t packet[DECODED_PACKET_SIZE];
-  uint8_t data[DECODED_DATA_SIZE];
+  uint8_t packet[PACKET_SIZE];
+  uint8_t data[DATA_SIZE];
   uint8_t buf[FLUSH_SIZE + 100];
 
   int packetlen_bits = 0;
@@ -150,26 +145,25 @@ void Transceiver::Receive() {
 
   // Toss out first 5
   for (int i = 0; i < 6; i++)
-    _pru.pop(encoded);
+    _pru.pop(packet);
   
   
-  int num_packets = _pru.pruCursor() / ENCODED_PACKET_SIZE;
+  int num_packets = _pru.pruCursor() / PACKET_SIZE;
   // Subtract 5 for our 5 junk packets
-  num_packets -= 5;
+  num_packets -= 6;
 
   int high = 0;
 
   for (int i = 0; i < PACKET_COUNT; i++) {
-    _pru.pop(encoded);
-    cout << encoded << endl;
+    _pru.pop(packet);
+    for (int k = 0; k < PACKET_SIZE; k++)
+      printf("%02x", packet[k]);
 
-    for (int j = 0; j < ENCODED_DATA_SIZE; j++)
-      high += encoded[j] == 0xFF;
+    for (int j = 0; j < PACKET_SIZE; j++)
+      high += packet[j] == 0xFF;
 
-    if (high > ENCODED_DATA_SIZE - 10)
+    if (high > PACKET_SIZE - 10)
       break;
-
-    _fec.Decode(encoded, packet, ENCODED_DATA_SIZE);
 
     // This gives us number of bits in packet that are real data
     packetlen_bits = depacketize(packet, data);
@@ -178,12 +172,11 @@ void Transceiver::Receive() {
     // If not a multiple of 8, just return an extra byte
     if (packetlen_bits % 8 != 0)
       packetlen += 1;
+
     // Copy data into buffer
-    //memcpy(buf + sendsize, encoded, ENCODED_DATA_SIZE);
     memcpy(buf + sendsize, data, packetlen);
 
     sendsize += packetlen;
-    //sendsize += ENCODED_DATA_SIZE;
 
     if (packetlen_bits % 8 != 0)
       break;
