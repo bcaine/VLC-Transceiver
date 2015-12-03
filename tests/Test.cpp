@@ -39,18 +39,17 @@ void CorruptData(unsigned char* data,
 
 unsigned int HammingDistance(unsigned char* a,
 			     unsigned char* b,
-			     unsigned int n) {
+			     unsigned int length) {
 
   unsigned int num_mismatches = 0;
-  while (n) {
-    if (*a != *b) {
-      for (int i = 0; i < 8; ++i)
-	num_mismatches += (getBit(a, i) == getBit(b, i));
+  for(int n = 0; n < length; n++) {
+    for (int i = 0; i < 8; ++i) {
+      if (getBit(a + n, i) != getBit(b + n, i)) {
+	cout << "N: " << n << " Bit: " << i << endl;
+	num_mismatches += 1;
+      }
+      //num_mismatches += (getBit(a, i) != getBit(b, i));
     }
-    
-    --n;
-    ++a;
-    ++b;
   }
   
   return num_mismatches;
@@ -85,25 +84,33 @@ void TestFEC() {
   cout << HammingDistance(data, decoded, data_length) << endl;
   
   assert(HammingDistance(data, decoded, data_length) == 0);
+  delete[] data;
+  delete[] encoded;
+  delete[] decoded;
 }
 
 void TestByteQueue() {
   RealtimeControl pru;
+  cout << "Encoded data size: " << ENCODED_DATA_SIZE << endl;
+  cout << "Encoded packet size: " << ENCODED_PACKET_SIZE << endl;
 
   pru.OpenMem();
-  cout << "Queue Created" << endl;
 
   uint8_t* in = GenerateData(81);
+
   pru.push(in);
 
   pru.setCursor(0);
 
   uint8_t* out = new uint8_t[81];
   pru.pop(out);
+
+  cout << in << endl;
   cout << out << endl;
 
-  cout << "Distance: " << HammingDistance(in, out, 81) << endl;
-  assert(HammingDistance(in, out, 81) == 0);
+  int distance = HammingDistance(in, out, 81);
+  cout << "Distance: " << distance << endl;
+  assert(distance == 0);
   pru.CloseMem();
   
   delete [] in;
@@ -131,32 +138,38 @@ void TestManchester() {
   cout << decoded << endl;
 
   assert(HammingDistance(data, decoded, 2) == 0);
-
-  delete [] data;
-  delete [] encoded;
-  delete [] decoded;
+  
+  delete[] data;
+  delete[] encoded;
+  delete[] decoded;
 }
 
 void TestBasicPacketization() {
 
   // Basic test of a normal packet size
-  uint8_t *data = GenerateData(40);
+  //uint8_t *data = GenerateData(40);
+  uint8_t *data = new uint8_t[40];
   uint8_t *packet = new uint8_t[42];
   uint8_t *out = new uint8_t[40];
+
+  for (int i = 0; i < 40; i++)
+    data[i] = 'a';
 
   packetize(data, packet, 40 * 8);
 
   uint16_t bitlen = depacketize(packet, out);
 
+  cout << "Bitlen: " << bitlen << endl;
   cout << "IN:  " << data << endl;
   cout << "OUT: " << out << endl;
   
   assert(HammingDistance(data, out, 40) == 0);
-  assert(bitlen = 40 * 8);
+  assert(bitlen == 40 * 8);
 
-  delete [] data;
-  delete [] packet;
-  delete [] out;
+  delete[] data;
+  delete[] packet;
+  delete[] out;
+
 }
 
 void TestAdvPacketization() {
@@ -177,10 +190,10 @@ void TestAdvPacketization() {
 
   assert(HammingDistance(data, out, 30) == 0);
   assert(bitlen = 30 * 8);
-
-  delete [] data;
-  delete [] packet;
-  delete [] out;
+  
+  delete[] data;
+  delete[] packet;
+  delete[] out;
 }
 
 
@@ -188,7 +201,7 @@ void TestDataPipeline() {
   // Generate Data
 
   int data_length = 1000;
-  double p_error = 0.02;
+  double p_error = 0.015;
   uint8_t* data = GenerateData(data_length);
   // Packets are all 42 bytes
   uint8_t* packet = new uint8_t[42];

@@ -55,7 +55,7 @@ public:
   /* Memory Related Functionality */
   bool OpenMem();
   void CloseMem();
-  void pop(uint8_t packet[]);  
+  void pop(uint8_t bytes[]);
   void push(uint8_t bytes[]);
 
   void setLength(int n) { *(_length) = n; }

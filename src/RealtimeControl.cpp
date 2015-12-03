@@ -142,22 +142,21 @@ void RealtimeControl::push(uint8_t packet[]) {
   for (int i = 0; i < PREAMBLE_LEN; i++)
     peek()[i] = 0b00111100;
 
-  memcpy((peek() + PREAMBLE_LEN), packet, ENCODED_DATA_SIZE);
+  for (int i = PREAMBLE_LEN; i < ENCODED_PACKET_SIZE; i++) {
+    peek()[i] = packet[i - PREAMBLE_LEN];
+  }
 
   _internal_cursor += ENCODED_PACKET_SIZE;
-  _internal_cursor = _internal_cursor % max_bytes;
 }
 
 
 // Pops 1 encoded packet at a time
 void RealtimeControl::pop(uint8_t packet[]) {
 
-  uint8_t* addr = peek();
-  // Remove preamble 
-  memcpy(packet, (addr + PREAMBLE_LEN), ENCODED_DATA_SIZE);
+  for (int i = PREAMBLE_LEN; i < ENCODED_PACKET_SIZE; i++)
+    packet[i - PREAMBLE_LEN] = peek()[i];
 
   _internal_cursor += ENCODED_PACKET_SIZE;
-  _internal_cursor = _internal_cursor % max_bytes;
 }
 
 
