@@ -55,14 +55,19 @@ void Transceiver::Transmit()
     received += recvlen;
 
     for (i = 0; i < recvlen; i+= DECODED_DATA_SIZE) {
-      packetlen = ((recvlen - i) >= DECODED_DATA_SIZE) ? DECODED_DATA_SIZE : recvlen - i;
       
+      if ((recvlen - i) >= DECODED_DATA_SIZE)
+	packetlen = DECODED_DATA_SIZE;
+      else
+	packetlen = recvlen - i;
+
       packetize(buf + i, packet, packetlen * 8);
       _fec.Encode(packet, encoded, DECODED_PACKET_SIZE);
-      
-      for(int i = 0; i < 87; i++) {
-	encoded[i] = 97 + n;
-      }
+
+      /*
+      for(int i = 0; i < 81; i++) {
+	encoded[i] = n;
+	}*/
 
       // Increase packet number
       n++;
