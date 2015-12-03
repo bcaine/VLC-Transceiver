@@ -53,7 +53,7 @@ DEL_R8: // new packet delay
 
 CLC_B1b1:
     MOV r0.b0, 0 // reset delay counter to 0
-    GET_BIT r9, 31, r4
+    GET_BIT r9, 0, r4
     QBEQ SET_B1b1, r4, 1 // if this bit is high, jump to set
 
 CLR_B1b1: // if bit low
@@ -72,7 +72,7 @@ DEL_B1b1: // Byte 1, bit 1 delay
 
 CLC_B1b2:
     MOV r0.b0, 0
-    GET_BIT r9, 30, r4
+    GET_BIT r9, 1, r4
     QBEQ SET_B1b2, r4, 1
 
 CLR_B1b2:
@@ -89,7 +89,7 @@ DEL_B1b2:
 
 CLC_B1b3:
     MOV r0.b0, 0
-    GET_BIT r9, 29, r4
+    GET_BIT r9, 2, r4
     QBEQ SET_B1b3, r4, 1
 
 CLR_B1b3:
@@ -106,7 +106,7 @@ DEL_B1b3:
 
 CLC_B1b4:
     MOV r0.b0, 0
-    GET_BIT r9, 28, r4
+    GET_BIT r9, 3, r4
     QBEQ SET_B1b4, r4, 1
 
 CLR_B1b4:
@@ -123,7 +123,7 @@ DEL_B1b4:
 
 CLC_B1b5:
     MOV r0.b0, 0
-    GET_BIT r9, 27, r4
+    GET_BIT r9, 4, r4
     QBEQ SET_B1b5, r4, 1
 
 CLR_B1b5:
@@ -140,7 +140,7 @@ DEL_B1b5:
 
 CLC_B1b6:
     MOV r0.b0, 0
-    GET_BIT r9, 26, r4
+    GET_BIT r9, 5, r4
     QBEQ SET_B1b6, r4, 1
 
 CLR_B1b6:
@@ -157,7 +157,7 @@ DEL_B1b6:
 
 CLC_B1b7:
     MOV r0.b0, 0
-    GET_BIT r9, 25, r4
+    GET_BIT r9, 6, r4
     QBEQ SET_B1b7, r4, 1
 
 CLR_B1b7:
@@ -174,7 +174,7 @@ DEL_B1b7:
 
 CLC_B1b8:
     MOV r0.b0, 0
-    GET_BIT r9, 24, r4
+    GET_BIT r9, 7, r4
     QBEQ SET_B1b8, r4, 1
 
 CLR_B1b8:
@@ -195,7 +195,7 @@ DEL_B1b8:
 
 CLC_B2b1:
     MOV r0.b0, 0
-    GET_BIT r9, 23, r4
+    GET_BIT r9, 8, r4
     QBEQ SET_B2b1, r4, 1
 
 CLR_B2b1:
@@ -212,7 +212,7 @@ DEL_B2b1:
 
 CLC_B2b2:
     MOV r0.b0, 0
-    GET_BIT r9, 22, r4
+    GET_BIT r9, 9, r4
     QBEQ SET_B2b2, r4, 1
 
 CLR_B2b2:
@@ -229,7 +229,7 @@ DEL_B2b2:
 
 CLC_B2b3:
     MOV r0.b0, 0
-    GET_BIT r9, 21, r4
+    GET_BIT r9, 10, r4
     QBEQ SET_B2b3, r4, 1
 
 CLR_B2b3:
@@ -246,7 +246,7 @@ DEL_B2b3:
 
 CLC_B2b4:
     MOV r0.b0, 0
-    GET_BIT r9, 20, r4
+    GET_BIT r9, 11, r4
     QBEQ SET_B2b4, r4, 1
 
 CLR_B2b4:
@@ -263,7 +263,7 @@ DEL_B2b4:
 
 CLC_B2b5:
     MOV r0.b0, 0
-    GET_BIT r9, 19, r4
+    GET_BIT r9, 12, r4
     QBEQ SET_B2b5, r4, 1
 
 CLR_B2b5:
@@ -280,7 +280,7 @@ DEL_B2b5:
 
 CLC_B2b6:
     MOV r0.b0, 0
-    GET_BIT r9, 18, r4
+    GET_BIT r9, 13, r4
     QBEQ SET_B2b6, r4, 1
 
 CLR_B2b6:
@@ -297,7 +297,7 @@ DEL_B2b6:
 
 CLC_B2b7:
     MOV r0.b0, 0
-    GET_BIT r9, 17, r4
+    GET_BIT r9, 14, r4
     QBEQ SET_B2b7, r4, 1
 
 CLR_B2b7:
@@ -314,7 +314,7 @@ DEL_B2b7:
 
 CLC_B2b8:
     MOV r0.b0, 0
-    GET_BIT r9, 16, r4
+    GET_BIT r9, 15, r4
     QBEQ SET_B2b8, r4, 1
 
 CLR_B2b8:
@@ -334,7 +334,7 @@ DEL_B2b8:
 
 CLC_B3b1:
     MOV r0.b0, 0
-    GET_BIT r9, 15, r4
+    GET_BIT r9, 16, r4
     QBEQ SET_B3b1, r4, 1
 
 CLR_B3b1:
@@ -351,7 +351,7 @@ DEL_B3b1:
 
 CLC_B3b2:
     MOV r0.b0, 0
-    GET_BIT r9, 14, r4
+    GET_BIT r9, 17, r4
     QBEQ SET_B3b2, r4, 1
 
 CLR_B3b2:
@@ -368,7 +368,7 @@ DEL_B3b2:
 
 CLC_B3b3:
     MOV r0.b0, 0
-    GET_BIT r9, 13, r4
+    GET_BIT r9, 18, r4
     QBEQ SET_B3b3, r4, 1
 
 CLR_B3b3:
@@ -385,7 +385,7 @@ DEL_B3b3:
 
 CLC_B3b4:
     MOV r0.b0, 0
-    GET_BIT r9, 12, r4
+    GET_BIT r9, 19, r4
     QBEQ SET_B3b4, r4, 1
 
 CLR_B3b4:
@@ -402,7 +402,7 @@ DEL_B3b4:
 
 CLC_B3b5:
     MOV r0.b0, 0
-    GET_BIT r9, 11, r4
+    GET_BIT r9, 20, r4
     QBEQ SET_B3b5, r4, 1
 
 CLR_B3b5:
@@ -419,7 +419,7 @@ DEL_B3b5:
 
 CLC_B3b6:
     MOV r0.b0, 0
-    GET_BIT r9, 10, r4
+    GET_BIT r9, 21, r4
     QBEQ SET_B3b6, r4, 1
 
 CLR_B3b6:
@@ -436,7 +436,7 @@ DEL_B3b6:
 
 CLC_B3b7:
     MOV r0.b0, 0
-    GET_BIT r9, 9, r4
+    GET_BIT r9, 22, r4
     QBEQ SET_B3b7, r4, 1
 
 CLR_B3b7:
@@ -453,7 +453,7 @@ DEL_B3b7:
 
 CLC_B3b8:
     MOV r0.b0, 0
-    GET_BIT r9, 8, r4
+    GET_BIT r9, 23, r4
     QBEQ SET_B3b8, r4, 1
 
 CLR_B3b8:
@@ -473,7 +473,7 @@ DEL_B3b8:
 
 CLC_B4b1:
     MOV r0.b0, 0
-    GET_BIT r9, 7, r4
+    GET_BIT r9, 24, r4
     QBEQ SET_B4b1, r4, 1
 
 CLR_B4b1:
@@ -490,7 +490,7 @@ DEL_B4b1:
 
 CLC_B4b2:
     MOV r0.b0, 0
-    GET_BIT r9, 6, r4
+    GET_BIT r9, 25, r4
     QBEQ SET_B4b2, r4, 1
 
 CLR_B4b2:
@@ -507,7 +507,7 @@ DEL_B4b2:
 
 CLC_B4b3:
     MOV r0.b0, 0
-    GET_BIT r9, 5, r4
+    GET_BIT r9, 26, r4
     QBEQ SET_B4b3, r4, 1
 
 CLR_B4b3:
@@ -524,7 +524,7 @@ DEL_B4b3:
 
 CLC_B4b4:
     MOV r0.b0, 0
-    GET_BIT r9, 4, r4
+    GET_BIT r9, 27, r4
     QBEQ SET_B4b4, r4, 1
 
 CLR_B4b4:
@@ -541,7 +541,7 @@ DEL_B4b4:
 
 CLC_B4b5:
     MOV r0.b0, 0
-    GET_BIT r9, 3, r4
+    GET_BIT r9, 28, r4
     QBEQ SET_B4b5, r4, 1
 
 CLR_B4b5:
@@ -558,7 +558,7 @@ DEL_B4b5:
 
 CLC_B4b6:
     MOV r0.b0, 0
-    GET_BIT r9, 2, r4
+    GET_BIT r9, 29, r4
     QBEQ SET_B4b6, r4, 1
 
 CLR_B4b6:
@@ -575,7 +575,7 @@ DEL_B4b6:
 
 CLC_B4b7:
     MOV r0.b0, 0
-    GET_BIT r9, 1, r4
+    GET_BIT r9, 30, r4
     QBEQ SET_B4b7, r4, 1
 
 CLR_B4b7:
@@ -592,7 +592,7 @@ DEL_B4b7:
 
 CLC_B4b8:
     MOV r0.b0, 0
-    GET_BIT r9, 0, r4
+    GET_BIT r9, 31, r4
     QBEQ SET_B4b8, r4, 1
 
 CLR_B4b8:
@@ -726,7 +726,7 @@ DEL_R29:
 	
 CLC_R29_B2b1:
     MOV r0.b0, 0
-    GET_BIT r9, 23, r4
+    GET_BIT r9, 0, r4
     QBEQ SET_R29_B2b1, r4, 1
 
 CLR_R29_B2b1:
@@ -743,7 +743,7 @@ DEL_R29_B2b1:
 
 CLC_R29_B2b2:
     MOV r0.b0, 0
-    GET_BIT r9, 22, r4
+    GET_BIT r9, 1, r4
     QBEQ SET_R29_B2b2, r4, 1
 
 CLR_R29_B2b2:
@@ -760,7 +760,7 @@ DEL_R29_B2b2:
 
 CLC_R29_B2b3:
     MOV r0.b0, 0
-    GET_BIT r9, 21, r4
+    GET_BIT r9, 2, r4
     QBEQ SET_R29_B2b3, r4, 1
 
 CLR_R29_B2b3:
@@ -777,7 +777,7 @@ DEL_R29_B2b3:
 
 CLC_R29_B2b4:
     MOV r0.b0, 0
-    GET_BIT r9, 20, r4
+    GET_BIT r9, 3, r4
     QBEQ SET_R29_B2b4, r4, 1
 
 CLR_R29_B2b4:
@@ -794,7 +794,7 @@ DEL_R29_B2b4:
 
 CLC_R29_B2b5:
     MOV r0.b0, 0
-    GET_BIT r9, 19, r4
+    GET_BIT r9, 4, r4
     QBEQ SET_R29_B2b5, r4, 1
 
 CLR_R29_B2b5:
@@ -811,7 +811,7 @@ DEL_R29_B2b5:
 
 CLC_R29_B2b6:
     MOV r0.b0, 0
-    GET_BIT r9, 18, r4
+    GET_BIT r9, 5, r4
     QBEQ SET_R29_B2b6, r4, 1
 
 CLR_R29_B2b6:
@@ -828,7 +828,7 @@ DEL_R29_B2b6:
 
 CLC_R29_B2b7:
     MOV r0.b0, 0
-    GET_BIT r9, 17, r4
+    GET_BIT r9, 6, r4
     QBEQ SET_R29_B2b7, r4, 1
 
 CLR_R29_B2b7:
@@ -845,7 +845,7 @@ DEL_R29_B2b7:
 
 CLC_R29_B2b8:
     MOV r0.b0, 0
-    GET_BIT r9, 16, r4
+    GET_BIT r9, 7, r4
     QBEQ SET_R29_B2b8, r4, 1
 
 CLR_R29_B2b8:
@@ -862,7 +862,7 @@ DEL_R29_B2b8:
 
 CLC_R29_B3b1:
     MOV r0.b0, 0
-    GET_BIT r9, 15, r4
+    GET_BIT r9, 8, r4
     QBEQ SET_R29_B3b1, r4, 1
 
 CLR_R29_B3b1:
@@ -879,7 +879,7 @@ DEL_R29_B3b1:
 
 CLC_R29_B3b2:
     MOV r0.b0, 0
-    GET_BIT r9, 14, r4
+    GET_BIT r9, 9, r4
     QBEQ SET_R29_B3b2, r4, 1
 
 CLR_R29_B3b2:
@@ -896,7 +896,7 @@ DEL_R29_B3b2:
 
 CLC_R29_B3b3:
     MOV r0.b0, 0
-    GET_BIT r9, 13, r4
+    GET_BIT r9, 10, r4
     QBEQ SET_R29_B3b3, r4, 1
 
 CLR_R29_B3b3:
@@ -913,7 +913,7 @@ DEL_R29_B3b3:
 
 CLC_R29_B3b4:
     MOV r0.b0, 0
-    GET_BIT r9, 12, r4
+    GET_BIT r9, 11, r4
     QBEQ SET_R29_B3b4, r4, 1
 
 CLR_R29_B3b4:
@@ -930,7 +930,7 @@ DEL_R29_B3b4:
 
 CLC_R29_B3b5:
     MOV r0.b0, 0
-    GET_BIT r9, 11, r4
+    GET_BIT r9, 12, r4
     QBEQ SET_R29_B3b5, r4, 1
 
 CLR_R29_B3b5:
@@ -947,7 +947,7 @@ DEL_R29_B3b5:
 
 CLC_R29_B3b6:
     MOV r0.b0, 0
-    GET_BIT r9, 10, r4
+    GET_BIT r9, 13, r4
     QBEQ SET_R29_B3b6, r4, 1
 
 CLR_R29_B3b6:
@@ -964,7 +964,7 @@ DEL_R29_B3b6:
 
 CLC_R29_B3b7:
     MOV r0.b0, 0
-    GET_BIT r9, 9, r4
+    GET_BIT r9, 14, r4
     QBEQ SET_R29_B3b7, r4, 1
 
 CLR_R29_B3b7:
@@ -981,7 +981,7 @@ DEL_R29_B3b7:
 
 CLC_R29_B3b8:
     MOV r0.b0, 0
-    GET_BIT r9, 8, r4
+    GET_BIT r9, 15, r4
     QBEQ SET_R29_B3b8, r4, 1
 
 CLR_R29_B3b8:
@@ -998,7 +998,7 @@ DEL_R29_B3b8:
 
 CLC_R29_B4b1:
     MOV r0.b0, 0
-    GET_BIT r9, 7, r4
+    GET_BIT r9, 16, r4
     QBEQ SET_R29_B4b1, r4, 1
 
 CLR_R29_B4b1:
@@ -1015,7 +1015,7 @@ DEL_R29_B4b1:
 
 CLC_R29_B4b2:
     MOV r0.b0, 0
-    GET_BIT r9, 6, r4
+    GET_BIT r9, 17, r4
     QBEQ SET_R29_B4b2, r4, 1
 
 CLR_R29_B4b2:
@@ -1032,7 +1032,7 @@ DEL_R29_B4b2:
 
 CLC_R29_B4b3:
     MOV r0.b0, 0
-    GET_BIT r9, 5, r4
+    GET_BIT r9, 18, r4
     QBEQ SET_R29_B4b3, r4, 1
 
 CLR_R29_B4b3:
@@ -1049,7 +1049,7 @@ DEL_R29_B4b3:
 
 CLC_R29_B4b4:
     MOV r0.b0, 0
-    GET_BIT r9, 4, r4
+    GET_BIT r9, 19, r4
     QBEQ SET_R29_B4b4, r4, 1
 
 CLR_R29_B4b4:
@@ -1066,7 +1066,7 @@ DEL_R29_B4b4:
 
 CLC_R29_B4b5:
     MOV r0.b0, 0
-    GET_BIT r9, 3, r4
+    GET_BIT r9, 20, r4
     QBEQ SET_R29_B4b5, r4, 1
 
 CLR_R29_B4b5:
@@ -1083,7 +1083,7 @@ DEL_R29_B4b5:
 
 CLC_R29_B4b6:
     MOV r0.b0, 0
-    GET_BIT r9, 2, r4
+    GET_BIT r9, 21, r4
     QBEQ SET_R29_B4b6, r4, 1
 
 CLR_R29_B4b6:
@@ -1100,7 +1100,7 @@ DEL_R29_B4b6:
 
 CLC_R29_B4b7:
     MOV r0.b0, 0
-    GET_BIT r9, 1, r4
+    GET_BIT r9, 22, r4
     QBEQ SET_R29_B4b7, r4, 1
 
 CLR_R29_B4b7:
@@ -1117,7 +1117,7 @@ DEL_R29_B4b7:
 
 CLC_R29_B4b8:
     MOV r0.b0, 0
-    GET_BIT r9, 0, r4
+    GET_BIT r9, 23, r4
     QBEQ SET_R29_B4b8, r4, 1
 
 CLR_R29_B4b8:

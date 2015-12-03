@@ -137,6 +137,7 @@ void RealtimeControl::CloseMem() {
 
 
 void RealtimeControl::push(uint8_t packet[]) {
+  memset(peek(), 0, ENCODED_PACKET_SIZE);
 
   // Set preamble PREAMBLE_LEN times
   for (int i = 0; i < PREAMBLE_LEN; i++)
