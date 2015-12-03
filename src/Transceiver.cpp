@@ -14,6 +14,7 @@ Transceiver::Transceiver(SocketConnection &sockconn,
 			 RealtimeControl &pru):
   _sock(sockconn), _fec(fec), _pru(pru) {}
 
+const unsigned PACKET_COUNT = 6500;
 
 void Transceiver::Transmit()
 {
@@ -36,7 +37,7 @@ void Transceiver::Transmit()
   if (totallen % DECODED_DATA_SIZE != 0)
     packet_num += 1;
 
-  _pru.setLength(packet_num);
+  _pru.setLength(PACKET_COUNT);
   cout << "Incoming data length: " << totallen << endl;
   cout << "Packet count: " << packet_num << endl;
 
@@ -49,6 +50,7 @@ void Transceiver::Transmit()
   int i = 0;
   int packetlen;
 
+  bool first = true;
   // Read in all data from socket and write to mem or backlog
   while(1) {
     recvlen = _sock.Receive(buf, FLUSH_SIZE);
@@ -57,14 +59,21 @@ void Transceiver::Transmit()
     // Really bad hack. First 2-3 packets on RX side are corrupted
     // with old data. Sending first 5 packets twice...
     // Assuming all first 5 packets are full...
-    for (i = 0; i < DECODED_DATA_SIZE * 5; i+= DECODED_DATA_SIZE) {
-      packetlen = DECODED_DATA_SIZE;
+    if (first) {
+      for (i = 0; i < DECODED_DATA_SIZE * 5; i+= DECODED_DATA_SIZE) {
+	packetlen = DECODED_DATA_SIZE;
       
-      packetize(buf + i, packet, packetlen * 8);
-      _fec.Encode(packet, encoded, DECODED_PACKET_SIZE);
-      _pru.push(encoded);
-      n++;
+	packetize(buf + i, packet, packetlen * 8);
 
+	_fec.Encode(packet, encoded, DECODED_PACKET_SIZE);
+
+	for (int k = 0; k < ENCODED_DATA_SIZE; k++)
+	  encoded[k] = 0xee;
+
+	_pru.push(encoded);
+	
+      }
+      first = false;
     }
 
     for (i = 0; i < recvlen; i+= DECODED_DATA_SIZE) {
@@ -81,6 +90,7 @@ void Transceiver::Transmit()
 	encoded[i] = n;
       }
 
+
       // Increase packet number
       n++;
 
@@ -94,6 +104,13 @@ void Transceiver::Transmit()
       cout << "Socket Transfer is done." << endl;
       break;
     }
+  }
+
+  // Set all high for the rest of packets
+  memset(encoded, 0xFF, DECODED_PACKET_SIZE);
+
+  for (i = n; i < PACKET_COUNT; i++) {
+    _pru.push(encoded);
   }
 
   cout << "Transmitted " << n << " Packets" << endl;
@@ -132,7 +149,7 @@ void Transceiver::Receive() {
   _pru.DisablePru();
 
   // Toss out first 5
-  for (int i = 0; i < 5; i++)
+  for (int i = 0; i < 6; i++)
     _pru.pop(encoded);
   
   
@@ -140,11 +157,18 @@ void Transceiver::Receive() {
   // Subtract 5 for our 5 junk packets
   num_packets -= 5;
 
-  for (int i = 0; i < num_packets; i++) {
+  int high = 0;
+
+  for (int i = 0; i < PACKET_COUNT; i++) {
     _pru.pop(encoded);
     cout << encoded << endl;
 
-    /*
+    for (int j = 0; j < ENCODED_DATA_SIZE; j++)
+      high += encoded[j] == 0xFF;
+
+    if (high > ENCODED_DATA_SIZE - 10)
+      break;
+
     _fec.Decode(encoded, packet, ENCODED_DATA_SIZE);
 
     // This gives us number of bits in packet that are real data
@@ -154,18 +178,15 @@ void Transceiver::Receive() {
     // If not a multiple of 8, just return an extra byte
     if (packetlen_bits % 8 != 0)
       packetlen += 1;
-    */
     // Copy data into buffer
-    memcpy(buf + sendsize, encoded, ENCODED_DATA_SIZE);
-    //memcpy(buf + sendsize, data, packetlen);
+    //memcpy(buf + sendsize, encoded, ENCODED_DATA_SIZE);
+    memcpy(buf + sendsize, data, packetlen);
 
-    //sendsize += packetlen;
-    sendsize += ENCODED_DATA_SIZE;
+    sendsize += packetlen;
+    //sendsize += ENCODED_DATA_SIZE;
 
-    /*
     if (packetlen_bits % 8 != 0)
       break;
-    */
 
     if (sendsize >= FLUSH_SIZE) {
       cout << "Sending: " << sendsize << " Bytes"<< endl;
