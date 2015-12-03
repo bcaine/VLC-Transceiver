@@ -135,19 +135,14 @@ void Transceiver::Receive() {
   for (int i = 0; i < 5; i++)
     _pru.pop(encoded);
   
-  int zeros = 0;
+  
+  int num_packets = _pru.pruCursor() / ENCODED_PACKET_SIZE;
+  // Subtract 5 for our 5 junk packets
+  num_packets -= 5;
 
-  while(1) {
+  for (int i = 0; i < num_packets; i++) {
     _pru.pop(encoded);
     cout << encoded << endl;
-    
-    for(int j = 0; j < ENCODED_DATA_SIZE; j++)
-      zeros += encoded[j];
-
-    if (zeros >= ENCODED_DATA_SIZE)
-      break;
-    
-
 
     /*
     _fec.Decode(encoded, packet, ENCODED_DATA_SIZE);
