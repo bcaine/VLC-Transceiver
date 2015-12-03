@@ -136,11 +136,12 @@ void Transceiver::Receive() {
   // Wait for it to finish
   _pru.DisablePru();
 
+  /*
   int num_packets = 15;
 
   for (int i = 0; i < 4; i++)
     _pru.pop(encoded);
-  
+  */
   for (int n = 4; n < num_packets + 4; n++) {
     _pru.pop(encoded);
 
@@ -158,11 +159,11 @@ void Transceiver::Receive() {
       packetlen += 1;
     */
     // Copy data into buffer
-    memcpy(buf + sendsize, encoded, 87);
+    memcpy(buf + sendsize, encoded, ENCODED_PACKET_SIZE);
     //memcpy(buf + sendsize, data, packetlen);
 
     //sendsize += packetlen;
-    sendsize += 87;
+    sendsize += ENCODED_PACKET_SIZE;
     /*
     if (packetlen_bits % 8 != 0)
       break;
