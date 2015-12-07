@@ -140,7 +140,7 @@ int main (void)
 static int LOCAL_exampleInit (  )
 {
     /* open the device */
-    mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
+    mem_fd = open("/dev/mem", O_RDWR);
     if (mem_fd < 0) {
         printf("Failed to open /dev/mem (%s)\n", strerror(errno));
         return -1;
@@ -163,7 +163,7 @@ static int LOCAL_exampleInit (  )
     int i = 0;
     int j = 0;
     void *storeData = data;
-    for(i=0; i < numPackets; i++){
+    for(i=0; i < LENGTH; i++){
     	(*(unsigned char*) (storeData+PACKETLENGTH*i)) = 0b00111100;
 	(*(unsigned char*) (storeData+PACKETLENGTH*i+1)) = 0b00111100;
 	for(j=2; j < PACKETLENGTH; j++){
@@ -185,7 +185,7 @@ static unsigned short LOCAL_examplePassed ( unsigned short pruNum )
    printf("Data:\n");
 
    int i = 0, j = 0;
-   for(i=0; i < numPackets; i++){
+   for(i=0; i < LENGTH; i++){
        printf("Preamble: (%x)\t", (*(unsigned char*) (data+PACKETLENGTH*i)));
 	for(j=1; j < PACKETLENGTH; j++){
 	    printf("%x ", (*(unsigned char*) (data+PACKETLENGTH*i+j)));

@@ -137,13 +137,13 @@ void RealtimeControl::CloseMem() {
 
 
 void RealtimeControl::push(uint8_t packet[]) {
-  memset(peek(), 0, DATA_SIZE);
+  memset(peek(), 0, PACKET_SIZE);
 
   // Set preamble PREAMBLE_LEN times
   for (int i = 0; i < PREAMBLE_LEN; i++)
     peek()[i] = 0b00111100;
 
-  for (int i = PREAMBLE_LEN; i < PACKET_SIZE; i++) {
+  for (int i = PREAMBLE_LEN; i < TOTAL_SIZE; i++) {
     peek()[i] = packet[i - PREAMBLE_LEN];
   }
 

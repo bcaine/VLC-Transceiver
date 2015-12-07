@@ -55,6 +55,7 @@ void Transceiver::Transmit()
     recvlen = _sock.Receive(buf, FLUSH_SIZE);
     received += recvlen;
 
+    /*
     // Really bad hack. First 2-3 packets on RX side are corrupted
     // with old data. Sending first 5 packets twice...
     // Assuming all first 5 packets are full...
@@ -71,7 +72,8 @@ void Transceiver::Transmit()
 	
       }
       first = false;
-    }
+      }
+    */
 
     for (i = 0; i < recvlen; i+= DATA_SIZE) {
       
@@ -82,8 +84,9 @@ void Transceiver::Transmit()
 
       packetize(buf + i, packet, packetlen * 8);
 
-      for(int i = 0; i < PACKET_SIZE; i++) {
-	packet[i] = n;
+      // TODO: REMOVE ONCE WORKING
+      for(int k = 0; k < PACKET_SIZE; k++) {
+	packet[k] = n;//0x1f;
       }
 
 
@@ -91,10 +94,7 @@ void Transceiver::Transmit()
       n++;
       cout << "Packet Num " << n << endl;
 
-      // If its our first n packets, write to mem. 
-      // Otherwise to the backlog
-      if (n < _pru.max_packets)
-	_pru.push(packet);
+      _pru.push(packet);
     }
 
     if (received >= totallen) {
@@ -127,7 +127,7 @@ void Transceiver::Receive() {
 
   uint8_t packet[PACKET_SIZE];
   uint8_t data[DATA_SIZE];
-  uint8_t buf[FLUSH_SIZE + 100];
+  uint8_t buf[FLUSH_SIZE];
 
   int packetlen_bits = 0;
   int packetlen = 0;
@@ -146,15 +146,18 @@ void Transceiver::Receive() {
   // Wait for it to finish
   _pru.DisablePru();
 
+  /*
   // Toss out first 5
   for (int i = 0; i < 6; i++)
     _pru.pop(packet);
-  
+  */
   
   int num_packets = _pru.pruCursor() / PACKET_SIZE;
 
+  /*
   // Subtract 5 for our 5 junk packets
   num_packets -= 6;
+  */
 
   int high = 0;
 
@@ -188,7 +191,7 @@ void Transceiver::Receive() {
       cout << "Sending: " << sendsize << " Bytes"<< endl;
       _sock.Send(buf, sendsize);
       sendsize = 0;
-      }*/
+      }
   }
   
   cout << "Received: " << n << " Packets" << endl;

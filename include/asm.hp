@@ -7,8 +7,8 @@
 // ***************************************
 
 // Frequency
-#define MHz1 1
-//#define kHz500 1
+//#define MHz1 1
+#define kHz500 1
 
 #ifdef MHz1
 	#define DELAY_FWD_TX     97

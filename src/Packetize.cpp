@@ -1,7 +1,7 @@
 #include "Packetize.hpp"
 #include <iostream>
 
-const int MAX_BYTES = 40;
+const int MAX_BYTES = 79;
 const int MAX_BITS = 8 * MAX_BYTES;
 
 // Should pass in 40 Bytes and we will return 42 bytes
