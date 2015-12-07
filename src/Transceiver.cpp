@@ -14,7 +14,7 @@ Transceiver::Transceiver(SocketConnection &sockconn,
 			 RealtimeControl &pru):
   _sock(sockconn), _fec(fec), _pru(pru) {}
 
-const unsigned PACKET_COUNT = 6500;
+const unsigned PACKET_COUNT = 6000;
 
 void Transceiver::Transmit()
 {
@@ -55,25 +55,17 @@ void Transceiver::Transmit()
     recvlen = _sock.Receive(buf, FLUSH_SIZE);
     received += recvlen;
 
-    /*
     // Really bad hack. First 2-3 packets on RX side are corrupted
     // with old data. Sending first 5 packets twice...
     // Assuming all first 5 packets are full...
     if (first) {
       for (i = 0; i < DATA_SIZE * 5; i+= DATA_SIZE) {
 	packetlen = DATA_SIZE;
-      
 	packetize(buf + i, packet, packetlen * 8);
-
-	for (int k = 0; k < PACKET_SIZE; k++)
-	  packet[k] = 0xee;
-
 	_pru.push(packet);
-	
       }
       first = false;
-      }
-    */
+    }
 
     for (i = 0; i < recvlen; i+= DATA_SIZE) {
       
@@ -88,7 +80,6 @@ void Transceiver::Transmit()
       for(int k = 0; k < PACKET_SIZE; k++) {
 	packet[k] = n;//0x1f;
       }
-
 
       // Increase packet number
       n++;
@@ -106,7 +97,7 @@ void Transceiver::Transmit()
   // Set all high for the rest of packets
   memset(packet, 0xFF, PACKET_SIZE);
 
-  for (i = n; i < PACKET_COUNT; i++) {
+  for (i = n; i < PACKET_COUNT + 50; i++) {
     _pru.push(packet);
   }
 
@@ -146,32 +137,36 @@ void Transceiver::Receive() {
   // Wait for it to finish
   _pru.DisablePru();
 
-  /*
   // Toss out first 5
-  for (int i = 0; i < 6; i++)
+  for (int i = 0; i < 5; i++)
     _pru.pop(packet);
-  */
   
-  int num_packets = _pru.pruCursor() / PACKET_SIZE;
-
-  /*
-  // Subtract 5 for our 5 junk packets
-  num_packets -= 6;
-  */
+  int num_packets = (_pru.pruCursor() - 8) / TOTAL_SIZE;
 
   int high = 0;
+  bool last_packet_high = false;
 
-  for (int i = 0; i < PACKET_COUNT; i++) {
+  for (int i = 5; i < num_packets; i++) {
     _pru.pop(packet);
+
     for (int k = 0; k < PACKET_SIZE; k++)
       printf("%02x", packet[k]);
+    cout << endl;
 
     for (int j = 0; j < PACKET_SIZE; j++)
       high += packet[j] == 0xFF;
+    
+    if (high > (PACKET_SIZE - 10)) {
+      if (last_packet_high)
+	break;
+      else
+	last_packet_high = true;
+    } else {
+      last_packet_high = false;
+    }
 
-    if (high > PACKET_SIZE - 10)
-      break;
-
+    high = 0;
+    
     packetlen_bits = depacketize(packet, data);
     packetlen = packetlen_bits / 8;
 
@@ -184,14 +179,17 @@ void Transceiver::Receive() {
 
     sendsize += packetlen;
 
-    if (packetlen_bits % 8 != 0)
+    if (packetlen_bits % 8 != 0) {
+      cout << "Packetlength bits not % by 8. Breaking." << endl;
       break;
+    }
 
     if (sendsize >= FLUSH_SIZE) {
       cout << "Sending: " << sendsize << " Bytes"<< endl;
       _sock.Send(buf, sendsize);
       sendsize = 0;
-      }
+    }
+    n++;
   }
   
   cout << "Received: " << n << " Packets" << endl;
