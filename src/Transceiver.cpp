@@ -49,23 +49,10 @@ void Transceiver::Transmit()
   int i = 0;
   int packetlen;
 
-  bool first = true;
   // Read in all data from socket and write to mem or backlog
   while(1) {
     recvlen = _sock.Receive(buf, FLUSH_SIZE);
     received += recvlen;
-
-    // Really bad hack. First 2-3 packets on RX side are corrupted
-    // with old data. Sending first 5 packets twice...
-    // Assuming all first 5 packets are full...
-    if (first) {
-      for (i = 0; i < DATA_SIZE * 5; i+= DATA_SIZE) {
-	packetlen = DATA_SIZE;
-	packetize(buf + i, packet, packetlen * 8);
-	_pru.push(packet);
-      }
-      first = false;
-    }
 
     for (i = 0; i < recvlen; i+= DATA_SIZE) {
       
@@ -75,11 +62,6 @@ void Transceiver::Transmit()
 	packetlen = recvlen - i;
 
       packetize(buf + i, packet, packetlen * 8);
-
-      // TODO: REMOVE ONCE WORKING
-      for(int k = 0; k < PACKET_SIZE; k++) {
-	packet[k] = n;//0x1f;
-      }
 
       // Increase packet number
       n++;
@@ -137,21 +119,22 @@ void Transceiver::Receive() {
   // Wait for it to finish
   _pru.DisablePru();
 
-  // Toss out first 5
-  for (int i = 0; i < 5; i++)
+  // Toss out first 2 that are always 0xff
+  for (int i = 0; i < 2; i++) {
     _pru.pop(packet);
+    for(int j = 0; j < PACKET_SIZE; j++)
+      printf("%02x", packet[j]);
+    cout << endl;
+  }
+
   
   int num_packets = (_pru.pruCursor() - 8) / TOTAL_SIZE;
 
   int high = 0;
   bool last_packet_high = false;
 
-  for (int i = 5; i < num_packets; i++) {
+  for (int i = 0; i < num_packets; i++) {
     _pru.pop(packet);
-
-    for (int k = 0; k < PACKET_SIZE; k++)
-      printf("%02x", packet[k]);
-    cout << endl;
 
     for (int j = 0; j < PACKET_SIZE; j++)
       high += packet[j] == 0xFF;
@@ -197,7 +180,10 @@ void Transceiver::Receive() {
   // Send the rest via sockets.
   if (sendsize > 0) {
     cout << "Sent " << sendsize << " bytes" << endl;
-    _sock.Send(buf, sendsize);
+    if (last_packet_high)
+      _sock.Send(buf, sendsize - PACKET_SIZE * 2);
+    else
+      _sock.Send(buf, sendsize);
   }
 
   // Mark the PRU done and send Done via sockets
