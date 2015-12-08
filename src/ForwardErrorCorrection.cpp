@@ -66,14 +66,11 @@ void ForwardErrorCorrection::Decode(unsigned char *encoded,
 void ForwardErrorCorrection::ManchesterEncode(
 		      unsigned char *data_in,
 		      unsigned char *data_out,
-		      int in_len,
-		      int out_len)
-{
-  assert((in_len * 2) == out_len);
-  int num_bits = in_len * 8;
+		      int num_bits_in)
 
+{
   int out = 0;
-  for(int in = 0; in < num_bits; in++) {
+  for(int in = 0; in < num_bits_in; in++) {
     if (getBit(data_in, in) == 0) {
       setBit(data_out, out, 0);
       setBit(data_out, out + 1, 1);
@@ -88,14 +85,10 @@ void ForwardErrorCorrection::ManchesterEncode(
 void ForwardErrorCorrection::ManchesterDecode(
 		      unsigned char *data_in,
 		      unsigned char *data_out,
-		      int in_len,
-		      int out_len)
+		      int num_bits_in)
 {
-  assert((in_len / 2) == out_len);
-  int num_bits = out_len * 8;
-
   int in = 0;
-  for(int out = 0; out < num_bits; out++) {
+  for(int out = 0; out < num_bits_in; out++) {
     if ((getBit(data_in, in) == 0) &&
 	(getBit(data_in, in+1) == 1))
     {

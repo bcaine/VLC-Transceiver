@@ -125,13 +125,11 @@ void TestManchester() {
   
   cout << data << endl;
   cout << "---------------------" << endl;
-  fec.ManchesterEncode(data, encoded,
-		       data_length, data_length * 2);
+  fec.ManchesterEncode(data, encoded, data_length * 8);
 
   cout << encoded << endl;
   cout << "---------------------" << endl;
-  fec.ManchesterDecode(encoded, decoded,
-		       data_length * 2, data_length);
+  fec.ManchesterDecode(encoded, decoded, data_length * 2 * 8);
 
   cout << decoded << endl;
 
@@ -309,6 +307,7 @@ void TestDataStorage() {
 
 int main() {
 
+  /*
   cout << "Forward Error Correction Test Running...\n" << endl;
   TestFEC();
 
@@ -317,6 +316,7 @@ int main() {
 
   cout << "ByteQueue Test Running...\n" << endl;
   TestByteQueue();
+  */
 
   cout << "----------------------------------------";
   cout << "----------------------------------------" << endl;
@@ -327,6 +327,7 @@ int main() {
   cout << "----------------------------------------";
   cout << "----------------------------------------" << endl;
 
+  /*
   cout << "Basic Packetization Test Running...\n" << endl;
   TestBasicPacketization();
 
@@ -346,7 +347,8 @@ int main() {
   cout << "----------------------------------------" << endl;
 
   cout << "Data Storage Test Running...\n" << endl;
-  TestDataStorage();
+  //TestDataStorage();
+  */
 
   return 0;
 };
