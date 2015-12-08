@@ -21,10 +21,11 @@ void Transceiver::Transmit()
 
   // Initializing pru memory
   _pru.OpenMem();
-  
+
   cout << "Starting Transmit" << endl;
   uint8_t buf[FLUSH_SIZE];
-  uint8_t packet[PACKET_SIZE];
+  uint8_t packet[HALF_PACKET_SIZE];
+  uint8_t encoded[PACKET_SIZE];
   int recvlen;
   uint32_t totallen;
 
@@ -54,20 +55,24 @@ void Transceiver::Transmit()
     recvlen = _sock.Receive(buf, FLUSH_SIZE);
     received += recvlen;
 
-    for (i = 0; i < recvlen; i+= DATA_SIZE) {
+    for (i = 0; i < recvlen; i+= HALF_DATA_SIZE) {
       
-      if ((recvlen - i) >= DATA_SIZE)
-	packetlen = DATA_SIZE;
+      if ((recvlen - i) >= HALF_DATA_SIZE)
+	packetlen = HALF_DATA_SIZE;
       else
 	packetlen = recvlen - i;
 
       packetize(buf + i, packet, packetlen * 8);
+      
+      _fec.ManchesterEncode(packet, encoded, (2 + packetlen) * 8);
+      // Since we only save 40-> Encoded packets, set last one to 0
+      encoded[PACKET_SIZE - 1] = 0;
 
       // Increase packet number
       n++;
       cout << "Packet Num " << n << endl;
 
-      _pru.push(packet);
+      _pru.push(encoded);
     }
 
     if (received >= totallen) {
@@ -77,7 +82,7 @@ void Transceiver::Transmit()
   }
 
   // Set all high for the rest of packets
-  memset(packet, 0xFF, PACKET_SIZE);
+  memset(encoded, 0xFF, PACKET_SIZE);
 
   for (i = n; i < PACKET_COUNT + 50; i++) {
     _pru.push(packet);
@@ -98,8 +103,9 @@ void Transceiver::Transmit()
 
 void Transceiver::Receive() {
 
-  uint8_t packet[PACKET_SIZE];
-  uint8_t data[DATA_SIZE];
+  uint8_t encoded[PACKET_SIZE];
+  uint8_t packet[HALF_PACKET_SIZE];
+  uint8_t data[HALF_DATA_SIZE];
   uint8_t buf[FLUSH_SIZE];
 
   int packetlen_bits = 0;
@@ -134,7 +140,7 @@ void Transceiver::Receive() {
   bool last_packet_high = false;
 
   for (int i = 0; i < num_packets; i++) {
-    _pru.pop(packet);
+    _pru.pop(encoded);
 
     for (int j = 0; j < PACKET_SIZE; j++)
       high += packet[j] == 0xFF;
@@ -150,6 +156,8 @@ void Transceiver::Receive() {
 
     high = 0;
     
+    _fec.ManchesterDecode(encoded, packet, HALF_PACKET_SIZE * 8);
+
     packetlen_bits = depacketize(packet, data);
     packetlen = packetlen_bits / 8;
 
