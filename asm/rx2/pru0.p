@@ -20,16 +20,16 @@
 //     r1.w2  |  Holder  - preamble bitmask
 //     r2.w0  |  Holder  - sampled bitstream (preamble)
 //     r2.w2  |  Holder  - actual preamble value for comparison
-//     r3.w0  |  Holder  - XOR result (preamble)
-//     r3.w2  |  Holder  - LSR/AND result (preamble)
 //       r4   |  Holder  - sampled bit
+//     r4.w0  |  Holder  - XOR result (preamble)
+//     r4.w2  |  Holder  - LSR/AND result (preamble)
 //     r5.w0  |  Holder  - bit-sync delay value
 //     r5.w2  |  Holder  - backward delay value
 //     r6.w0  |  Holder  - bit-check delay value 
 //     r6.w2  |  Holder  - forward delay value
 //     r7.w0  |  Counter - packets sampled
 //     r7.w2  |  Holder  - max packets to sample
-//       r8   |  Free
+//    r3, r8  |  Free
 //     r9-r29 |  Holder  - sampled registers
 //    r30.t15 |  Holder  - output pin value (debug)
 //    r31.t15 |  Holder  - input pin value
@@ -53,10 +53,10 @@ INIT:
 	MOV r1.w2, PRE_BITMASK    // load value to AND out irrelevant bits
 
 	MOV r2.w0, INIT_PRE2      // recent bits holder
-    	MOV r2.w2, PREAMBLE2      // actual preamble holder
+    MOV r2.w2, PREAMBLE2      // actual preamble holder
 	
-	MOV r3.w0, 0              // XOR holder
-	MOV r3.w2, 0              // LSR/AND holder
+	MOV r4.w0, 0              // XOR holder
+	MOV r4.w2, 0              // LSR/AND holder
 
 	MOV r5.w0, DELAY_P2_RX    // store bit-sync delay value for comparison
 	MOV r5.w2, DELAY_BWD_RX   // store backward delay value for comparison
@@ -68,7 +68,7 @@ INIT:
 	MOV r7.w2, PACKET_LIMIT   // store packet limit for comparison
 
 	MOV r8.w0, SYNC_TIMEOUT
-    	JMP P1_SMP                // jump to preamble check
+    JMP P1_SMP                // jump to preamble check
 
 NEW_PACKET:
     XOUT 10, r9, PACK_LEN         // write data to PRU1
@@ -77,10 +77,10 @@ P1_RESET:
     MOV r2.w0, INIT_PRE2          // reset bit holder
 
 P1_SMP:
-    MOV r0.w0, 0                  // reset delay
-    LSL r2.w0, r2.w0, 1           // shift preamble holder to prepare for new bit
-    GET_BIT r31, PIN_OFFSET_BIT, r4
-    QBEQ P1_SET, r4, 1            // if bit set, jump to set
+    MOV r0.w0, 0                       // reset delay
+    LSL r2.w0, r2.w0, 1                // shift preamble holder to prepare for new bit
+    GET_BIT r31, PIN_OFFSET_BIT, r4    // sample input pin
+    QBEQ P1_SET, r4, 1                 // if bit set, jump to set
 
 P1_CLR:
     CLR_BIT r2.w0.t0              // clear new bit
@@ -94,11 +94,11 @@ P1_SET:
 
 P1_DEL: 
     ADD r0.w0, r0.w0, 1
-    QBNE P1_DEL, r0.w0, r6.w0    // delay s.t. 200 cycles between preamble reads
+    QBNE P1_DEL, r0.w0, r6.w0     // delay s.t. 200 cycles between preamble reads
 
 P1_CHK:
 
-    GET_DIFF_13 r2.w0, r2.w2, r0.b3, r3.w0, r3.w2, r1.w2        // get number of matches between preamble and current bitstream
+    GET_DIFF_13 r2.w0, r2.w2, r0.b3, r4.w0, r4.w2, r1.w2        // get number of matches between preamble and current bitstream
     QBLT P2_INIT, r0.b3, REQ_BITS2                              // if enough bits match, jump out of preamble bit-check
     JMP P1_SMP                                                  // otherwise, keep sampling
 
@@ -124,13 +124,13 @@ P2_DEL:
 	JMP SMP_B3b1                        // jump to normal operation
 	
 DEL_CPY:
-        ADD r0.w0, r0.w0, 1
-        QBNE DEL_CPY, r0.w0, r5.w2          // delay after copying a register
+    ADD r0.w0, r0.w0, 1
+    QBNE DEL_CPY, r0.w0, r5.w2          // delay after copying a register
 
 SMP_B1b1:
-        MOV r0.w0, 0
-        GET_BIT r31, PIN_OFFSET_BIT, r4
-        QBEQ SET_B1b1, r4, 1
+    MOV r0.w0, 0
+    GET_BIT r31, PIN_OFFSET_BIT, r4
+    QBEQ SET_B1b1, r4, 1
 
 CLR_B1b1:
 	CLR_BIT r29.t0
@@ -721,13 +721,13 @@ UPD_R29:
 	QBEQ CPY_R28, r0.b2, 20
 
 CHECK_DONE:
-        MOV r4, READY_CODE			      // temporarily overwrite r4 with ready code for storage
-        SBCO r4, CONST_PRUSHAREDRAM, 0, 1             // write packet ready code to PRU RAM
-        MOV r0.b2, 0                                  // reset register counter
-	ADD r7.w0, r7.w0, 1                           // increment packet counter
-	QBNE BCK_P4b8, r7.w0, r7.w2                   // if not at packet limit, keep sampling
-        XOUT 10, r9, PACK_LEN                         // otherwise, transfer current packet to PRU1
-        JMP STOP                                      // and commence shutdown
+    MOV r4, READY_CODE			            // temporarily overwrite r4 with ready code for storage
+    SBCO r4, CONST_PRUSHAREDRAM, 0, 1       // write packet ready code to PRU RAM
+    MOV r0.b2, 0                            // reset register counter
+	ADD r7.w0, r7.w0, 1                     // increment packet counter
+	QBNE BCK_P4b8, r7.w0, r7.w2             // if not at packet limit, keep sampling
+    XOUT 10, r9, PACK_LEN                   // otherwise, transfer current packet to PRU1
+    JMP STOP                                // and commence shutdown
 
 CPY_R9:
 	MOV r9, r29 	          // copy contents of r9 into r9 (modulation reg)
@@ -801,7 +801,7 @@ CPY_R28:
 	MOV r28, r29
 
 SMP_R29:
-        MOV r0.w0, 0
+    MOV r0.w0, 0
 	ADD r5.w2, r5.w2, 2
 	MOV r5.w2, r5.w2
 
@@ -810,9 +810,9 @@ DEL_R29:
 	QBNE DEL_R29, r0.w0, r5.w2
 	
 SMP_R29_B1b1:
-        MOV r0.w0, 0
-        GET_BIT r31, PIN_OFFSET_BIT, r4
-        QBEQ SET_R29_B1b1, r4, 1
+    MOV r0.w0, 0
+    GET_BIT r31, PIN_OFFSET_BIT, r4
+    QBEQ SET_R29_B1b1, r4, 1
 
 CLR_R29_B1b1:
 	CLR_BIT r29.t0

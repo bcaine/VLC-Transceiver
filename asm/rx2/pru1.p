@@ -7,7 +7,7 @@
 //  Register  |  Purpose
 //		      
 //      r0    |  Counter - write offset for RAM stores
-//	r1    |  Holder  - end of buffer offset (wraparound)
+//	    r1    |  Holder  - end of buffer offset (wraparound)
 //      r2    |  Holder  - address of start of buffer (no offset)
 //     r3.b0  |  Check   - holds zero value to reset packet ready code
 //     r3.b1  |  Check   - holds value at 'packet ready' code location
@@ -30,7 +30,7 @@ INIT:
 
 	MOV r0, INIT_OFFSET                      // init write offset to ninth byte
 	MOV r1, OFFSET_LIM                       // store end of buffer location
-	MOV r2, DDR_ADDRESS	                 // store buffer address
+	MOV r2, DDR_ADDRESS	                     // store buffer address
 	
 	SBBO r0, r2, 4, 4                        // write initial offset to RAM
 	SBCO r3.b0, CONST_PRUSHAREDRAM, 0, 1     // force packet ready false on init
@@ -50,7 +50,6 @@ POLL_PX:
 	LBCO r3.b1, CONST_PRUSHAREDRAM, 0, 1     // load value of packet-ready code
 	QBEQ STOP, r6, r7                        // if delay over timeout value, jump to shutdown
 	QBNE POLL_PX, r3.b1, READY_CODE          // if low, keep checking the code
-	
 
 READ: 
 	XIN 10, r9, PACK_LEN                     // once packet-ready code high, pull from PRU0
