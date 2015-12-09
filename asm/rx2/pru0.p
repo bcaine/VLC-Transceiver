@@ -55,6 +55,9 @@ INIT:
 	MOV r2.w0, INIT_PRE2      // recent bits holder
     MOV r2.w2, PREAMBLE2      // actual preamble holder
 	
+	MOV r3.w0, 0
+	MOV r3.w2, RX_PRU0_TIMEOUT
+	
 	MOV r4.w0, 0              // XOR holder
 	MOV r4.w2, 0              // LSR/AND holder
 
@@ -63,9 +66,6 @@ INIT:
 
 	MOV r6.w0, DELAY_P1_RX    // store bit-check delay value for comparsion
 	MOV r6.w2, DELAY_FWD_RX   // store forward delay value for comparison
-
-	MOV r7.w0, 0              // init packet counter to 0
-	MOV r7.w2, PACKET_LIMIT   // store packet limit for comparison
 
 	MOV r8.w0, SYNC_TIMEOUT
     JMP P1_SMP                // jump to preamble check
@@ -100,12 +100,14 @@ P1_CHK:
 
     GET_DIFF_13 r2.w0, r2.w2, r0.b3, r4.w0, r4.w2, r1.w2        // get number of matches between preamble and current bitstream
     QBLT P2_INIT, r0.b3, REQ_BITS2                              // if enough bits match, jump out of preamble bit-check
-    JMP P1_SMP                                                  // otherwise, keep sampling
+    ADD r3.w0, r3.w0, 1                                         // increment preamble loop counter
+	QBEQ STOP, r3.w0, r3.w2                                     // if enough preamble loops without one, jump to stop
+	JMP P1_SMP                                                  // otherwise, keep sampling
 
 P2_INIT:
 	MOV r0.w0, 0                        // reset delay counter
-	MOV r0.w0, 0                        // NOP for 200c between LSRs
-	MOV r0.w0, 0                        // NOP for 200c between LSRs
+	MOV r3.w0, 0                        // reset preamble count
+	MOV r3.w0, 0                        // NOP for 200c between LSRs
 	GET_BIT r31, PIN_OFFSET_BIT, r4     // Sample input pin
 	QBNE P1_SMP, r4, 1                  // if we don't receive the last 1 in preamble, reset
 
@@ -724,10 +726,8 @@ CHECK_DONE:
     MOV r4, READY_CODE			            // temporarily overwrite r4 with ready code for storage
     SBCO r4, CONST_PRUSHAREDRAM, 0, 1       // write packet ready code to PRU RAM
     MOV r0.b2, 0                            // reset register counter
-	ADD r7.w0, r7.w0, 1                     // increment packet counter
-	QBNE BCK_P4b8, r7.w0, r7.w2             // if not at packet limit, keep sampling
-    XOUT 10, r9, PACK_LEN                   // otherwise, transfer current packet to PRU1
-    JMP STOP                                // and commence shutdown
+	MOV r4, r4 // NOP (legacy timing)
+	JMP BCK_P4b8
 
 CPY_R9:
 	MOV r9, r29 	          // copy contents of r9 into r9 (modulation reg)

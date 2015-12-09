@@ -74,7 +74,7 @@
 
 // Timing:
 #define RX_PRU1_TIMEOUT 1328000 // update, copy and move to above ifdef blocks
-#define RX_PRU0_TIMEOUT   65500 // update, but this is agnostic to a bit-time, can stay outside of ifdefs
+#define RX_PRU0_TIMEOUT   33200 // update, but this is agnostic to a bit-time, can stay outside of ifdefs
 
 // Preamble:
 #define PREAMBLE1 0b00111100
