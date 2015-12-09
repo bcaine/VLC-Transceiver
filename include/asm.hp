@@ -9,7 +9,8 @@
 // Frequency
 //#define MHz1 1
 //#define kHz500 1
-#define khz250 1
+//#define khz250 1
+#define khz40 1
 
 #ifdef MHz1
 	#define DELAY_FWD_TX     97
@@ -49,6 +50,19 @@
 	#define DELAY_FWD_RX    396
 	#define DELAY_BWD_RX    391
 	#define SYNC_TIMEOUT    340
+#endif
+
+#ifdef khz40
+	#define DELAY_FWD_TX   2497
+	#define DELAY_BWD_TX   2492
+	#define DELAY_NEW_TX   2482
+	#define PRU0_DELAY  1584000
+
+	#define DELAY_P1_RX    2473
+	#define DELAY_P2_RX    6250
+	#define DELAY_FWD_RX   2496
+	#define DELAY_BWD_RX   2491
+	#define SYNC_TIMEOUT   2440
 #endif
 
 
