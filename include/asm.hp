@@ -11,18 +11,23 @@
 //#define kHz500 1
 //#define khz250 1
 #define khz40 1
-
+                                    // UPDATE ALL OTHER FREQ TIMINGS AFTER THIS
 #ifdef MHz1
 	#define DELAY_FWD_TX     97
 	#define DELAY_BWD_TX     92
 	#define DELAY_NEW_TX     82
 	#define PRU0_DELAY    62365
 
-	#define DELAY_P1_RX	 73
-	#define DELAY_P2_RX     155
+	#define DELAY_P1_RX	     72
+	#define DELAY_P2_RX     246  // gets us to 499-503 cycles after transition
+	#define DELAY_RXINPROG   70
 	#define DELAY_FWD_RX     96
-	#define DELAY_BWD_RX	 91
-	#define SYNC_TIMEOUT     40
+	#define DELAY_BWD_RX	 92
+	#define TRANS_TIMEOUT    88
+	
+	#define RX_PRU1_TIMEOUT   64400 // (* ~103 = ~50 packet times at 1 MHz)
+	#define RX_PRU0_TIMEOUT   33200 // ( number of preamble loops - ~50 packets)
+
 #endif
 
 #ifdef kHz500
@@ -36,7 +41,7 @@
 //500//315//300//285//270//260//250//135//155
 	#define DELAY_FWD_RX    196
 	#define DELAY_BWD_RX    191
-	#define SYNC_TIMEOUT    140
+	#define TRANS_TIMEOUT   140
 #endif
 
 #ifdef khz250
@@ -49,7 +54,8 @@
 	#define DELAY_P2_RX    1000 //works with direct // 850 worked with HW
 	#define DELAY_FWD_RX    396
 	#define DELAY_BWD_RX    391
-	#define SYNC_TIMEOUT    340
+	#define TRANS_TIMEOUT   340
+	
 #endif
 
 #ifdef khz40
@@ -62,7 +68,7 @@
 	#define DELAY_P2_RX    6250
 	#define DELAY_FWD_RX   2496
 	#define DELAY_BWD_RX   2491
-	#define SYNC_TIMEOUT   2440
+	#define TRANS_TIMEOUT  2440
 #endif
 
 
@@ -71,10 +77,6 @@
 #define PACK_LEN 83
 #define PIN_OFFSET_BIT 15
 #define PACKET_LIMIT 5000
-
-// Timing:
-#define RX_PRU1_TIMEOUT 1328000 // update, copy and move to above ifdef blocks
-#define RX_PRU0_TIMEOUT   33200//65500 // update, but this is agnostic to a bit-time, can stay outside of ifdefs
 
 // Preamble:
 #define PREAMBLE1 0b00111100

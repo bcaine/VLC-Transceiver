@@ -53,7 +53,7 @@ INIT:
 	MOV r1.w2, PRE_BITMASK    // load value to AND out irrelevant bits
 
 	MOV r2.w0, INIT_PRE2      // recent bits holder
-        MOV r2.w2, PREAMBLE2      // actual preamble holder
+    MOV r2.w2, PREAMBLE2      // actual preamble holder
 
 	MOV r3.w0, 0
 	MOV r3.w2, RX_PRU0_TIMEOUT 
@@ -68,8 +68,10 @@ INIT:
 	MOV r6.w2, DELAY_FWD_RX   // store forward delay value for comparison
 
 	MOV r7.w0, 0              // init packet counter to 0
-	MOV r8.w0, SYNC_TIMEOUT
-        JMP P1_SMP                // jump to preamble check
+	
+	MOV r8.w0, TRANS_TIMEOUT  // store transition timeout for comparison
+	
+    JMP P1_SMP                // jump to preamble check
 
 NEW_PACKET:
     XOUT 10, r9, PACK_LEN         // write data to PRU1
@@ -77,50 +79,50 @@ NEW_PACKET:
 P1_RESET:
     MOV r2.w0, INIT_PRE2          // reset bit holder
 
-P1_SMP:
+P1_SMP: // 5cyc
     MOV r0.w0, 0                       // reset delay
     LSL r2.w0, r2.w0, 1                // shift preamble holder to prepare for new bit
     GET_BIT r31, PIN_OFFSET_BIT, r4    // sample input pin
     QBEQ P1_SET, r4, 1                 // if bit set, jump to set
 
-P1_CLR:
+P1_CLR: // 5cyc
     CLR_BIT r2.w0.t0              // clear new bit
     MOV r0.b3, 0                  // reset verified bits
-    JMP P1_DEL
+    JMP P1_TIMEOUT
 
-P1_SET:
+P1_SET: // 5cyc
     SET_BIT r2.w0.t0              // set new bit
     MOV r0.b3, 0                  // reset verified bits
-    JMP P1_DEL
-
-P1_DEL: 
-    ADD r0.w0, r0.w0, 1
-    QBNE P1_DEL, r0.w0, r6.w0     // delay s.t. 200 cycles between preamble reads
-
-P1_CHK:
-
+    JMP P1_TIMEOUT
+	
+P1_TIMEOUT:
+	MOV r0.w0, 0 	              // NOP
+	QBEQ P1_CHK, r7.w0, 0         // if we haven't received a packet yet, don't enforce timeout
+    ADD r3.w0, r3.w0, 1           // otherwise, increment timeout counter
+    QBEQ STOP_JMP1, r3.w0, r3.w2  // if matches our limit, jump to stop
+	MOV r6.w0, DELAY_RXINPROG     // update preamble delay for future packets (which now need to be checked for timeout)
+	MOV r6.w0, DELAY_RXINPROG     // NOP
+	
+P1_CHK: // 43cyc
     GET_DIFF_13 r2.w0, r2.w2, r0.b3, r4.w0, r4.w2, r1.w2        // get number of matches between preamble and current bitstream
-    QBLT P2_INIT, r0.b3, REQ_BITS2                              // if enough bits match, jump out of preamble bit-check
-    QBEQ P1_SMP, r7.w0, 0
-    ADD r3.w0, r3.w0, 1
-    QBEQ STOP_JMP1, r3.w0, r3.w2
-    JMP P1_SMP                                                  // otherwise, keep sampling
+    QBLT P2_INIT, r0.b3, REQ_BITS2                              // if enough bits match, jump to bit-sync
 
-P2_INIT:
-	MOV r0.w0, 0                        // reset delay counter
-	MOV r3.w0, 0                        // NOP for 200c between LSRs
-	MOV r3.w0, 0                        // NOP for 200c between LSRs
-	GET_BIT r31, PIN_OFFSET_BIT, r4     // Sample input pin
-	QBNE P1_SMP, r4, 1                  // if we don't receive the last 1 in preamble, reset
+P1_DEL: // (2*DELAY_P1_RX)cyc
+    ADD r0.w0, r0.w0, 1
+    QBNE P1_DEL, r0.w0, r6.w0     // otherwise, delay sufficiently and
+	JMP P1_SMP                    // keep sampling
 
-P2_SMP:
-	ADD r0.w0, r0.w0, 1                 // incr counter
+P2_INIT: // 1cyc
+	MOV r3.w0, 0                        // reset preamble timeout counter
+
+P2_SMP: // (no match: 2+5n, match: 5n+6)cyc
+	ADD r0.w0, r0.w0, 1                 // incr delay counter
 	QBLT P1_RESET, r0.w0, r8.w0         // if taken too long, revert to P stage 1
 	GET_BIT r31, PIN_OFFSET_BIT, r4     // sample input pin
 	QBNE P2_SMP, r4, 0                  // if pin not reading 0, restart loop
 	MOV r0.w0, 0                        // reset delay counter
 	
-P2_DEL: 
+P2_DEL: // (2*DELAY_P2_RX+2)cyc
 	ADD r0.w0, r0.w0, 1
 	QBNE P2_DEL, r0.w0, r5.w0           // delay to middle of first data bit
 
@@ -685,21 +687,18 @@ DEL_B4b7:
 	ADD r0.w0, r0.w0, 1
 	QBNE DEL_B4b7, r0.w0, r6.w2
 
-SMP_B4b8:
+SMP_B4b8: // 4cyc
 	MOV r0.w0, 0
 	GET_BIT r31, PIN_OFFSET_BIT, r4
 	QBEQ SET_B4b8, r4, 1
 
-CLR_B4b8:
+CLR_B4b8: // 4cyc
 	CLR_BIT r29.t31
 	JMP UPD_R29
 
-SET_B4b8:
+SET_B4b8: // 4cyc
 	SET_BIT r29.t31
 	JMP UPD_R29
-
-BCK_P4b8:
-	JMP BCK_P3b8
 
 UPD_R29:
 	ADD r0.b2, r0.b2, 1
@@ -728,8 +727,8 @@ CHECK_DONE:
     MOV r4, READY_CODE			            // temporarily overwrite r4 with ready code for storage
     SBCO r4, CONST_PRUSHAREDRAM, 0, 1       // write packet ready code to PRU RAM
     MOV r0.b2, 0                            // reset register counter
-    ADD r7.b0, r7.b0, 1
-    JMP BCK_P4b8                              
+    ADD r7.b0, r7.b0, 1                     // increment packet counter
+    JMP BCK_P3b8                            // jump back to loop start                 
 
 CPY_R9:
 	MOV r9, r29 	          // copy contents of r9 into r9 (modulation reg)
@@ -804,8 +803,7 @@ CPY_R28:
 
 SMP_R29:
     MOV r0.w0, 0
-	ADD r5.w2, r5.w2, 2
-	MOV r5.w2, r5.w2
+	ADD r5.w2, r5.w2, 1 // 84 cycles
 
 DEL_R29:
 	ADD r0.w0, r0.w0, 1
@@ -1207,11 +1205,11 @@ SMP_R29_B3b8:
 	GET_BIT r31, PIN_OFFSET_BIT, r4
 	QBEQ SET_R29_B3b8, r4, 1
 
-CLR_R29_B3b8:
+CLR_R29_B3b8: // 4cyc
 	CLR_BIT r29.t23
 	JMP CHECK_DONE
 
-SET_R29_B3b8:
+SET_R29_B3b8: // 4cyc
 	SET_BIT r29.t23
 	JMP CHECK_DONE
 STOP:
