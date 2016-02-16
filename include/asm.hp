@@ -7,92 +7,87 @@
 // ***************************************
 
 // Frequency
-//#define MHz1 1
-//#define kHz500 1
-//#define khz250 1
+// #define MHz1 1
+// #define kHz500 1
+// #define khz250 1
 #define khz40 1
-                                    // UPDATE ALL OTHER FREQ TIMINGS AFTER THIS
-#ifdef MHz1
-	#define DELAY_FWD_TX     97
-	#define DELAY_BWD_TX     92
-	#define DELAY_NEW_TX     82
-	#define PRU0_DELAY    62365
 
-	#define DELAY_P1_RX	     72
-	#define DELAY_P2_RX     246  // gets us to 499-503 cycles after transition
-	#define DELAY_RXINPROG   70
-	#define DELAY_FWD_RX     96
-	#define DELAY_BWD_RX	 92
-	#define TRANS_TIMEOUT    88
+#ifdef MHz1
+	#define DELAY_FWD_TX      97
+	#define DELAY_BWD_TX      92
+	#define DELAY_NEW_TX      82
+	#define PRU0_DELAY        62365
+
+	#define DELAY_P1_RX	      72
+	#define DELAY_P2_RX       246
+	#define DELAY_RXINPROG    70
+	#define DELAY_FWD_RX      96
+	#define DELAY_BWD_RX	  92
+	#define TRANS_TIMEOUT     88
 	
-	#define RX_PRU1_TIMEOUT   64400 // (* ~103 = ~50 packet times at 1 MHz)
-	#define RX_PRU0_TIMEOUT   33200 // ( number of preamble loops - ~50 packets)
+	#define RX_PRU1_TIMEOUT   64400
+	#define RX_PRU0_TIMEOUT   33200
 
 #endif
 
 #ifdef kHz500
-	#define DELAY_FWD_TX    197
-	#define DELAY_BWD_TX    192
-	#define DELAY_NEW_TX    182
-	#define PRU0_DELAY   132000
+	#define DELAY_FWD_TX      197
+	#define DELAY_BWD_TX      192
+	#define DELAY_NEW_TX      182
+	#define PRU0_DELAY        132000
 
-	#define DELAY_P1_RX     173
-	#define DELAY_P2_RX     530 // started working at ~500 for 500khz
-//500//315//300//285//270//260//250//135//155
-	#define DELAY_FWD_RX    196
-	#define DELAY_BWD_RX    191
-	#define TRANS_TIMEOUT   140
+	#define DELAY_P1_RX       173
+	#define DELAY_P2_RX       530
+	#define DELAY_FWD_RX      196
+	#define DELAY_BWD_RX      191
+	#define TRANS_TIMEOUT     140
 #endif
 
 #ifdef khz250
-	#define DELAY_FWD_TX    397
-	#define DELAY_BWD_TX    392
-	#define DELAY_NEW_TX    382
-	#define PRU0_DELAY   264000
+	#define DELAY_FWD_TX      397
+	#define DELAY_BWD_TX      392
+	#define DELAY_NEW_TX      382
+	#define PRU0_DELAY        264000
 
-	#define DELAY_P1_RX     373
-	#define DELAY_P2_RX    1000 //works with direct // 850 worked with HW
-	#define DELAY_FWD_RX    396
-	#define DELAY_BWD_RX    391
-	#define TRANS_TIMEOUT   340
+	#define DELAY_P1_RX       373
+	#define DELAY_P2_RX       1000
+	#define DELAY_FWD_RX      396
+	#define DELAY_BWD_RX      391
+	#define TRANS_TIMEOUT     340
 	
 #endif
 
 #ifdef khz40
-	#define DELAY_FWD_TX   2497
-	#define DELAY_BWD_TX   2492
-	#define DELAY_NEW_TX   2482
-	#define PRU0_DELAY  1584000
+	#define DELAY_FWD_TX      2497
+	#define DELAY_BWD_TX      2492
+	#define DELAY_NEW_TX      2482
+	#define PRU0_DELAY        1584000
 
-	#define DELAY_P1_RX    2471//2//3
-	#define DELAY_P2_RX    6250
-	#define DELAY_FWD_RX   2496
-	#define DELAY_BWD_RX   2491
-	#define TRANS_TIMEOUT  2440
+	#define DELAY_P1_RX       2471
+	#define DELAY_P2_RX       6250
+	#define DELAY_FWD_RX      2496
+	#define DELAY_BWD_RX      2491
+	#define TRANS_TIMEOUT     2440
 #endif
 
 
 
 // Implementation Constants:
-#define PACK_LEN 83
-#define PIN_OFFSET_BIT 15
-#define PACKET_LIMIT 5000
+#define PACK_LEN              83
+#define PIN_OFFSET_BIT        15
+#define PACKET_LIMIT          5000
 
-// Preamble:
-#define PREAMBLE1 0b00111100
-#define REQ_BITS1 7 
-#define INIT_PRE1 0x0000
-
-#define PREAMBLE2 0b0011110000111 // update? Needs to match what we see out of HW
-#define REQ_BITS2 12
-#define INIT_PRE2 0x00000000
-#define PRE_BITMASK 0b0000111111111111
+// Preamble
+#define PREAMBLE              0b0011110000111
+#define PRE_BITMASK           0b0111111111111
+#define INIT_PRE              0
+#define REQ_BITS              12
 
 // Memory Access:
-#define DDR_ADDRESS 0x90000000
-#define READY_CODE 0xaa
-#define OFFSET_LIM 16777130
-#define INIT_OFFSET 8
+#define DDR_ADDRESS           0x90000000
+#define READY_CODE            0xaa
+#define OFFSET_LIM            16777130
+#define INIT_OFFSET           8
 
 // Macros:
 
@@ -116,56 +111,17 @@
     MOV r0, r0
 .endm
 
-.macro GET_DIFF_8
-.mparam rcvd, preamble, dst, hold1, hold2
-    XOR hold1, rcvd, preamble // get bitwise differences b/w preamble and current
-    NOT hold1, hold1 // NOT - get bitwise similarities
-
-    LSR hold2, hold1, 0 // shift to bit of interest
-    AND hold2, hold2, 1 // isolate that bit
-    ADD dst, dst, hold2 // add it to the counter
-
-    LSR hold2, hold1, 1 // repeat for each bit
-    AND hold2, hold2, 1 
-    ADD dst, dst, hold2
-
-    LSR hold2, hold1, 2
-    AND hold2, hold2, 1 
-    ADD dst, dst, hold2
-
-    LSR hold2, hold1, 3
-    AND hold2, hold2, 1 
-    ADD dst, dst, hold2
-    
-    LSR hold2, hold1, 4
-    AND hold2, hold2, 1 
-    ADD dst, dst, hold2
-
-    LSR hold2, hold1, 5
-    AND hold2, hold2, 1 
-    ADD dst, dst, hold2
-
-    LSR hold2, hold1, 6
-    AND hold2, hold2, 1 
-    ADD dst, dst, hold2
-
-    LSR hold2, hold1, 7
-    AND hold2, hold2, 1 
-    ADD dst, dst, hold2
-
-.endm
-
-.macro GET_DIFF_13
+.macro GET_DIFF
 .mparam rcvd, preamble, dst, hold1, hold2, bitmask
     AND hold1, rcvd, bitmask
     XOR hold1, hold1, preamble // get bitwise differences b/w preamble and current
-    NOT hold1, hold1 // NOT - get bitwise similarities
+    NOT hold1, hold1           // NOT - get bitwise similarities
 
-    LSR hold2, hold1, 0 // shift to bit of interest
-    AND hold2, hold2, 1 // isolate that bit
-    ADD dst, dst, hold2 // add it to the counter
+    LSR hold2, hold1, 0 	   // shift to bit of interest
+    AND hold2, hold2, 1 	   // isolate that bit
+    ADD dst, dst, hold2 	   // add it to the counter
 
-    LSR hold2, hold1, 1 // repeat for each bit
+    LSR hold2, hold1, 1 	   // repeat for each bit
     AND hold2, hold2, 1 
     ADD dst, dst, hold2
 
@@ -223,71 +179,32 @@
 #ifdef AM33XX
 
 // Refer to this mapping in the file - \prussdrv\include\pruss_intc_mapping.h
-#define PRU0_PRU1_INTERRUPT     17
-#define PRU1_PRU0_INTERRUPT     18
-#define PRU0_ARM_INTERRUPT      19
-#define PRU1_ARM_INTERRUPT      20
-#define ARM_PRU0_INTERRUPT      21
-#define ARM_PRU1_INTERRUPT      22
+#define PRU0_PRU1_INTERRUPT   17
+#define PRU1_PRU0_INTERRUPT   18
+#define PRU0_ARM_INTERRUPT    19
+#define PRU1_ARM_INTERRUPT    20
+#define ARM_PRU0_INTERRUPT    21
+#define ARM_PRU1_INTERRUPT    22
 
-#define CONST_PRUCFG       C4
-#define CONST_PRUDRAM      C24
-#define CONST_PRUSHAREDRAM C28
-#define CONST_DDR          C31
+#define CONST_PRUCFG          C4
+#define CONST_PRUDRAM         C24
+#define CONST_PRUSHAREDRAM    C28
+#define CONST_DDR             C31
 
 // Address for the Constant table Block Index Register (CTBIR)
-#define PRU0CTBIR_0         0x22020
-// Address for the Constant table Programmable Pointer Register 0(CTPPR_0)
-#define PRU0CTPPR_0         0x22028
-// Address for the Constant table Programmable Pointer Register 1(CTPPR_1)
-#define PRU0CTPPR_1         0x2202C
+#define PRU0CTBIR_0           0x22020
 
-#define PRU1CTBIR_0	    0x24020
-#define PRU1CTPPR_0	    0x24028
-#define PRU1CTPPR_1         0x2402C
+// Address for the Constant table Programmable Pointer Register 0(CTPPR_0)
+#define PRU0CTPPR_0           0x22028
+
+// Address for the Constant table Programmable Pointer Register 1(CTPPR_1)
+#define PRU0CTPPR_1           0x2202C
+
+#define PRU1CTBIR_0	    	  0x24020
+#define PRU1CTPPR_0	    	  0x24028
+#define PRU1CTPPR_1           0x2402C
 
 #endif
-
-.macro  LD32
-.mparam dst,src
-    LBBO    dst,src,#0x00,4
-.endm
-
-.macro  LD16
-.mparam dst,src
-    LBBO    dst,src,#0x00,2
-.endm
-
-.macro  LD8
-.mparam dst,src
-    LBBO    dst,src,#0x00,1
-.endm
-
-.macro ST32
-.mparam src,dst
-    SBBO    src,dst,#0x00,4
-.endm
-
-.macro ST16
-.mparam src,dst
-    SBBO    src,dst,#0x00,2
-.endm
-
-.macro ST8
-.mparam src,dst
-    SBBO    src,dst,#0x00,1
-.endm
-
-
-// ***************************************
-// *    Global Structure Definitions     *
-// ***************************************
-
-
-// ***************************************
-// *     Global Register Assignments     *
-// ***************************************
-
 
 #endif //_PRU_memAccessPRUDataRAM_HP_
 
