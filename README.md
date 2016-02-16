@@ -1,5 +1,5 @@
 # Visible Light Communication Transceiver
-This software package is intended to perform the transmitting and receiving functionality needed to transmit data via Visible Light Communication using a [Beaglebone Black](http://beagleboard.org/black). This project is for our Senior Capstone at Northeastern University in Boston.
+This software package is intended to perform the transmitting and receiving functionality needed to transmit data via Visible Light Communication using a [Beaglebone Black](http://beagleboard.org/black). This project is for our Senior Capstone at Northeastern University in Boston. This will only compile on a Beaglebone black with the appropriate assembler (see assembler/). 
 
 
 ## Table of Contents
@@ -24,7 +24,7 @@ Data is passed from and to the host computer over USB using sockets. The Beagleb
 
 #### Basics
 
-Data is sent in 88 byte packets, with the first byte being a preamble (currently 11111111) followed by 87 bytes of encoded data.
+Data is sent in N byte packets, with the first two bytes being a preamble (currently 0011110000111100) followed by N-2 bytes of encoded data.
 
 The receiver has to continuously search for the preamble when not reading in data. The preamble helps prevent clock drift, align our sampling, and prevent us from trying to receive data that's not really data.
 
@@ -37,9 +37,10 @@ Each bit should have a width of 1μs.
 1. Initialize the memory (mmap "/dev/mem"... which is less than ideal)
 2. Get the size of the incoming data from the Host via USB (Sockets)
 3. Receive Data from Host via USB (Sockets)
-4. Packetize data (45 byte packets: 2 byte length, 43 bytes data)
-5. Encode data using the [perfect binary Golay Code](https://en.wikipedia.org/wiki/Binary_Golay_code) which transforms 12 bits into 23 encoded bits. This allows us to fix 3 bit errors per 23 bit block when decoding.
-6. Add encoded data to memory up until the limit (16kb), and then put the rest in a queue.
+4. Packetize data
+5a. (Either this or 5b.) Encode data using the [perfect binary Golay Code](https://en.wikipedia.org/wiki/Binary_Golay_code) which transforms 12 bits into 23 encoded bits. This allows us to fix 3 bit errors per 23 bit block when decoding.
+5b. (Either this or 5a.) Encode data using Manchester Encoding which has a 1/2 coding rate, and turns 0 into 01, and 1 into 10. 
+6. Add encoded data to memory.
 7. Start the PRUs
 8. Watch the PRU, and backfill data from the queue behind it to make sure it churns through all the data and doesn't just spit out random data from RAM.
 9. Clean up: Shut down PRU, Close Memory, Close Socket etc.
@@ -50,10 +51,11 @@ Each bit should have a width of 1μs.
 (Excluding descriptions of what the PRUs are doing)
 
 1. Initialize the memory (mmap "/dev/mem" again...)
-2. Initialize the PRUs
-3. Watch their cursor, when new packets are available, put decode them, depacketize them, and put them in a buffer.
+2. Initialize the PRUs.
+3. Receive all the data, the PRU will put it into shared RAM. Shut down PRUs. 
+3. Read in how many packets are available from the PRU in smared RAM. Read these in, decode, depacketize. 
 4. When this buffer reaches a certain size, send this via USB to the Host computer (via Sockets).
-5. Clean up: Shut down PRU, Close Memory, Close Socket ect.
+5. Clean up: Close Memory, Close Socket ect.
 
 
 ## Structure
