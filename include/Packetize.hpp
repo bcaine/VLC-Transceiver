@@ -7,7 +7,7 @@
 #include "Util.hpp"
 
 void packetize(uint8_t* data_in, uint8_t* data_out,
-	       uint16_t bitlen);
+               uint16_t bitlen);
 uint16_t depacketize(uint8_t* data_in, uint8_t* data_out);
 
 #endif // PACKETIZE_HPP

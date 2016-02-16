@@ -1,5 +1,5 @@
 /* Tranceiver code for a Visible Light Communication System.
-   Part of a Senior Capstone Project at Northeastern University's Electrical 
+   Part of a Senior Capstone Project at Northeastern University's Electrical
    and Computer Engineering Department.
 
    This module wraps the Transmitter and Receiver module into one for
@@ -26,18 +26,18 @@ const int FLUSH_SIZE = DATA_SIZE * 12;
 
 class Transceiver {
 
-public:
-  Transceiver(SocketConnection &sockconn,
-	      ForwardErrorCorrection &fec,
-	      RealtimeControl &pru);
-  
-  void Transmit();
-  void Receive();
+  public:
+    Transceiver(SocketConnection &sockconn,
+                ForwardErrorCorrection &fec,
+                RealtimeControl &pru);
 
-private:
-  SocketConnection _sock;
-  ForwardErrorCorrection _fec;
-  RealtimeControl _pru;
+    void Transmit();
+    void Receive();
+
+  private:
+    SocketConnection _sock;
+    ForwardErrorCorrection _fec;
+    RealtimeControl _pru;
 };
 
 #endif // TRANSCEIVER_HPP

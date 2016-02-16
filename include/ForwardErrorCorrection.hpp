@@ -11,16 +11,16 @@
 
 class ForwardErrorCorrection {
 
-public:
-  void Encode(unsigned char *data, unsigned char* encoded, int len);
-  void Decode(unsigned char *encoded, unsigned char* data, int len);
+  public:
+    void Encode(unsigned char *data, unsigned char* encoded, int len);
+    void Decode(unsigned char *encoded, unsigned char* data, int len);
 
-  void ManchesterEncode(unsigned char *data_in,
-			unsigned char *data_out,
-			int num_bits_in);
-  void ManchesterDecode(unsigned char *data_in,
-			unsigned char *data_out,
-			int num_bits_out);
+    void ManchesterEncode(unsigned char *data_in,
+                          unsigned char *data_out,
+                          int num_bits_in);
+    void ManchesterDecode(unsigned char *data_in,
+                          unsigned char *data_out,
+                          int num_bits_out);
 };
 
 #endif // FEC_HPP
