@@ -6,9 +6,6 @@
 #ifndef SOCKET_HPP
 #define SOCKET_HPP
 
-
-// TODO: Figure out which of these I can get rid of...
-// Going off C Socket Programming example from Wireless Networks class
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
